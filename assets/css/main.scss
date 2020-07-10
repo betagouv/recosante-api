@@ -1,5 +1,9 @@
-hero__container {
+.hero__container {
     h1 {
         text-align: center;
     }
+}
+
+.article-grey {
+    background-color: --var(grey);
 }
