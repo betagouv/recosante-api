@@ -1,0 +1,7 @@
+title: Écosanté
+email: ecosante@data.gouv.fr
+lang: fr
+
+theme: minima
+plugins:
+  - jekyll-feed
