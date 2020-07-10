@@ -1,3 +1,3 @@
 # ecosante
 
-Service public fournissant des recommandations pour limiter les impacts de la pollution sur un individu.
+Un service public numérique de recommandations d'actions pour réduire l'impact de l'environnement sur sa santé.
