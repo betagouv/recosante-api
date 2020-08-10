@@ -49,7 +49,7 @@ function makeSendingRow(row){
     .then(geoResult => {
         const {code: codeINSEE} = geoResult[0];
 
-        return d3.json(`http://app-6ccdcc10-da92-47b1-add6-59d8d3914d79.cleverapps.io/forecast?insee=${codeINSEE}`)
+        return d3.json(`https://app-6ccdcc10-da92-47b1-add6-59d8d3914d79.cleverapps.io/forecast?insee=${codeINSEE}`)
         .then(apiQAResult => {
             if(apiQAResult.length === 0)
                 throw new Error('Pas trouvé !')
