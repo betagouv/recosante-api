@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta name="referrer" content="same-origin">
+        
+        <title>Recomms Écosanté</title>
+        
+        <meta name="description" content=" ">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" href="data:,">
+        
+        <link crossorigin="anonymous" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/twbs/bootstrap@v4/dist/css/bootstrap-reboot.css">
+        
+        <!--
+        <script crossorigin="anonymous" src="https://polyfill.io/v3/polyfill.min.js?flags=always&features=default%2Ces2017%2Ces2016%2Ces2015%2Cfetch"></script>
+        -->
+
+        <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+        <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+
+        <script type="module" src="assets/js/recommz.js"></script>
+
+        <style>
+            body > *{
+                padding: 0 20%;
+            }
+
+            label{
+                padding: 1em;
+                border: 1px solid #DDD;
+                text-transform: capitalize;
+            }
+
+            label:hover{
+                background-color: #EEE;
+            }
+
+            label input{
+                margin: 0 0.5em;
+                vertical-align: middle;
+            }
+
+            ul{
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .recommz > li{
+                
+            }
+
+            .recommz > li:hover{
+                background-color: #EEE;
+                
+            }
+
+
+        </style>
+    </head>
+    <body>
+        <h1>Recomms Écosanté</h1>
+        <section class="filters"></section>
+
+        <section>
+            <h2>Recommandations <span class="recommz-count"></span></h2>
+            <ul class="recommz"></ul>
+        </section>
+    </body>
+</html>
