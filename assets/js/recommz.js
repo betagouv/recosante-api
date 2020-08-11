@@ -3,10 +3,8 @@ import { html, render } from 'https://unpkg.com/htm/preact/standalone.module.js'
 
 const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 
-
 const RECOMMANDABILITÉ_COLUMN = 'Recommandabilité'
 const RECOMMANDABILITÉ_UTILISABLE = `Utilisable`
-
 
 function NiveauFilter({recommz, value, setFilterValue}) {
     const key = NIVEAU_DIFFICULTÉ_COLUMN
@@ -44,6 +42,13 @@ function RecommandabilitéFilter({recommz, checked, setFilterValue}){
     </section>`
 }
 
+function Recommandation({recommandation}){
+    const { 'Recommandation': text, [RECOMMANDABILITÉ_COLUMN]: recommandabilité } = recommandation;
+
+    return html`<li class="recommandability-${recommandabilité.toLowerCase()}">
+        ${text}
+    </li>`
+}
 
 const store = new Store({
     state: {
@@ -127,12 +132,12 @@ store.subscribe(state => {
     }
 
     document.querySelector('.recommz-count').textContent = `(${filteredRecommz.length})`
-
-    for (const { 'Recommandation': recommandation } of filteredRecommz) {
-        const li = document.createElement('li')
-        li.append(recommandation)
-        ul.append(li)
-    }
+    
+    render(html`${
+        filteredRecommz.map(rec => {
+            return html`<${Recommandation} recommandation=${rec}/>`
+        })
+    }`, ul)
 })
 
 d3.csv('./data/recommandations.csv')

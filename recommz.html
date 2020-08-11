@@ -23,7 +23,7 @@
 
         <style>
             body > *{
-                padding: 0 20%;
+                padding: 0 calc( max(5px, ( 100vw - 50rem ) / 2 ));
             }
 
             label{
@@ -48,12 +48,35 @@
             }
 
             .recommz > li{
-                
+                margin: 0.5em 0;
             }
 
             .recommz > li:hover{
                 background-color: #EEE;
                 
+            }
+
+
+            .recommz > li::before{
+                content: " ";
+                display: inline-block;
+                width: 1em;
+                height: 1em;
+
+                position: relative;
+                left: -2em;
+
+                border-radius: 50%;
+            }
+
+            .recommz > li.recommandability-utilisable::before{
+                background-color: hsl(108, 80%, 50%);
+            }
+            .recommz > li.recommandability-doute::before{
+                background-color: hsl(59, 80%, 50%);
+            }
+            .recommz > li.recommandability-non-utilisable::before{
+                background-color: hsl(0, 80%, 50%);
             }
 
 
