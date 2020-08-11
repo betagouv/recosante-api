@@ -3,6 +3,11 @@ import { html, render } from 'https://unpkg.com/htm/preact/standalone.module.js'
 
 const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 
+
+const RECOMMANDABILITÉ_COLUMN = 'Recommandabilité'
+const RECOMMANDABILITÉ_UTILISABLE = `Utilisable`
+
+
 function NiveauFilter({recommz, value, setFilterValue}) {
     const key = NIVEAU_DIFFICULTÉ_COLUMN
     const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
@@ -23,12 +28,34 @@ function NiveauFilter({recommz, value, setFilterValue}) {
     </section>`
 }
 
+function RecommandabilitéFilter({recommz, checked, setFilterValue}){
+    const key = RECOMMANDABILITÉ_COLUMN
+    const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
+
+    return html`<section>
+        ${
+            [...values].map(v => {
+                return html`<label>
+                    ${v}
+                    <input type="checkbox" name=${key} value=${v} checked=${checked.has(v)} onChange=${e => { setFilterValue(v) }}/>
+                </label>`
+            })
+        }
+    </section>`
+}
+
 
 const store = new Store({
     state: {
         recommz: [],
-        filters: new Map(),
-        filterValues: new Map()
+        filters: new Map(Object.entries({
+            [RECOMMANDABILITÉ_COLUMN]: 
+                r => store.state.filterValues.get(RECOMMANDABILITÉ_COLUMN).has(r[RECOMMANDABILITÉ_COLUMN])
+        })),
+        filterValues: new Map(Object.entries({
+            [NIVEAU_DIFFICULTÉ_COLUMN]: undefined,
+            [RECOMMANDABILITÉ_COLUMN]: new Set([RECOMMANDABILITÉ_UTILISABLE])
+        }))
     },
     mutations: {
         setRecommz(state, recommz) {
@@ -63,9 +90,25 @@ store.subscribe(state => {
     ul.innerHTML = '';
 
     console.log('filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)', filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN))
+    
+    const recommandabilitéFilterFunction = selectedValue => {
+        const valuesSet = filterValues.get(RECOMMANDABILITÉ_COLUMN);
 
-    const niveauValue = filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)
-    const niveauFilter = value => {
+        if(valuesSet.has(selectedValue)){
+            valuesSet.delete(selectedValue)
+        }
+        else{
+            valuesSet.add(selectedValue)
+        }
+
+        store.mutations.setFilterValue(
+            RECOMMANDABILITÉ_COLUMN,
+            valuesSet,
+            r => valuesSet.has(r[RECOMMANDABILITÉ_COLUMN])
+        )
+    }
+
+    const niveauFilterFunction = value => {
         store.mutations.setFilterValue(
             NIVEAU_DIFFICULTÉ_COLUMN,
             value,
@@ -73,7 +116,10 @@ store.subscribe(state => {
         )
     }
 
-    render(html`<${NiveauFilter} recommz=${recommz} value=${niveauValue} setFilterValue=${niveauFilter} />`, filtersSection)
+    render(html`
+        <${NiveauFilter} recommz=${recommz} value=${filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)} setFilterValue=${niveauFilterFunction} />
+        <${RecommandabilitéFilter} recommz=${recommz} checked=${filterValues.get(RECOMMANDABILITÉ_COLUMN)} setFilterValue=${recommandabilitéFilterFunction} />
+    `, filtersSection)
 
     let filteredRecommz = recommz;
     for(const f of filters.values()){
