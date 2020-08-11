@@ -1,40 +1,26 @@
 import Store from 'https://cdn.jsdelivr.net/gh/DavidBruant/baredux@master/main.js'
+import { html, render } from 'https://unpkg.com/htm/preact/standalone.module.js'
 
 const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 
-function makeNiveauFilter(recommz, value, setFilterValue) {
+function NiveauFilter({recommz, value, setFilterValue}) {
     const key = NIVEAU_DIFFICULTÉ_COLUMN
     const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
 
-    const section = document.createElement('section')
-
-    for (const v of values) {
-        const radio = document.createElement('input')
-        radio.type = "radio"
-        radio.name = key;
-        radio.value = v;
-
-        radio.addEventListener('change', e => { setFilterValue(v) })
-
-        const label = document.createElement('label');
-        label.append(v, radio);
-        radio.checked = v === value;
-
-        section.append(label)
-    }
-
-    const allRadio = document.createElement('input')
-    allRadio.type = "radio"
-    allRadio.name = key;
-    allRadio.value = 'tous';
-    allRadio.addEventListener('change', e => { setFilterValue(undefined) })
-    const allLabel = document.createElement('label');
-    allLabel.append('tous', allRadio);
-    allRadio.checked = value === undefined;
-
-    section.append(allLabel)
-
-    return section;
+    return html`<section>
+        ${
+            [...values].map(v => {
+                return html`<label>
+                    ${v}
+                    <input type="radio" name=${key} value=${v} checked=${v === value} onChange=${e => { setFilterValue(v) }}/>
+                </label>`
+            })
+        }
+        <label>
+            tous
+            <input type="radio" name=${key} value="tous" checked=${value === undefined} onChange=${e => { setFilterValue(undefined) }}/>
+        </label>
+    </section>`
 }
 
 
@@ -73,19 +59,21 @@ store.subscribe(state => {
     const ul = document.querySelector('ul.recommz')
     const filtersSection = document.querySelector('.filters')
 
-    ul.innerHTML = '';
     filtersSection.innerHTML = '';
+    ul.innerHTML = '';
 
     console.log('filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)', filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN))
 
-    const niveauFilter = makeNiveauFilter(recommz, filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN), value => {
+    const niveauValue = filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)
+    const niveauFilter = value => {
         store.mutations.setFilterValue(
             NIVEAU_DIFFICULTÉ_COLUMN,
             value,
             value ? r => r[NIVEAU_DIFFICULTÉ_COLUMN] === value : undefined
         )
-    })
-    filtersSection.append(niveauFilter)
+    }
+
+    render(html`<${NiveauFilter} recommz=${recommz} value=${niveauValue} setFilterValue=${niveauFilter} />`, filtersSection)
 
     let filteredRecommz = recommz;
     for(const f of filters.values()){
