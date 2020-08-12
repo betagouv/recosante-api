@@ -54,6 +54,8 @@ const OUTPUT_WEBSITE_COLUMN_NAME = `Site web AASQUA`
 
 
 
+const OUTPUT_REGION_WEBSITE_COLUMN_NAME = `Site web régional`
+
 function makeSendingRow(row){
     const sendingRow = Object.create(null);
     const TODAY_DATE_STRING = (new Date()).toISOString().slice(0, 10)
@@ -94,6 +96,8 @@ function makeSendingRow(row){
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
         if(qualif)
             sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
+        if(website)
+            sendingRow[OUTPUT_REGION_WEBSITE_COLUMN_NAME] = website
         sendingRow[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = row[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
         sendingRow[OUTPUT_ALLERGIQUE_COLUMN_NAME] = row[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
         sendingRow[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = row[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
