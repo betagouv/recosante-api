@@ -49,8 +49,10 @@ const FILENAME_TO_INPUT_FREQ = {
     [FREQUENCY_BAD_AIR_QUALITY]: INPUT_FREQUENCY_BAD_AIR_QUALITY,
 }
 
-
 const OUTPUT_QUALITE_AIR_COLUMN_NAME = `Qualité de l'air`
+const OUTPUT_WEBSITE_COLUMN_NAME = `Site web AASQUA`
+
+
 
 function makeSendingRow(row){
     const sendingRow = Object.create(null);
@@ -62,11 +64,14 @@ function makeSendingRow(row){
         const {code: codeINSEE} = geoResult[0];
 
         return d3.json(`https://app-6ccdcc10-da92-47b1-add6-59d8d3914d79.cleverapps.io/forecast?insee=${codeINSEE}`)
-        .then(apiQAResult => {
-            if(apiQAResult.length === 0)
+        .then(({data, metadata}) => {
+            if(!data || data.length === 0)
                 throw new Error('Pas trouvé !')
 
-            return apiQAResult.find(res => res.date === TODAY_DATE_STRING)
+            return {
+                air: data.find(res => res.date === TODAY_DATE_STRING),
+                website: metadata.website
+            }
         })
         .catch(err => {
             console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, row, err)
@@ -75,12 +80,17 @@ function makeSendingRow(row){
     .catch(err => {
         console.warn('Code INSEE pour', ville, 'non trouvé', row, err)
     })
-    .then(indiceATMODate => {
+    .then(apiResult => {
+        const {air = {}, website} = apiResult || {}
         //console.log('indiceATMODate', indiceATMODate, ville)
-        const {qualif} = indiceATMODate || {}
+        const {qualif} = air
 
         sendingRow[OUTPUT_EMAIL_COLUMN_NAME] = row[INPUT_EMAIL_COLUMN_NAME].trim()
+
+        sendingRow[OUTPUT_PHONE_NUMBER_COLUMN_NAME] = row[INPUT_PHONE_NUMBER_COLUMN_NAME].trim()
+
         sendingRow[OUTPUT_REGION_COLUMN_NAME] = row[INPUT_REGION_COLUMN_NAME].trim()
+        sendingRow[OUTPUT_WEBSITE_COLUMN_NAME] = website;
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
         if(qualif)
             sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
@@ -91,7 +101,6 @@ function makeSendingRow(row){
         sendingRow[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
         sendingRow[OUTPUT_FUMEUR_COLUMN_NAME] = row[INPUT_FUMEUR_COLUMN_NAME].trim()
 
-        sendingRow[OUTPUT_PHONE_NUMBER_COLUMN_NAME] = row[INPUT_PHONE_NUMBER_COLUMN_NAME].trim()
                 
         return sendingRow;
     })
