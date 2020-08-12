@@ -51,6 +51,8 @@ const FILENAME_TO_INPUT_FREQ = {
 
 const OUTPUT_QUALITE_AIR_COLUMN_NAME = `Qualité de l'air`
 
+const OUTPUT_REGION_WEBSITE_COLUMN_NAME = `Site web régional`
+
 function makeSendingRow(row){
     const sendingRow = Object.create(null);
     const TODAY_DATE_STRING = (new Date()).toISOString().slice(0, 10)
@@ -62,10 +64,13 @@ function makeSendingRow(row){
 
         return d3.json(`https://app-6ccdcc10-da92-47b1-add6-59d8d3914d79.cleverapps.io/forecast?insee=${codeINSEE}`)
         .then(apiQAResult => {
-            if(apiQAResult.length === 0)
+            if(apiQAResult.data.length === 0)
                 throw new Error('Pas trouvé !')
 
-            return apiQAResult.find(res => res.date === TODAY_DATE_STRING)
+            return {
+                data: apiQAResult.data.find(res => res.date === TODAY_DATE_STRING) || {},
+                metadata: apiQAResult.metadata
+            }
         })
         .catch(err => {
             console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, row, err)
@@ -75,14 +80,15 @@ function makeSendingRow(row){
         console.warn('Code INSEE pour', ville, 'non trouvé', row, err)
     })
     .then(indiceATMODate => {
-        //console.log('indiceATMODate', indiceATMODate, ville)
-        const {qualif} = indiceATMODate || {}
+        const {data: {qualif}, metadata: {website}} = indiceATMODate || {data: {}, metadata: {}}
 
         sendingRow[OUTPUT_EMAIL_COLUMN_NAME] = row[INPUT_EMAIL_COLUMN_NAME].trim()
         sendingRow[OUTPUT_REGION_COLUMN_NAME] = row[INPUT_REGION_COLUMN_NAME].trim()
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
         if(qualif)
             sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
+        if(website)
+            sendingRow[OUTPUT_REGION_WEBSITE_COLUMN_NAME] = website
         sendingRow[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = row[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
         sendingRow[OUTPUT_ALLERGIQUE_COLUMN_NAME] = row[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
         sendingRow[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = row[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
@@ -91,7 +97,7 @@ function makeSendingRow(row){
         sendingRow[OUTPUT_FUMEUR_COLUMN_NAME] = row[INPUT_FUMEUR_COLUMN_NAME].trim()
 
         sendingRow[OUTPUT_PHONE_NUMBER_COLUMN_NAME] = row[INPUT_PHONE_NUMBER_COLUMN_NAME].trim()
-                
+
         return sendingRow;
     })
 }
