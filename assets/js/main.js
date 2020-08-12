@@ -10,8 +10,8 @@ const OUTPUT_EMAIL_COLUMN_NAME = 'Mail'
 const INPUT_REGION_COLUMN_NAME = 'Région'
 const OUTPUT_REGION_COLUMN_NAME = INPUT_REGION_COLUMN_NAME
 
-const INPUT_VILLE_COLUMN_NAME = 'Ville'
-const OUTPUT_VILLE_COLUMN_NAME = INPUT_VILLE_COLUMN_NAME
+const INPUT_VILLE_COLUMN_NAME = 'Dans quelle ville habitez-vous ? '
+const OUTPUT_VILLE_COLUMN_NAME = 'Ville'
 
 const INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME = `Vivez-vous avec une pathologie respiratoire ?`
 const OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME = `Pathologie_respiratoire`;
@@ -31,14 +31,15 @@ const OUTPUT_CANAL_COLUMN_NAME = `Format`
 const CANAL_EMAIL = 'Mail'
 const CANAL_SMS = 'SMS'
 
-const INPUT_PHONE_NUMBER_COLUMN_NAME = `Si vous avez choisi par SMS ou WhatsApp, veuillez renseigner votre numéro de téléphone`
+const INPUT_PHONE_NUMBER_COLUMN_NAME = `Si vous avez choisi par SMS, veuillez renseigner votre numéro de téléphone`
 const OUTPUT_PHONE_NUMBER_COLUMN_NAME = `Téléphone`
 
 const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les notifications ? `
 const OUTPUT_FREQUENCY_COLUMN_NAME = `Fréquence`
 
-const INPUT_FREQUENCY_EVERYDAY = `tous les jours`
-const INPUT_FREQUENCY_BAD_AIR_QUALITY = `Lorsque la qualité de l'air est mauvaise`
+// in the spreadsheet, casing is inconsistent
+const INPUT_FREQUENCY_EVERYDAY = `tous les jours`.toLowerCase()
+const INPUT_FREQUENCY_BAD_AIR_QUALITY = `Lorsque la qualité de l'air est mauvaise`.toLowerCase()
 
 const FREQUENCY_EVERYDAY = `Tous-les-jours`
 const FREQUENCY_BAD_AIR_QUALITY = `Air-mauvais`
