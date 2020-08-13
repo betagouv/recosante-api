@@ -51,6 +51,9 @@ const FILENAME_TO_INPUT_FREQ = {
 const OUTPUT_QUALITE_AIR_COLUMN_NAME = `Qualité de l'air`
 const OUTPUT_WEBSITE_COLUMN_NAME = `Site web AASQUA`
 
+const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
+const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
+
 
 
 const OUTPUT_REGION_WEBSITE_COLUMN_NAME = `Site web régional`
@@ -105,7 +108,10 @@ function makeSendingRow(row){
         sendingRow[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
         sendingRow[OUTPUT_FUMEUR_COLUMN_NAME] = row[INPUT_FUMEUR_COLUMN_NAME].trim()
 
-                
+        // Adding empty columns for convenience
+        sendingRow[OUTPUT_RECOMMANDATION_COLUMN_NAME] = ' '
+        sendingRow[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = ' '
+
         return sendingRow;
     })
 }
