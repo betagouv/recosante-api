@@ -49,14 +49,11 @@ const FILENAME_TO_INPUT_FREQ = {
 }
 
 const OUTPUT_QUALITE_AIR_COLUMN_NAME = `Qualité de l'air`
-const OUTPUT_WEBSITE_COLUMN_NAME = `Site web AASQUA`
+const OUTPUT_WEBSITE_COLUMN_NAME = `Lien_AASQA`
 
 const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
 const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
 
-
-
-const OUTPUT_REGION_WEBSITE_COLUMN_NAME = `Site web régional`
 
 function makeSendingRow(row){
     const sendingRow = Object.create(null);
@@ -99,8 +96,6 @@ function makeSendingRow(row){
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
         if(qualif)
             sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
-        if(website)
-            sendingRow[OUTPUT_REGION_WEBSITE_COLUMN_NAME] = website
         sendingRow[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = row[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
         sendingRow[OUTPUT_ALLERGIQUE_COLUMN_NAME] = row[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
         sendingRow[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = row[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
