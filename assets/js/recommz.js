@@ -6,6 +6,11 @@ const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 const RECOMMANDABILITÉ_COLUMN = 'Recommandabilité'
 const RECOMMANDABILITÉ_UTILISABLE = `Utilisable`
 
+const AIR_QUALITY_COLUMN = 'QA mauvaise'
+const AIR_QUALITY_BAD = `Qualité de l'air mauvaise`
+const AIR_QUALITY_UNRELATED = 'Autres recommandations'
+const AIR_QUALITY_MARKER_VALUE = 'x'
+
 function NiveauFilter({recommz, value, setFilterValue}) {
     const key = NIVEAU_DIFFICULTÉ_COLUMN
     const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
@@ -42,6 +47,24 @@ function RecommandabilitéFilter({recommz, checked, setFilterValue}){
     </section>`
 }
 
+function AirQualityFilter({checked, setFilterValue}){
+    const key = AIR_QUALITY_COLUMN
+    const values = new Set([AIR_QUALITY_BAD, AIR_QUALITY_UNRELATED])
+
+    return html`<section>
+        ${
+            [...values].map(v => {
+                return html`<label>
+                    ${v}
+                    <input type="checkbox" name=${key} value=${v} checked=${checked.has(v)} onChange=${e => { setFilterValue(v) }}/>
+                </label>`
+            })
+        }
+    </section>`
+}
+
+
+
 function Recommandation({recommandation}){
     const { 'Recommandation': text, [RECOMMANDABILITÉ_COLUMN]: recommandabilité } = recommandation;
 
@@ -59,7 +82,8 @@ const store = new Store({
         })),
         filterValues: new Map(Object.entries({
             [NIVEAU_DIFFICULTÉ_COLUMN]: undefined,
-            [RECOMMANDABILITÉ_COLUMN]: new Set([RECOMMANDABILITÉ_UTILISABLE])
+            [RECOMMANDABILITÉ_COLUMN]: new Set([RECOMMANDABILITÉ_UTILISABLE]),
+            [AIR_QUALITY_COLUMN]: new Set([AIR_QUALITY_BAD, AIR_QUALITY_UNRELATED])
         }))
     },
     mutations: {
@@ -121,9 +145,28 @@ store.subscribe(state => {
         )
     }
 
+    const airQualityFilterFunction = selectedValue => {
+        const valuesSet = filterValues.get(AIR_QUALITY_COLUMN);
+
+        if(valuesSet.has(selectedValue)){
+            valuesSet.delete(selectedValue)
+        }
+        else{
+            valuesSet.add(selectedValue)
+        }
+
+        store.mutations.setFilterValue(
+            AIR_QUALITY_COLUMN,
+            valuesSet,
+            r => r[AIR_QUALITY_COLUMN] === AIR_QUALITY_MARKER_VALUE && valuesSet.has(AIR_QUALITY_BAD) ||
+                r[AIR_QUALITY_COLUMN] !== AIR_QUALITY_MARKER_VALUE && valuesSet.has(AIR_QUALITY_UNRELATED)
+        )
+    }
+
     render(html`
         <${NiveauFilter} recommz=${recommz} value=${filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)} setFilterValue=${niveauFilterFunction} />
         <${RecommandabilitéFilter} recommz=${recommz} checked=${filterValues.get(RECOMMANDABILITÉ_COLUMN)} setFilterValue=${recommandabilitéFilterFunction} />
+        <${AirQualityFilter} checked=${filterValues.get(AIR_QUALITY_COLUMN)} setFilterValue=${airQualityFilterFunction} />
     `, filtersSection)
 
     let filteredRecommz = recommz;
