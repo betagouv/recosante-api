@@ -101,12 +101,14 @@ function Recommandation({recommandation}){
         [RECOMMANDABILITÉ_COLUMN]: recommandabilité
     } = recommandation;
 
-    return html`<li class="recommandability-${recommandabilité.toLowerCase()}">
-        <details>
-            <summary>${text}</summary>
-            ${details}
-        </details>
-    </li>`
+    return details && details.trim().length >= 2 ? 
+        html`<li class="recommandability-${recommandabilité.toLowerCase()}">
+            <details>
+                <summary>${text}</summary>
+                ${details}
+            </details>
+        </li>` : 
+        html`<li class="recommandability-${recommandabilité.toLowerCase()}">${text}</li>`
 }
 
 const store = new Store({
