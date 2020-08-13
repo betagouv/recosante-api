@@ -6,6 +6,9 @@ const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 const RECOMMANDABILITÉ_COLUMN = 'Recommandabilité'
 const RECOMMANDABILITÉ_UTILISABLE = `Utilisable`
 
+const RECOMMANDATION_COLUMN = 'Recommandation';
+const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
+
 const AIR_QUALITY_COLUMN = 'QA mauvaise'
 const AIR_QUALITY_BAD = `Qualité de l'air mauvaise`
 const AIR_QUALITY_UNRELATED = 'Autres recommandations'
@@ -88,10 +91,17 @@ function AllergyFilter({checked, setFilterValue}){
 
 
 function Recommandation({recommandation}){
-    const { 'Recommandation': text, [RECOMMANDABILITÉ_COLUMN]: recommandabilité } = recommandation;
+    const { 
+        [RECOMMANDATION_COLUMN]: text, 
+        [RECOMMANDATION_DETAILS_COLUMN]: details, 
+        [RECOMMANDABILITÉ_COLUMN]: recommandabilité
+    } = recommandation;
 
     return html`<li class="recommandability-${recommandabilité.toLowerCase()}">
-        ${text}
+        <details>
+            <summary>${text}</summary>
+            ${details}
+        </details>
     </li>`
 }
 
