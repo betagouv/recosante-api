@@ -11,6 +11,12 @@ const AIR_QUALITY_BAD = `Qualité de l'air mauvaise`
 const AIR_QUALITY_UNRELATED = 'Autres recommandations'
 const AIR_QUALITY_MARKER_VALUE = 'x'
 
+const ALLERGY_COLUMN = 'Allergies'
+const WITH_ALLERGY = `Liée aux allergies`
+const ALLERGY_UNRELATED = 'Autres recommandations'
+const ALLERGY_MARKER_VALUE = 'x'
+
+
 function NiveauFilter({recommz, value, setFilterValue}) {
     const key = NIVEAU_DIFFICULTÉ_COLUMN
     const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
@@ -63,6 +69,22 @@ function AirQualityFilter({checked, setFilterValue}){
     </section>`
 }
 
+function AllergyFilter({checked, setFilterValue}){
+    const key = ALLERGY_COLUMN
+    const values = new Set([WITH_ALLERGY, ALLERGY_UNRELATED])
+
+    return html`<section>
+        ${
+            [...values].map(v => {
+                return html`<label>
+                    ${v}
+                    <input type="checkbox" name=${key} value=${v} checked=${checked.has(v)} onChange=${e => { setFilterValue(v) }}/>
+                </label>`
+            })
+        }
+    </section>`
+}
+
 
 
 function Recommandation({recommandation}){
@@ -83,7 +105,8 @@ const store = new Store({
         filterValues: new Map(Object.entries({
             [NIVEAU_DIFFICULTÉ_COLUMN]: undefined,
             [RECOMMANDABILITÉ_COLUMN]: new Set([RECOMMANDABILITÉ_UTILISABLE]),
-            [AIR_QUALITY_COLUMN]: new Set([AIR_QUALITY_BAD, AIR_QUALITY_UNRELATED])
+            [AIR_QUALITY_COLUMN]: new Set([AIR_QUALITY_BAD, AIR_QUALITY_UNRELATED]),
+            [ALLERGY_COLUMN]: new Set([WITH_ALLERGY, ALLERGY_UNRELATED])
         }))
     },
     mutations: {
@@ -159,7 +182,25 @@ store.subscribe(state => {
             AIR_QUALITY_COLUMN,
             valuesSet,
             r => r[AIR_QUALITY_COLUMN] === AIR_QUALITY_MARKER_VALUE && valuesSet.has(AIR_QUALITY_BAD) ||
-                r[AIR_QUALITY_COLUMN] !== AIR_QUALITY_MARKER_VALUE && valuesSet.has(AIR_QUALITY_UNRELATED)
+            r[AIR_QUALITY_COLUMN] !== AIR_QUALITY_MARKER_VALUE && valuesSet.has(AIR_QUALITY_UNRELATED)
+        )
+    }
+
+    const allergyFilterFunction = selectedValue => {
+        const valuesSet = filterValues.get(ALLERGY_COLUMN);
+
+        if(valuesSet.has(selectedValue)){
+            valuesSet.delete(selectedValue)
+        }
+        else{
+            valuesSet.add(selectedValue)
+        }
+
+        store.mutations.setFilterValue(
+            ALLERGY_COLUMN,
+            valuesSet,
+            r => r[ALLERGY_COLUMN] === ALLERGY_MARKER_VALUE && valuesSet.has(WITH_ALLERGY) ||
+                r[ALLERGY_COLUMN] !== ALLERGY_MARKER_VALUE && valuesSet.has(ALLERGY_UNRELATED)
         )
     }
 
@@ -167,6 +208,7 @@ store.subscribe(state => {
         <${NiveauFilter} recommz=${recommz} value=${filterValues.get(NIVEAU_DIFFICULTÉ_COLUMN)} setFilterValue=${niveauFilterFunction} />
         <${RecommandabilitéFilter} recommz=${recommz} checked=${filterValues.get(RECOMMANDABILITÉ_COLUMN)} setFilterValue=${recommandabilitéFilterFunction} />
         <${AirQualityFilter} checked=${filterValues.get(AIR_QUALITY_COLUMN)} setFilterValue=${airQualityFilterFunction} />
+        <${AllergyFilter} checked=${filterValues.get(ALLERGY_COLUMN)} setFilterValue=${allergyFilterFunction} />
     `, filtersSection)
 
     let filteredRecommz = recommz;
