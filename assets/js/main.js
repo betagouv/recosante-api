@@ -54,6 +54,42 @@ const OUTPUT_WEBSITE_COLUMN_NAME = `Lien_AASQA`
 const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
 const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
 
+// Per  Arrêté du 22 juillet 2004 relatif aux indices de la qualité de l'air (article 6)
+const QUALIFICATIF_TRES_BON = `Très bon`
+const QUALIFICATIF_BON = `Bon`
+const QUALIFICATIF_MOYEN = `Moyen`
+const QUALIFICATIF_MÉDIOCRE = `Médiocre`
+const QUALIFICATIF_MAUVAIS = `Mauvais`
+const QUALIFICATIF_TRÈS_MAUVAIS = `Très mauvais`
+
+const INDICE_ATMO_TO_QUALIFICATIF = {
+    1: QUALIFICATIF_TRES_BON,
+    2: QUALIFICATIF_TRES_BON,
+    3: QUALIFICATIF_BON,
+    4: QUALIFICATIF_BON,
+    5: QUALIFICATIF_MOYEN,
+    6: QUALIFICATIF_MÉDIOCRE,
+    7: QUALIFICATIF_MÉDIOCRE,
+    8: QUALIFICATIF_MAUVAIS,
+    9: QUALIFICATIF_MAUVAIS,
+    10: QUALIFICATIF_TRÈS_MAUVAIS,
+}
+
+const LEGAL_QUALIFICATIF_TO_EMAIL_QUALIFICATIF = {
+    [QUALIFICATIF_TRES_BON]: `très bonne`,
+    [QUALIFICATIF_BON]: `bonne`,
+    [QUALIFICATIF_MOYEN]: `moyenne`,
+    [QUALIFICATIF_MÉDIOCRE]: `médiocre`,
+    [QUALIFICATIF_MAUVAIS]: `mauvaise`,
+    [QUALIFICATIF_TRÈS_MAUVAIS]: `très mauvaise`,
+}
+
+const INDICE_ATMO_TO_EMAIL_QUALIFICATIF = Object.fromEntries(
+    Object.entries(INDICE_ATMO_TO_QUALIFICATIF)
+        .map(([indice, legalQualif]) => [indice, LEGAL_QUALIFICATIF_TO_EMAIL_QUALIFICATIF[legalQualif]])
+)
+
+
 
 function makeSendingRow(row){
     const sendingRow = Object.create(null);
@@ -85,7 +121,9 @@ function makeSendingRow(row){
     .then(apiResult => {
         const {air = {}, website, region} = apiResult || {}
         //console.log('indiceATMODate', indiceATMODate, ville)
-        const {qualif} = air
+        const {indice} = air
+
+        const qualif = INDICE_ATMO_TO_EMAIL_QUALIFICATIF[indice]
 
         sendingRow[OUTPUT_EMAIL_COLUMN_NAME] = row[INPUT_EMAIL_COLUMN_NAME].trim()
 
