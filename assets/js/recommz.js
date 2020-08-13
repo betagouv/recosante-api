@@ -25,6 +25,7 @@ function NiveauFilter({recommz, value, setFilterValue}) {
     const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
 
     return html`<section>
+        <h3>Niveau de difficulté</h3>
         ${
             [...values].map(v => {
                 return html`<label>
@@ -45,6 +46,7 @@ function RecommandabilitéFilter({recommz, checked, setFilterValue}){
     const values = new Set(recommz.map(r => r[key]).filter(str => str !== undefined && str !== ''))
 
     return html`<section>
+        <h3>Utilisabilité</h3>
         ${
             [...values].map(v => {
                 return html`<label>
@@ -61,6 +63,7 @@ function AirQualityFilter({checked, setFilterValue}){
     const values = new Set([AIR_QUALITY_BAD, AIR_QUALITY_UNRELATED])
 
     return html`<section>
+        <h3>Mauvaise qualité de l'air</h3>
         ${
             [...values].map(v => {
                 return html`<label>
@@ -77,6 +80,7 @@ function AllergyFilter({checked, setFilterValue}){
     const values = new Set([WITH_ALLERGY, ALLERGY_UNRELATED])
 
     return html`<section>
+        <h3>Allergies</h3>
         ${
             [...values].map(v => {
                 return html`<label>
