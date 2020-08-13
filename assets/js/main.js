@@ -7,8 +7,7 @@ const OUTPUT_ALLERGIQUE_COLUMN_NAME = 'Allergies'
 const INPUT_EMAIL_COLUMN_NAME = 'Adresse e-mail'
 const OUTPUT_EMAIL_COLUMN_NAME = 'Mail'
 
-const INPUT_REGION_COLUMN_NAME = 'Région'
-const OUTPUT_REGION_COLUMN_NAME = INPUT_REGION_COLUMN_NAME
+const OUTPUT_REGION_COLUMN_NAME = 'Région'
 
 const INPUT_VILLE_COLUMN_NAME = 'Dans quelle ville habitez-vous ? '
 const OUTPUT_VILLE_COLUMN_NAME = 'Ville'
@@ -65,14 +64,15 @@ function makeSendingRow(row){
     .then(geoResult => {
         const {code: codeINSEE} = geoResult[0];
 
-        return d3.json(`https://app-6ccdcc10-da92-47b1-add6-59d8d3914d79.cleverapps.io/forecast?insee=${codeINSEE}`)
-        .then(({data, metadata}) => {
+        return d3.json(`https://app-ed2e0e03-0bd3-4eb4-8326-000288aeb6a0.cleverapps.io/forecast?insee=${codeINSEE}`)
+        .then(({data, metadata: {region: {website, nom}}}) => {
             if(!data || data.length === 0)
                 throw new Error('Pas trouvé !')
 
             return {
                 air: data.find(res => res.date === TODAY_DATE_STRING),
-                website: metadata.website
+                website,
+                region: nom
             }
         })
         .catch(err => {
@@ -83,7 +83,7 @@ function makeSendingRow(row){
         console.warn('Code INSEE pour', ville, 'non trouvé', row, err)
     })
     .then(apiResult => {
-        const {air = {}, website} = apiResult || {}
+        const {air = {}, website, region} = apiResult || {}
         //console.log('indiceATMODate', indiceATMODate, ville)
         const {qualif} = air
 
@@ -91,7 +91,7 @@ function makeSendingRow(row){
 
         sendingRow[OUTPUT_PHONE_NUMBER_COLUMN_NAME] = row[INPUT_PHONE_NUMBER_COLUMN_NAME].trim()
 
-        sendingRow[OUTPUT_REGION_COLUMN_NAME] = row[INPUT_REGION_COLUMN_NAME].trim()
+        sendingRow[OUTPUT_REGION_COLUMN_NAME] = region
         sendingRow[OUTPUT_WEBSITE_COLUMN_NAME] = website;
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
         if(qualif)
