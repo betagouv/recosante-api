@@ -33,7 +33,7 @@ const CANAL_SMS = 'SMS'
 const INPUT_PHONE_NUMBER_COLUMN_NAME = `Si vous avez choisi par SMS, veuillez renseigner votre numéro de téléphone`
 const OUTPUT_PHONE_NUMBER_COLUMN_NAME = `Téléphone`
 
-const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les notifications ? `
+const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les recommandations ? `
 const OUTPUT_FREQUENCY_COLUMN_NAME = `Fréquence`
 
 // in the spreadsheet, casing is inconsistent
@@ -175,12 +175,34 @@ function makeSendingCSVs(file){
         });
         reader.readAsText(file);
     }))
+    // parse csv and produce responses as an array of objects
     .then(textContent => {
-        const formResponses = d3.csvParse(textContent, r => {
-            r[INPUT_FREQUENCY_COLUMN_NAME] = r[INPUT_FREQUENCY_COLUMN_NAME].toLowerCase();
+        //console.log('text content', textContent)
+
+        // remove the 2 first rows because they're the form title and some questions
+        const framaFormsRows = d3.tsvParseRows(textContent, r => {
+            //r[INPUT_FREQUENCY_COLUMN_NAME] = r[INPUT_FREQUENCY_COLUMN_NAME].toLowerCase();
             return r;
-        })//.slice(0, 10)
-        //console.log('input file', file, content)
+        }).slice(2);
+        
+        const columns = framaFormsRows[0];
+
+        // Rename some columns for clarity
+        const FRAMAFORMS_AUCUN_EXTERIEUR_COLUMN = "Aucun";
+        const AUCUN_EXTERIEUR_COLUMN = "Aucun extérieur";
+        columns[columns.indexOf(FRAMAFORMS_AUCUN_EXTERIEUR_COLUMN)] = AUCUN_EXTERIEUR_COLUMN
+
+        const FRAMAFORMS_CONSENT_COLUMN = "Oui";
+        const CONSENT_COLUMN = "Consentement";
+        columns[columns.indexOf(FRAMAFORMS_CONSENT_COLUMN)] = CONSENT_COLUMN;
+
+        return framaFormsRows.slice(1).map(row => {
+            return Object.fromEntries(row.map((datum, i) => [columns[i], datum]))
+        })
+    })
+    // process from responses to produce sending files
+    .then(formResponses => {
+        console.log('formResponses', formResponses)
 
         const sendingFilesFormResponsesMap = new Map([
             makeSendingFileMapEntry(FREQUENCY_EVERYDAY, CANAL_EMAIL, formResponses),
@@ -206,11 +228,9 @@ document.addEventListener('DOMContentLoaded', e => {
         // replace <input> with list of files
         const file = e.target.files[0];
 
-        const sendingCSVTextP = makeSendingCSVs(file)
-        
         const ul = document.createElement('ul');
 
-        sendingCSVTextP.then(sendingCSVMap => {
+        makeSendingCSVs(file).then(sendingCSVMap => {
             // console.log('output sendingCSVMap', sendingCSVMap)
 
             for(const [filename, csvString] of sendingCSVMap){
@@ -229,7 +249,7 @@ document.addEventListener('DOMContentLoaded', e => {
 
             output.append(ul)
         })
-    })
 
+    })
 
 }, {once: true})
