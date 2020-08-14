@@ -1,7 +1,9 @@
 const OUI = `Oui`;
 const NON = `Non`;
 
-const INPUT_ALLERGIQUE_COLUMN_NAME = 'Êtes-vous allergique aux pollens (graminées, ambroisie, etc.) ?'
+const CHECK = `X`;
+
+const INPUT_ALLERGIQUE_COLUMN_NAME = 'Êtes-vous allergique aux pollens ?'
 const OUTPUT_ALLERGIQUE_COLUMN_NAME = 'Allergies'
 
 const INPUT_EMAIL_COLUMN_NAME = 'Adresse e-mail'
@@ -9,36 +11,49 @@ const OUTPUT_EMAIL_COLUMN_NAME = 'Mail'
 
 const OUTPUT_REGION_COLUMN_NAME = 'Région'
 
-const INPUT_VILLE_COLUMN_NAME = 'Dans quelle ville habitez-vous ? '
+const INPUT_VILLE_COLUMN_NAME = 'Dans quelle ville vivez-vous ?'
 const OUTPUT_VILLE_COLUMN_NAME = 'Ville'
 
-const INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME = `Vivez-vous avec une pathologie respiratoire ?`
+const INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME = `Vivez-vous avec une pathologie respiratoire ? `
 const OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME = `Pathologie_respiratoire`;
 
-const INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME = `Pratiquez-vous une activité sportive ? `
+const INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME = `Pratiquez-vous une activité sportive au moins une fois par semaine ?`
 const OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME = `Activité_sportive`
 
-const INPUT_TRANSPORT_COLUMN_NAME = `Quel(s) moyen(s) de transport utilisez-vous pour vos déplacements ?`
+const INPUT_CYCLISTE_COLUMN_NAME = `Vélo`
 const OUTPUT_CYCLISTE_COLUMN_NAME = `Cycliste`
+
+const INPUT_AUTOMOBILISTE_COLUMN_NAME = `Voiture`
 const OUTPUT_AUTOMOBILISTE_COLUMN_NAME = `Automobiliste`
 
-const INPUT_FUMEUR_COLUMN_NAME = `Êtes-vous fumeur.euse (cigarette, cigare, cigarette électronique) ?`
+const INPUT_FUMEUR_COLUMN_NAME = `Êtes-vous fumeur.euse ?`
 const OUTPUT_FUMEUR_COLUMN_NAME = `Fumeur`
 
-const INPUT_CANAL_COLUMN_NAME = `Souhaitez-vous recevoir les recommandations Ecosanté par :`
+const INPUT_CANAL_COLUMN_NAME = `Souhaitez-vous recevoir les recommandations par :`
 const OUTPUT_CANAL_COLUMN_NAME = `Format`
 const CANAL_EMAIL = 'Mail'
 const CANAL_SMS = 'SMS'
 
-const INPUT_PHONE_NUMBER_COLUMN_NAME = `Si vous avez choisi par SMS, veuillez renseigner votre numéro de téléphone`
+const INPUT_PHONE_NUMBER_COLUMN_NAME = `Numéro de téléphone`
 const OUTPUT_PHONE_NUMBER_COLUMN_NAME = `Téléphone`
 
 const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les recommandations ? `
 const OUTPUT_FREQUENCY_COLUMN_NAME = `Fréquence`
 
-// in the spreadsheet, casing is inconsistent
-const INPUT_FREQUENCY_EVERYDAY = `tous les jours`.toLowerCase()
-const INPUT_FREQUENCY_BAD_AIR_QUALITY = `Lorsque la qualité de l'air est mauvaise`.toLowerCase()
+const INPUT_FREQUENCY_EVERYDAY = `Tous les jours`
+const INPUT_FREQUENCY_BAD_AIR_QUALITY = `Lorsque la qualité de l'air est mauvaise`
+
+/*
+Currently unused data:
+{
+  "Balcon ou terrasse": "X",
+  "Jardin": "",
+  "Aucun extérieur": "",
+  "Transport en commun": "X",
+  "Pratiquez-vous une Activité Physique Adaptée au moins une fois par semaine ?  ": "Oui",
+  "Vivez-vous avec des enfants ?": "Non",
+}
+*/
 
 const FREQUENCY_EVERYDAY = `Tous-les-jours`
 const FREQUENCY_BAD_AIR_QUALITY = `Air-mauvais`
@@ -54,7 +69,7 @@ const OUTPUT_WEBSITE_COLUMN_NAME = `Lien_AASQA`
 const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
 const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
 
-// Per  Arrêté du 22 juillet 2004 relatif aux indices de la qualité de l'air (article 6)
+// Per Arrêté du 22 juillet 2004 relatif aux indices de la qualité de l'air (article 6)
 const QUALIFICATIF_TRES_BON = `Très bon`
 const QUALIFICATIF_BON = `Bon`
 const QUALIFICATIF_MOYEN = `Moyen`
@@ -129,16 +144,19 @@ function makeSendingRow(row){
 
         sendingRow[OUTPUT_PHONE_NUMBER_COLUMN_NAME] = row[INPUT_PHONE_NUMBER_COLUMN_NAME].trim()
 
-        sendingRow[OUTPUT_REGION_COLUMN_NAME] = region
-        sendingRow[OUTPUT_WEBSITE_COLUMN_NAME] = website;
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
         if(qualif)
             sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
+
+        sendingRow[OUTPUT_REGION_COLUMN_NAME] = region
+        sendingRow[OUTPUT_WEBSITE_COLUMN_NAME] = website;
+        
         sendingRow[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = row[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
         sendingRow[OUTPUT_ALLERGIQUE_COLUMN_NAME] = row[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
         sendingRow[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = row[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
-        sendingRow[OUTPUT_CYCLISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Vélo') ? OUI : NON;
-        sendingRow[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
+
+        sendingRow[OUTPUT_CYCLISTE_COLUMN_NAME] = row[INPUT_CYCLISTE_COLUMN_NAME] === CHECK ? OUI : NON;
+        sendingRow[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = row[INPUT_AUTOMOBILISTE_COLUMN_NAME] === CHECK ? OUI : NON;
         sendingRow[OUTPUT_FUMEUR_COLUMN_NAME] = row[INPUT_FUMEUR_COLUMN_NAME].trim()
 
         // Adding empty columns for convenience
@@ -180,10 +198,7 @@ function makeSendingCSVs(file){
         //console.log('text content', textContent)
 
         // remove the 2 first rows because they're the form title and some questions
-        const framaFormsRows = d3.tsvParseRows(textContent, r => {
-            //r[INPUT_FREQUENCY_COLUMN_NAME] = r[INPUT_FREQUENCY_COLUMN_NAME].toLowerCase();
-            return r;
-        }).slice(2);
+        const framaFormsRows = d3.tsvParseRows(textContent).slice(2);
         
         const columns = framaFormsRows[0];
 
