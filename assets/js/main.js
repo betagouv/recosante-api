@@ -18,6 +18,11 @@ const OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME = `Pathologie_respiratoire`;
 const INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME = `Pratiquez-vous une activité sportive ? `
 const OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME = `Activité_sportive`
 
+const INPUT_ACTIVITE_MAISON_COLUMN_NAME = `Pratiquez-vous au moins une fois par semaine les activités suivantes ?`
+const OUTPUT_JARDINAGE_COLUMN_NAME = `Jardinage`
+const OUTPUT_BRICOLAGE_COLUMN_NAME = `Bricolage`
+const OUTPUT_MÉNAGE_COLUMN_NAME = `Ménage`
+
 const INPUT_TRANSPORT_COLUMN_NAME = `Quel(s) moyen(s) de transport utilisez-vous pour vos déplacements ?`
 const OUTPUT_CYCLISTE_COLUMN_NAME = `Cycliste`
 const OUTPUT_AUTOMOBILISTE_COLUMN_NAME = `Automobiliste`
@@ -142,8 +147,14 @@ function makeSendingRow(row){
         sendingRow[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = row[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
         sendingRow[OUTPUT_ALLERGIQUE_COLUMN_NAME] = row[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
         sendingRow[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = row[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
+        
+        sendingRow[OUTPUT_JARDINAGE_COLUMN_NAME] = row[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Jardinage') ? OUI : NON;
+        sendingRow[OUTPUT_BRICOLAGE_COLUMN_NAME] = row[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Bricolage') ? OUI : NON;
+        sendingRow[OUTPUT_MÉNAGE_COLUMN_NAME] = row[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Ménage') ? OUI : NON;
+
         sendingRow[OUTPUT_CYCLISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Vélo') ? OUI : NON;
         sendingRow[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
+        
         sendingRow[OUTPUT_FUMEUR_COLUMN_NAME] = row[INPUT_FUMEUR_COLUMN_NAME].trim()
 
         // Adding empty columns for convenience
