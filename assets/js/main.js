@@ -123,7 +123,12 @@ function makeSendingRow(row){
         //console.log('indiceATMODate', indiceATMODate, ville)
         const {indice} = air
 
-        const qualif = INDICE_ATMO_TO_EMAIL_QUALIFICATIF[indice]
+        const qualif = INDICE_ATMO_TO_EMAIL_QUALIFICATIF[indice] || ''
+
+        // if people only want recommandations only in case of bad air, list them only if indice is 8-10
+        if(row[INPUT_FREQUENCY_COLUMN_NAME] === INPUT_FREQUENCY_BAD_AIR_QUALITY && indice && parseInt(indice) < 8){
+            return undefined
+        }
 
         sendingRow[OUTPUT_EMAIL_COLUMN_NAME] = row[INPUT_EMAIL_COLUMN_NAME].trim()
 
@@ -191,9 +196,10 @@ function makeSendingCSVs(file){
 
         return Promise.all([...sendingFilesFormResponsesMap].map(([filename, responses]) => {
             return Promise.all(responses.map(makeSendingRow))
-            .then(sendingRows => [filename, d3.csvFormat(sendingRows)])
+            .then(sendingRows => sendingRows.filter(r => r !== undefined))
+            .then(sendingRows => sendingRows.length >= 1 ? [filename, d3.csvFormat(sendingRows)] : undefined)
         }))
-        .then(fileEntries => new Map(fileEntries))
+        .then(fileEntries => new Map(fileEntries.filter(e => e !== undefined)))
     })
     
 }
