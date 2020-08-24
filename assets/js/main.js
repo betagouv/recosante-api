@@ -110,10 +110,10 @@ function makeSendingRow(row){
         return d3.json(`https://app-ed2e0e03-0bd3-4eb4-8326-000288aeb6a0.cleverapps.io/forecast?insee=${codeINSEE}`)
         .then(({data, metadata: {region: {website, nom}}}) => {
             if(!data || data.length === 0)
-                throw new Error('Pas trouvé !')
+                console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, row)
 
             return {
-                air: data.find(res => res.date === TODAY_DATE_STRING),
+                air: Array.isArray(data) && data.find(res => res.date === TODAY_DATE_STRING) || undefined,
                 website,
                 region: nom
             }
@@ -138,25 +138,21 @@ function makeSendingRow(row){
         }
 
         sendingRow[OUTPUT_EMAIL_COLUMN_NAME] = row[INPUT_EMAIL_COLUMN_NAME].trim()
-
         sendingRow[OUTPUT_PHONE_NUMBER_COLUMN_NAME] = row[INPUT_PHONE_NUMBER_COLUMN_NAME].trim()
 
         sendingRow[OUTPUT_REGION_COLUMN_NAME] = region
         sendingRow[OUTPUT_WEBSITE_COLUMN_NAME] = website;
         sendingRow[OUTPUT_VILLE_COLUMN_NAME] = ville
-        if(qualif)
-            sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
+        sendingRow[OUTPUT_QUALITE_AIR_COLUMN_NAME] = qualif
+
         sendingRow[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = row[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
         sendingRow[OUTPUT_ALLERGIQUE_COLUMN_NAME] = row[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
         sendingRow[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = row[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
-        
         sendingRow[OUTPUT_JARDINAGE_COLUMN_NAME] = row[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Jardinage') ? OUI : NON;
         sendingRow[OUTPUT_BRICOLAGE_COLUMN_NAME] = row[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Bricolage') ? OUI : NON;
         sendingRow[OUTPUT_MÉNAGE_COLUMN_NAME] = row[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Ménage') ? OUI : NON;
-
         sendingRow[OUTPUT_CYCLISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Vélo') ? OUI : NON;
         sendingRow[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = row[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
-        
         sendingRow[OUTPUT_FUMEUR_COLUMN_NAME] = row[INPUT_FUMEUR_COLUMN_NAME].trim()
 
         // Adding empty columns for convenience
