@@ -3,8 +3,14 @@ import {
     INPUT_VILLE_COLUMN_NAME,
     INPUT_FREQUENCY_COLUMN_NAME,
     INPUT_FREQUENCY_EVERYDAY,
-    INPUT_FREQUENCY_BAD_AIR_QUALITY
+    INPUT_FREQUENCY_BAD_AIR_QUALITY,
+    OUTPUT_RECOMMANDATION_COLUMN_NAME,
+    OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME
 } from './subscriberToReceipient.js'
+
+
+const RECOMMANDATION_COLUMN = 'Recommandation';
+const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
 
 
 const INPUT_CANAL_COLUMN_NAME = `Souhaitez-vous recevoir les recommandations par : *`
@@ -20,7 +26,7 @@ const FILENAME_TO_INPUT_FREQ = {
 }
 
 
-function makeSendingRow(row){
+function makeSendingRow(row, recommandations){
     const TODAY_DATE_STRING = (new Date()).toISOString().slice(0, 10)
 
     const ville = row[INPUT_VILLE_COLUMN_NAME].trim();
@@ -46,7 +52,7 @@ function makeSendingRow(row){
     .catch(err => {
         console.warn('Code INSEE pour', ville, 'non trouvé', row, err)
     })
-    .then(airAPIResult => subscriberToReceipient(row, airAPIResult))
+    .then(airAPIResult => subscriberToReceipient(row, airAPIResult, recommandations))
 }
 
 function makeSendingFileName(freq, canal){
@@ -65,10 +71,46 @@ function makeSendingFileMapEntry(freq, canal, formResponses){
     ]
 }
 
+function isRelevantReco(reciepient, reco){
+    throw `TODO`
+    return true;
+}
 
-export default function makeSendingCSVs(file){
+
+function pickRandomRelevantReco(reciepient, recommandations){
+    let attemptedRecommandation;
+
+    while(!attemptedRecommandation || !isRelevantReco(reciepient, attemptedRecommandation)){
+        attemptedRecommandation = recommandations[Math.floor(Math.random()*recommandations.length)]
+    }
     
-    return (new Promise( (resolve, reject) => {
+    return attemptedRecommandation;
+}
+
+
+function assignMatchingRecommandations(reciepients, recommandations){
+    // Tant qu'il y encore au moins une personne qui n'a pas de reco attribuée
+    while(reciepients.find(r => r[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined)){
+        // prendre une de ces personnes
+        const reciepientWithoutReco = reciepients.find(r => r[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined)
+
+        // trouver une reco aléatoire qui correspond à P
+        const recoRelevantForThisReciepient = pickRandomRelevantReco(reciepientWithoutReco, recommandations)
+
+        // attribuer R à P et à toutes les personnes qui n'ont pas encore de reco attribuée et pour qui la reco fonctionne
+        for(const reciepient of reciepients){
+            if(reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined && isRelevantReco(reciepient, recoRelevantForThisReciepient)){
+                reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_COLUMN]
+                reciepient[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_DETAILS_COLUMN]
+            }
+        }
+    }
+}
+
+
+export default function makeSendingCSVs(file, recommandations){
+    
+    return (new Promise( (resolve) => {
         const reader = new FileReader();  
         reader.addEventListener("loadend", e => {
             resolve(reader.result);
@@ -89,18 +131,21 @@ export default function makeSendingCSVs(file){
             makeSendingFileMapEntry(FREQUENCY_BAD_AIR_QUALITY, CANAL_SMS, formResponses),
         ])
 
+        throw `TODO
+        - perform matching and add actual values for recomm & précisions
+            - create a findMatchingRecommandation(subscriber)
+                - create a subbscriberRecommandationMatch(subscriber, recomm): bool
+            - impl algo of issue
+        `
+        
+
         return Promise.all([...sendingFilesFormResponsesMap].map(([filename, responses]) => {
-            return Promise.all(responses.map(makeSendingRow))
+            return Promise.all(responses.map(r => makeSendingRow(r)))
             .then(sendingRows => sendingRows.filter(r => r !== undefined))
-            /*.then(sendingRows => {
-                throw `TODO add recommandations
-                - load recommz csv
-                - pass it to makeSendingCSVs as argument
-                - create a function that takes a single row and all recommz and pick a corresponding reco 
-                - fills reco + details
-                
-                `
-            })*/
+            .then(sendingRows => {
+                assignMatchingRecommandations(sendingRows, recommandations)
+                return sendingRows
+            })
             .then(sendingRows => sendingRows.length >= 1 ? [filename, d3.csvFormat(sendingRows)] : undefined)
         }))
         .then(fileEntries => new Map(fileEntries.filter(e => e !== undefined)))

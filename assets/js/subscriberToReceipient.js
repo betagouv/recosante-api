@@ -38,8 +38,8 @@ const OUTPUT_PHONE_NUMBER_COLUMN_NAME = `Téléphone`
 const OUTPUT_QUALITE_AIR_COLUMN_NAME = `QUALITE_AIR`
 const OUTPUT_WEBSITE_COLUMN_NAME = `Lien_AASQA`
 
-const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
-const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
+export const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
+export const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
 
 export const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les recommandations ? *`
 
@@ -118,9 +118,6 @@ export default function subscriberToReceipient(subscriber, airAPIResult){
     receipient[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = subscriber[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
     receipient[OUTPUT_FUMEUR_COLUMN_NAME] = subscriber[INPUT_FUMEUR_COLUMN_NAME].trim()
 
-    // Adding empty columns for convenience
-    receipient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = ' '
-    receipient[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = ' '
 
     return receipient;
 }

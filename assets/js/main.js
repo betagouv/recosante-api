@@ -1,5 +1,38 @@
 import makeSendingCSVs from './makeSendingCSVs.js'
 
+import Store from 'https://cdn.jsdelivr.net/gh/DavidBruant/baredux@master/main.js'
+
+const store = new Store({
+    state: {
+        recommandations: [],
+        subscribers: [],
+        communeToAirQuality: new Map(),
+        communeToRegion: new Map(),
+    }, 
+    mutations: {
+        setRecommandations(state, recommz){
+            state.recommandations = recommz;
+        },
+        setSubscribers(state, subscribers){
+            state.subscribers = subscribers;
+        },
+        addCommuneAirQuality(state, commune, airQuality){
+            state.communeToAirQuality.set(commune, airQuality)
+        },
+        addCommuneAirRegion(state, commune, region){
+            state.communeToRegion.set(commune, region)
+        }
+    }
+})
+
+const recommsReadyP = d3.csv('./data/recommandations.csv')
+    .then(recommandations => {
+        console.log('recommz', recommandations)
+
+        store.mutations.setRecommandations(recommandations)
+    })
+
+
 document.addEventListener('DOMContentLoaded', e => {
     const input = document.body.querySelector('.input input[type="file"]');
     const output = document.body.querySelector('.output');
@@ -8,7 +41,7 @@ document.addEventListener('DOMContentLoaded', e => {
         // replace <input> with list of files
         const file = e.target.files[0];
 
-        const sendingCSVTextP = makeSendingCSVs(file)
+        const sendingCSVTextP = recommsReadyP.then(() => makeSendingCSVs(file, store.state.recommandations))
         
         const ul = document.createElement('ul');
 
