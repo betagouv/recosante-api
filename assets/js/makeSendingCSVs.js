@@ -1,17 +1,18 @@
+import subscriberToReceipient from './subscriberToReceipient.js'
 import {
-    default as subscriberToReceipient,
     INPUT_VILLE_COLUMN_NAME,
     INPUT_FREQUENCY_COLUMN_NAME,
     INPUT_FREQUENCY_EVERYDAY,
     INPUT_FREQUENCY_BAD_AIR_QUALITY,
     OUTPUT_RECOMMANDATION_COLUMN_NAME,
     OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME
-} from './subscriberToReceipient.js'
+} from './subscriberReceipientConstants.js'
+
+import isRelevantReco from './isRelevantReco.js'
 
 
 const RECOMMANDATION_COLUMN = 'Recommandation';
 const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
-
 
 const INPUT_CANAL_COLUMN_NAME = `Souhaitez-vous recevoir les recommandations par : *`
 const CANAL_EMAIL = 'Mail'
@@ -71,10 +72,7 @@ function makeSendingFileMapEntry(freq, canal, formResponses){
     ]
 }
 
-function isRelevantReco(reciepient, reco){
-    throw `TODO`
-    return true;
-}
+
 
 
 function pickRandomRelevantReco(reciepient, recommandations){
@@ -97,9 +95,12 @@ function assignMatchingRecommandations(reciepients, recommandations){
         // trouver une reco aléatoire qui correspond à P
         const recoRelevantForThisReciepient = pickRandomRelevantReco(reciepientWithoutReco, recommandations)
 
+        console.log('picked reco', recoRelevantForThisReciepient, reciepientWithoutReco)
+
         // attribuer R à P et à toutes les personnes qui n'ont pas encore de reco attribuée et pour qui la reco fonctionne
         for(const reciepient of reciepients){
             if(reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined && isRelevantReco(reciepient, recoRelevantForThisReciepient)){
+                console.log('applied')
                 reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_COLUMN]
                 reciepient[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_DETAILS_COLUMN]
             }
@@ -130,14 +131,6 @@ export default function makeSendingCSVs(file, recommandations){
             makeSendingFileMapEntry(FREQUENCY_BAD_AIR_QUALITY, CANAL_EMAIL, formResponses),
             makeSendingFileMapEntry(FREQUENCY_BAD_AIR_QUALITY, CANAL_SMS, formResponses),
         ])
-
-        throw `TODO
-        - perform matching and add actual values for recomm & précisions
-            - create a findMatchingRecommandation(subscriber)
-                - create a subbscriberRecommandationMatch(subscriber, recomm): bool
-            - impl algo of issue
-        `
-        
 
         return Promise.all([...sendingFilesFormResponsesMap].map(([filename, responses]) => {
             return Promise.all(responses.map(r => makeSendingRow(r)))
