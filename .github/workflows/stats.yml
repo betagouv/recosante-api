@@ -13,12 +13,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - run : pip install ruamel.yaml
+            - run: pip install ruamel.yaml
+            - run: ls -al
             - name: Generate stats.yml
               shell: bash
               env:
                 STATS_URL: ${{ secrets.StatsURL }}
-              run: ./github/workflows/stats.py "$STATS_URL"
+              run: python .github/workflows/stats.py "$STATS_URL"
             - name: Push changes
               uses: ad-m/github-push-action@master
               with:
