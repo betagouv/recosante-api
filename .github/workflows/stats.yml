@@ -18,7 +18,7 @@ jobs:
               shell: bash
               env:
                 STATS_URL: ${{ secrets.StatsURL }}
-              run: python3 .github/workflows/stats.py "$STATS_URL"
+              run: .github/workflows/stats.py "$STATS_URL"
             - name: Push changes
               uses: ad-m/github-push-action@master
               with:
