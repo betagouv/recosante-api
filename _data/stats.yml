@@ -1,0 +1,61 @@
+acquisition:
+  titre: Nouvelles réponses au questionnaire (acquisition)
+  total: 70
+  data:
+  - mois: juin 2020
+    valeur: 2
+  - mois: juillet 2020
+    valeur: 27
+  - mois: août 2020
+    valeur: 41
+actifs:
+  titre: Utilisateurs actifs (inscriptions - désinscriptions)
+  total: 68
+  data:
+  - mois: juin 2020
+    valeur: 2
+  - mois: juillet 2020
+    valeur: 27
+  - mois: août 2020
+    valeur: 39
+sms:
+  titre: Nombre de personnes ayant choisi l'information par SMS
+  total: 23
+  data:
+  - mois: juin 2020
+    valeur: 0
+  - mois: juillet 2020
+    valeur: 13
+  - mois: août 2020
+    valeur: 10
+mails:
+  titre: Nombre de personnes ayant choisi l'information par mail
+  total: 47
+  data:
+  - mois: juin 2020
+    valeur: 2
+  - mois: juillet 2020
+    valeur: 14
+  - mois: août 2020
+    valeur: 31
+quotidienne:
+  titre: Nombre de personnes ayant choisi l'information quotidienne
+  total: 36
+  data:
+  - mois: juin 2020
+    valeur: 2
+  - mois: juillet 2020
+    valeur: 14
+  - mois: août 2020
+    valeur: 20
+mauvaise_qa:
+  titre: Nombre de personnes ayant choisi l'information en cas de mauvaise qualité
+    de l'air
+  total: 34
+  data:
+  - mois: juin 2020
+    valeur: 0
+  - mois: juillet 2020
+    valeur: 13
+  - mois: août 2020
+    valeur: 21

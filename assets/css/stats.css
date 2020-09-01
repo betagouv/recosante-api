@@ -1,0 +1,33 @@
+h1 > .number {
+    color: blue;
+    font-size: 1.5em;
+}
+
+h1 {
+    text-align: center;
+}
+
+#total_subscriptions {
+    width: 75%;
+}
+
+.user_pref > div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.user_pref > div > div {
+    flex: 0 0 auto;
+    width: 50%;
+    padding: 0px 10px;
+}
+
+@media (max-width: 565px) {
+    .user_pref > div {
+        flex-direction: column;
+    }
+    .user_pref > div > div {
+        width: 100%;
+        padding: 0;
+    }
+}

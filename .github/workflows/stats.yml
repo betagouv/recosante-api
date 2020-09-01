@@ -1,0 +1,25 @@
+name: Stats
+
+on:
+    schedule:
+        - cron: 0 0 * * *
+    push:
+        branches:
+            - gh-pages
+
+jobs:
+    build:
+        name: getstats
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - run : pip install ruamel.yaml
+            - name: Generate stats.yml
+              shell: bash
+              env:
+                STATS_URL: ${{ secrets.StatsURL }}
+              run: ./github/workflows/stats.py "$STATS_URL"
+            - name: Push changes
+              uses: ad-m/github-push-action@master
+              with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
