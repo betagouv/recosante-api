@@ -13,7 +13,8 @@ import {
     INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME,
     OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME,
     
-    INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME ,
+    INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME,
+    INPUT_APA_COLUMN_NAME,
     OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME,
     
     INPUT_ACTIVITE_MAISON_COLUMN_NAME,
@@ -38,41 +39,8 @@ import {
     INPUT_FREQUENCY_BAD_AIR_QUALITY,
 } from './subscriberReceipientConstants.js'
 
+import {INDICE_ATMO_TO_EMAIL_QUALIFICATIF} from './qualiteAirConstants.js';
 
-// Per  Arrêté du 22 juillet 2004 relatif aux indices de la qualité de l'air (article 6)
-const QUALIFICATIF_TRES_BON = `Très bon`
-const QUALIFICATIF_BON = `Bon`
-const QUALIFICATIF_MOYEN = `Moyen`
-const QUALIFICATIF_MÉDIOCRE = `Médiocre`
-const QUALIFICATIF_MAUVAIS = `Mauvais`
-const QUALIFICATIF_TRÈS_MAUVAIS = `Très mauvais`
-
-const INDICE_ATMO_TO_QUALIFICATIF = {
-    1: QUALIFICATIF_TRES_BON,
-    2: QUALIFICATIF_TRES_BON,
-    3: QUALIFICATIF_BON,
-    4: QUALIFICATIF_BON,
-    5: QUALIFICATIF_MOYEN,
-    6: QUALIFICATIF_MÉDIOCRE,
-    7: QUALIFICATIF_MÉDIOCRE,
-    8: QUALIFICATIF_MAUVAIS,
-    9: QUALIFICATIF_MAUVAIS,
-    10: QUALIFICATIF_TRÈS_MAUVAIS,
-}
-
-const LEGAL_QUALIFICATIF_TO_EMAIL_QUALIFICATIF = {
-    [QUALIFICATIF_TRES_BON]: `très bonne`,
-    [QUALIFICATIF_BON]: `bonne`,
-    [QUALIFICATIF_MOYEN]: `moyenne`,
-    [QUALIFICATIF_MÉDIOCRE]: `médiocre`,
-    [QUALIFICATIF_MAUVAIS]: `mauvaise`,
-    [QUALIFICATIF_TRÈS_MAUVAIS]: `très mauvaise`,
-}
-
-const INDICE_ATMO_TO_EMAIL_QUALIFICATIF = Object.fromEntries(
-    Object.entries(INDICE_ATMO_TO_QUALIFICATIF)
-        .map(([indice, legalQualif]) => [indice, LEGAL_QUALIFICATIF_TO_EMAIL_QUALIFICATIF[legalQualif]])
-)
 
 export default function subscriberToReceipient(subscriber, airAPIResult){
     const receipient = Object.create(null);
@@ -98,7 +66,9 @@ export default function subscriberToReceipient(subscriber, airAPIResult){
 
     receipient[OUTPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME] = subscriber[INPUT_PATHOLOGIE_RESPIRATOIRE_COLUMN_NAME].trim()
     receipient[OUTPUT_ALLERGIQUE_COLUMN_NAME] = subscriber[INPUT_ALLERGIQUE_COLUMN_NAME].trim().slice(0, 3)
-    receipient[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME].trim() === NON ? NON : OUI;
+    receipient[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = 
+        subscriber[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] === OUI || subscriber[INPUT_APA_COLUMN_NAME] === OUI ? 
+            OUI : NON;
     receipient[OUTPUT_JARDINAGE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Jardinage') ? OUI : NON;
     receipient[OUTPUT_BRICOLAGE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Bricolage') ? OUI : NON;
     receipient[OUTPUT_MÉNAGE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Ménage') ? OUI : NON;

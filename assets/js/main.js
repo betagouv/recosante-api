@@ -1,6 +1,10 @@
-import makeSendingCSVs from './makeSendingCSVs.js'
-
 import Store from 'https://cdn.jsdelivr.net/gh/DavidBruant/baredux@master/main.js'
+
+import makeSendingCSVs from './makeSendingCSVs.js'
+import {RECO_RECOMMANDABILITÉ_COLUMN, RECO_RECOMMANDABILITÉ_UTILISABLE} from './recommandationConstants.js'
+
+
+
 
 const store = new Store({
     state: {
@@ -41,7 +45,10 @@ document.addEventListener('DOMContentLoaded', e => {
         // replace <input> with list of files
         const file = e.target.files[0];
 
-        const sendingCSVTextP = recommsReadyP.then(() => makeSendingCSVs(file, store.state.recommandations))
+        // filter out unusable recos
+        const usableRecos = store.state.recommandations.filter(r => r[RECO_RECOMMANDABILITÉ_COLUMN] === RECO_RECOMMANDABILITÉ_UTILISABLE)
+
+        const sendingCSVTextP = recommsReadyP.then(() => makeSendingCSVs(file, usableRecos))
         
         const ul = document.createElement('ul');
 
