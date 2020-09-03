@@ -24,8 +24,10 @@ if __name__ == '__main__':
     CSV_URL = sys.argv[1]
 
     with requests.Session() as s:
-        download = s.get(CSV_URL)
-        decoded_content = download.content.decode('utf-8')
+        r = s.get(CSV_URL)
+        r.raise_for_status()
+
+        decoded_content = r.content.decode('utf-8')
 
     cr = list(csv.reader(decoded_content.splitlines(), delimiter=','))
     yaml = YAML()
