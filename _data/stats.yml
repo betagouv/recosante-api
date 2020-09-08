@@ -1,6 +1,6 @@
 acquisition:
   titre: Nouvelles réponses au questionnaire (acquisition)
-  total: 70
+  total: 77
   data:
   - mois: juin 2020
     valeur: 2
@@ -8,9 +8,11 @@ acquisition:
     valeur: 27
   - mois: août 2020
     valeur: 41
+  - mois: septembre 2020
+    valeur: 7
 actifs:
   titre: Utilisateurs actifs (inscriptions - désinscriptions)
-  total: 68
+  total: 75
   data:
   - mois: juin 2020
     valeur: 2
@@ -18,6 +20,8 @@ actifs:
     valeur: 27
   - mois: août 2020
     valeur: 39
+  - mois: septembre 2020
+    valeur: 7
 sms:
   titre: Nombre de personnes ayant choisi l'information par SMS
   total: 23
@@ -28,6 +32,8 @@ sms:
     valeur: 13
   - mois: août 2020
     valeur: 10
+  - mois: septembre 2020
+    valeur: 5
 mails:
   titre: Nombre de personnes ayant choisi l'information par mail
   total: 47
@@ -38,6 +44,8 @@ mails:
     valeur: 14
   - mois: août 2020
     valeur: 31
+  - mois: septembre 2020
+    valeur: 2
 quotidienne:
   titre: Nombre de personnes ayant choisi l'information quotidienne
   total: 36
@@ -48,6 +56,8 @@ quotidienne:
     valeur: 14
   - mois: août 2020
     valeur: 20
+  - mois: septembre 2020
+    valeur: 4
 mauvaise_qa:
   titre: Nombre de personnes ayant choisi l'information en cas de mauvaise qualité
     de l'air
@@ -59,3 +69,5 @@ mauvaise_qa:
     valeur: 13
   - mois: août 2020
     valeur: 21
+  - mois: septembre 2020
+    valeur: 3
