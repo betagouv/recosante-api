@@ -20,7 +20,7 @@ jobs:
               env:
                 STATS_URL: ${{ secrets.StatsURL }}
               run: .github/workflows/stats.py "$STATS_URL"
-            name: Commit files
+            - name: Commit files
               run: |
                 git config --local user.email "action@github.com"
                 git config --local user.name "GitHub Action"
