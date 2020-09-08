@@ -6,7 +6,8 @@ on:
     push:
         branches:
             - gh-pages
-
+        paths-ignore:
+            - _data/stats.yml
 jobs:
     build:
         name: getstats
@@ -19,6 +20,12 @@ jobs:
               env:
                 STATS_URL: ${{ secrets.StatsURL }}
               run: .github/workflows/stats.py "$STATS_URL"
+            name: Commit files
+              run: |
+                git config --local user.email "action@github.com"
+                git config --local user.name "GitHub Action"
+                git add _data/stats.yml
+                git commit -m "Mise à jour des stats"
             - name: Push changes
               uses: ad-m/github-push-action@master
               with:
