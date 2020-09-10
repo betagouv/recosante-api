@@ -1,6 +1,6 @@
 acquisition:
   titre: Nouvelles réponses au questionnaire (acquisition)
-  total: 81
+  total: 80
   data:
   - mois: juin 2020
     valeur: 2
@@ -9,7 +9,7 @@ acquisition:
   - mois: août 2020
     valeur: 41
   - mois: septembre 2020
-    valeur: 11
+    valeur: 10
 actifs:
   titre: Utilisateurs actifs (inscriptions - désinscriptions)
   total: 79
