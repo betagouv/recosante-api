@@ -1,13 +1,15 @@
 import Store from 'https://cdn.jsdelivr.net/gh/DavidBruant/baredux@master/main.js'
 import { html, render } from 'https://unpkg.com/htm/preact/standalone.module.js'
+import {
+    RECOMMANDATION_COLUMN,
+    RECOMMANDATION_SMS_COLUMN,
+    RECOMMANDATION_DETAILS_COLUMN
+} from './makeSendingCSVs.js'
 
 const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 
 const RECOMMANDABILITÉ_COLUMN = 'Recommandabilité'
 const RECOMMANDABILITÉ_UTILISABLE = `Utilisable`
-
-const RECOMMANDATION_COLUMN = 'Recommandation';
-const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
 
 const AIR_QUALITY_COLUMN = 'QA mauvaise'
 const AIR_QUALITY_BAD = `Qualité de l'air mauvaise`
@@ -98,6 +100,7 @@ function Recommandation({recommandation}){
     const { 
         [RECOMMANDATION_COLUMN]: text, 
         [RECOMMANDATION_DETAILS_COLUMN]: details, 
+        [RECOMMANDATION_SMS_COLUMN]: sms, 
         [RECOMMANDABILITÉ_COLUMN]: recommandabilité
     } = recommandation;
 
@@ -105,7 +108,8 @@ function Recommandation({recommandation}){
         html`<li class="recommandability-${recommandabilité.toLowerCase()}">
             <details>
                 <summary>${text}</summary>
-                ${details}
+                <p class="detail-recomm">${details}</p>
+                <p class="sms-recomm">${sms}</p>
             </details>
         </li>` : 
         html`<li class="recommandability-${recommandabilité.toLowerCase()}">${text}</li>`
