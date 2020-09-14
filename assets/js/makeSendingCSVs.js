@@ -28,10 +28,10 @@ const FILENAME_TO_INPUT_FREQ = {
 }
 
 
-function makeSendingRow(row, recommandations){
+function makeReciepient(subscriber, recommandations){
     const TODAY_DATE_STRING = (new Date()).toISOString().slice(0, 10)
 
-    const ville = row[INPUT_VILLE_COLUMN_NAME].trim();
+    const ville = subscriber[INPUT_VILLE_COLUMN_NAME].trim();
     return d3.json(`https://geo.api.gouv.fr/communes?nom=${ville}&boost=population&limit=1`)
     .then(geoResult => {
         const {code: codeINSEE} = geoResult[0];
@@ -39,7 +39,7 @@ function makeSendingRow(row, recommandations){
         return d3.json(`https://app-ed2e0e03-0bd3-4eb4-8326-000288aeb6a0.cleverapps.io/forecast?insee=${codeINSEE}`)
         .then(({data, metadata: {region: {website, nom}}}) => {
             if(!data || data.length === 0)
-                console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, row)
+                console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, subscriber)
 
             return {
                 air: Array.isArray(data) && data.find(res => res.date === TODAY_DATE_STRING) || undefined,
@@ -48,13 +48,13 @@ function makeSendingRow(row, recommandations){
             }
         })
         .catch(err => {
-            console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, row, err)
+            console.warn(`Pas d'information de qualité de l'air pour`, codeINSEE, ville, subscriber, err)
         })
     })
     .catch(err => {
-        console.warn('Code INSEE pour', ville, 'non trouvé', row, err)
+        console.warn('Code INSEE pour', ville, 'non trouvé', subscriber, err)
     })
-    .then(airAPIResult => subscriberToReceipient(row, airAPIResult, recommandations))
+    .then(airAPIResult => subscriberToReceipient(subscriber, airAPIResult, recommandations))
 }
 
 function makeSendingFileName(freq, canal){
@@ -62,18 +62,6 @@ function makeSendingFileName(freq, canal){
 
     return `${TODAY_DATE_STRING}-${freq}-${canal}.csv`
 }
-
-function makeSendingFileMapEntry(freq, canal, formResponses){
-    return [
-        makeSendingFileName(freq, canal),
-        formResponses.filter(r => 
-            r[INPUT_FREQUENCY_COLUMN_NAME] === FILENAME_TO_INPUT_FREQ[freq] && 
-            r[INPUT_CANAL_COLUMN_NAME] === canal
-        )
-    ]
-}
-
-
 
 
 function pickRandomRelevantReco(reciepient, recommandations){
@@ -87,7 +75,7 @@ function pickRandomRelevantReco(reciepient, recommandations){
 }
 
 
-function assignMatchingRecommandations(reciepients, recommandations){
+function assignMatchingRecommandations(reciepients, recommandations, format){
     // Tant qu'il y encore au moins une personne qui n'a pas de reco attribuée
     while(reciepients.find(r => r[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined)){
         // prendre une de ces personnes
@@ -102,10 +90,10 @@ function assignMatchingRecommandations(reciepients, recommandations){
         for(const reciepient of reciepients){
             if(reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined && isRelevantReco(reciepient, recoRelevantForThisReciepient)){
                 console.log('applied')
-                if (reciepient[INPUT_CANAL_COLUMN_NAME] === CANAL_EMAIL) {
+                if (format === CANAL_EMAIL) {
                     reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_COLUMN]
                     reciepient[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_DETAILS_COLUMN]
-                } else {
+                } else { // format === CANAL_SMS
                     reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_SMS_COLUMN]
                 }
             }
@@ -124,27 +112,37 @@ export default function makeSendingCSVs(file, recommandations){
         reader.readAsText(file);
     }))
     .then(textContent => {
-        const formResponses = d3.csvParse(textContent, r => {
+        const subscribers = d3.csvParse(textContent, r => {
             r[INPUT_FREQUENCY_COLUMN_NAME] = r[INPUT_FREQUENCY_COLUMN_NAME].toLowerCase();
             return r;
         })//.slice(0, 10)
         //console.log('input file', file, content)
 
-        const sendingFilesFormResponsesMap = new Map([
-            makeSendingFileMapEntry(FREQUENCY_EVERYDAY, CANAL_EMAIL, formResponses),
-            makeSendingFileMapEntry(FREQUENCY_EVERYDAY, CANAL_SMS, formResponses),
-            makeSendingFileMapEntry(FREQUENCY_BAD_AIR_QUALITY, CANAL_EMAIL, formResponses),
-            makeSendingFileMapEntry(FREQUENCY_BAD_AIR_QUALITY, CANAL_SMS, formResponses),
-        ])
-
-        return Promise.all([...sendingFilesFormResponsesMap].map(([filename, responses]) => {
-            return Promise.all(responses.map(r => makeSendingRow(r)))
-            .then(sendingRows => sendingRows.filter(r => r !== undefined))
-            .then(sendingRows => {
-                assignMatchingRecommandations(sendingRows, recommandations)
-                return sendingRows
+        return Promise.all([
+            [FREQUENCY_EVERYDAY, CANAL_EMAIL],
+            [FREQUENCY_EVERYDAY, CANAL_SMS],
+            [FREQUENCY_BAD_AIR_QUALITY, CANAL_EMAIL],
+            [FREQUENCY_BAD_AIR_QUALITY, CANAL_SMS]
+        ]
+        .map(([frequency, format]) => {
+            return {
+                frequency,
+                format,
+                filename: makeSendingFileName(frequency, format),
+                subscribers: subscribers.filter(r => 
+                    r[INPUT_FREQUENCY_COLUMN_NAME] === FILENAME_TO_INPUT_FREQ[frequency] && 
+                    r[INPUT_CANAL_COLUMN_NAME] === format
+                )
+            }
+        })
+        .map(({filename, subscribers, format}) => {
+            return Promise.all(subscribers.map(r => makeReciepient(r)))
+            .then(receipients => receipients.filter(r => r !== undefined))
+            .then(receipients => {
+                assignMatchingRecommandations(receipients, recommandations, format)
+                return receipients;
             })
-            .then(sendingRows => sendingRows.length >= 1 ? [filename, d3.csvFormat(sendingRows)] : undefined)
+            .then(receipients => receipients.length >= 1 ? [filename, d3.csvFormat(receipients)] : undefined)
         }))
         .then(fileEntries => new Map(fileEntries.filter(e => e !== undefined)))
     })
