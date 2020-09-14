@@ -11,8 +11,9 @@ import {
 import isRelevantReco from './isRelevantReco.js'
 
 
-const RECOMMANDATION_COLUMN = 'Recommandation';
-const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
+export const RECOMMANDATION_COLUMN = 'Recommandation';
+export const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
+export const RECOMMANDATION_SMS_COLUMN = 'Recommandation format SMS';
 
 const INPUT_CANAL_COLUMN_NAME = `Souhaitez-vous recevoir les recommandations par : *`
 const CANAL_EMAIL = 'Mail'
@@ -101,8 +102,12 @@ function assignMatchingRecommandations(reciepients, recommandations){
         for(const reciepient of reciepients){
             if(reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] === undefined && isRelevantReco(reciepient, recoRelevantForThisReciepient)){
                 console.log('applied')
-                reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_COLUMN]
-                reciepient[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_DETAILS_COLUMN]
+                if (reciepient[INPUT_CANAL_COLUMN_NAME] === CANAL_EMAIL) {
+                    reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_COLUMN]
+                    reciepient[OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_DETAILS_COLUMN]
+                } else {
+                    reciepient[OUTPUT_RECOMMANDATION_COLUMN_NAME] = recoRelevantForThisReciepient[RECOMMANDATION_SMS_COLUMN]
+                }
             }
         }
     }
