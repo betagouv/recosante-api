@@ -1,0 +1,22 @@
+{% macro render_field(field) %}
+<div class="form__group">
+    <fieldset>
+
+        {% if field.is_required() %}
+        {{ field.label(class_='required') }}
+        {% else %}
+        {{ field.label }}
+        {% endif %}
+
+        {% if field.description %}
+        <p>{{ field.description }}</p>
+        {% endif %}
+
+        {{ field(**kwargs)|safe }}
+
+        {% for error in field.errors %}
+            <span class="form__error">{{ error }}
+        {% endfor %}
+    </fieldset>
+</div>
+{% endmacro %}

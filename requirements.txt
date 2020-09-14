@@ -1,0 +1,6 @@
+Flask
+Flask-Alembic
+Flask-SQLAlchemy
+Flask-WTF
+psycopg2
+email_validator

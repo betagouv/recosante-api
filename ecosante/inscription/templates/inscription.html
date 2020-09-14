@@ -1,0 +1,33 @@
+{% extends 'base.html'%}
+{% from "_formhelpers.html" import render_field %}
+
+{% block content %}
+<section class="section">
+<div class="container">
+{% if form.errors %}
+<div class="notification error">
+Vous avez fait des erreurs lorsque vous avez rempli le formulaire, veuillez les corriger    
+</div>
+{% endif %}
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <h1>Inscription</h1>
+    {{ render_field(form.ville_entree )}}
+    {{ render_field(form.deplacement )}}
+    {{ render_field(form.sport )}}
+    {{ render_field(form.apa )}}
+    {{ render_field(form.activites) }}
+    {{ render_field(form.pathologie_respiratoire) }}
+    {{ render_field(form.allergie_pollen) }}
+    {{ render_field(form.fumeur) }}
+    {{ render_field(form.enfants) }}
+    {{ render_field(form.mail) }}
+    {{ render_field(form.diffusion) }}
+    {{ render_field(form.telephone) }}
+    {{ render_field(form.frequence) }}
+    {{ render_field(form.accord) }}
+    <button class="button" type="submit" id="submit">Valider</button>
+</form>
+</div>
+</section>
+{% endblock content %}
