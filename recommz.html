@@ -1,107 +1,23 @@
-<!doctype html>
-<html lang="">
-    <head>
-        <meta charset="utf-8">
-        <meta name="referrer" content="same-origin">
-        
-        <title>Recomms Écosanté</title>
-        
-        <meta name="description" content=" ">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="icon" href="data:,">
-        
-        <link crossorigin="anonymous" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/twbs/bootstrap@v4/dist/css/bootstrap-reboot.css">
-        
-        <!--
-        <script crossorigin="anonymous" src="https://polyfill.io/v3/polyfill.min.js?flags=always&features=default%2Ces2017%2Ces2016%2Ces2015%2Cfetch"></script>
-        -->
+---
+layout: home
+styles:
+  - https://cdn.jsdelivr.net/gh/twbs/bootstrap@v4/dist/css/bootstrap-reboot.css
+  - assets/css/recommz.css
 
-        <script defer src="https://d3js.org/d3-dsv.v1.min.js"></script>
-        <script defer src="https://d3js.org/d3-fetch.v1.min.js"></script>
+scripts:
+  - https://d3js.org/d3-dsv.v1.min.js
+  - https://d3js.org/d3-fetch.v1.min.js
 
-        <script defer type="module" src="assets/js/recommz.js"></script>
+modules:
+  - assets/js/recommz.js
+  
+---
+<h1>Recommandations Écosanté</h1>
+<h2>Filtres de recommandations</h2>
+<section class="filters">
+</section>
 
-        <style>
-            body > *{
-                padding: 0 calc( max(5px, ( 100vw - 50rem ) / 2 ));
-            }
-
-            label{
-                padding: 1em;
-                border: 1px solid #DDD;
-                text-transform: capitalize;
-            }
-
-            label:hover{
-                background-color: #EEE;
-            }
-
-            label input{
-                margin: 0 0.5em;
-                vertical-align: middle;
-            }
-
-            ul{
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
-
-            .recommz > li{
-                margin: 0.5em 0;
-                position: relative;
-            }
-
-            .recommz > li:hover{
-                background-color: #EEE;
-                
-            }
-
-
-            .recommz > li::before{
-                content: " ";
-                display: inline-block;
-                width: 1em;
-                height: 1em;
-
-                position: absolute;
-                left: -2em;
-                top: 0.25em;
-
-                border-radius: 50%;
-            }
-
-            .recommz > li.recommandability-utilisable::before{
-                background-color: hsl(108, 80%, 50%);
-            }
-            .recommz > li.recommandability-doute::before{
-                background-color: hsl(59, 80%, 50%);
-            }
-            .recommz > li.recommandability-non-utilisable::before{
-                background-color: hsl(0, 80%, 50%);
-            }
-
-            .recommz > li details{
-                color: grey
-            }
-            .recommz > li details summary{
-                color: black;
-                margin-bottom: 0.2em;
-            }
-
-
-        </style>
-    </head>
-    <body>
-        <h1>Recommandations Écosanté</h1>
-        <h2>Filtres de recommandations</h2>
-        <section class="filters">
-
-        </section>
-
-        <section>
-            <h2>Recommandations retenues <span class="recommz-count"></span></h2>
-            <ul class="recommz"></ul>
-        </section>
-    </body>
-</html>
+<section>
+    <h2>Recommandations retenues <span class="recommz-count"></span></h2>
+    <ul class="recommz"></ul>
+</section>
