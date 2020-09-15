@@ -10,6 +10,7 @@ RUN apt-get update && \
       zlib1g-dev \
       libpq-dev
 
+RUN useradd www
 
 #Bug de ruby voir https://github.com/rubygems/rubygems/issues/3269
 ENV DEBIAN_DISABLE_RUBYGEMS_INTEGRATION=1
@@ -29,4 +30,6 @@ RUN pip3 install uwsgi
 
 EXPOSE 8080
 
-CMD uwsgi --ini wsgi.ini
+USER www
+
+CMD ["uwsgi", "wsgi.ini"]
