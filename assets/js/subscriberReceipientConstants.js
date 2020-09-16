@@ -37,8 +37,8 @@ export const OUTPUT_PHONE_NUMBER_COLUMN_NAME = `Téléphone`
 export const OUTPUT_QUALITE_AIR_COLUMN_NAME = `QUALITE_AIR`
 export const OUTPUT_WEBSITE_COLUMN_NAME = `Lien_AASQA`
 
-export const OUTPUT_RECOMMANDATION_COLUMN_NAME = `Recommandation`
-export const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `Précisions`
+export const OUTPUT_RECOMMANDATION_COLUMN_NAME = `RECOMMANDATION`
+export const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `PRECISIONS`
 
 export const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les recommandations ? *`
 
