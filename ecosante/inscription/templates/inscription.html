@@ -31,7 +31,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(event) {
-  new Autocomplete('#ville_entree', {
+  var autocomplete = new Autocomplete('#ville_entree', {
     search: input => {
       const url = `https://geo.api.gouv.fr/communes?&boost=population&fields=nom,code&format=json&nom=${encodeURI(input)}`
 
@@ -53,6 +53,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
       document.getElementById("ville_name").value = ville.nom
     }
   })
+  autocomplete.input.addEventListener('keydown', (event) => {
+      const { key } = event
+      if (key == 'Enter') {
+        event.preventDefault();
+      }
+  });
 });
 </script>
 {% endblock block_form %}
