@@ -8,7 +8,7 @@ class FormInscription(BaseForm):
     mail = EmailField(
         'Adresse email',
         [validators.DataRequired(), validators.Email()],
-        description='(attention, la newsletter Ecosanté peut se retrouver dans vos SPAM ou dans le dossier "Promotions" de votre boîte mail !)'
+        description='(attention, les mails Ecosanté peut se retrouver dans vos SPAM ou dans le dossier "Promotions" de votre boîte mail !)'
     )
     diffusion = RadioField(
         'Souhaitez-vous recevoir les recommandations par ?',

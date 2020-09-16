@@ -12,10 +12,10 @@
 {% block block_form %}
 <form method="POST" novalidate>
     {{ form.hidden_tag() }}
-    {{ render_field(form.ville_entree )}}
+    {{ render_field(form.mail, autofocus=form.mail.data == None) }}
+    {{ render_field(form.ville_entree, autofocus=form.mail.data != None )}}
     {{ render_field(form.frequence) }}
     {{ render_field(form.diffusion) }}
-    {{ render_field(form.mail) }}
     {{ render_field(form.telephone) }}
     <div class="form__group">
         <p>En passant à l'étape suivante vous consentez à partager vos données personnelles avec l'équipe écosanté <a href="#donnees-personnelles">En savoir plus</a></p>

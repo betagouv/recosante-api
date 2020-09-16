@@ -3,8 +3,9 @@
 
 
 .hero__container {
+    text-align: center;
     h1 {
-        text-align: center;
+        font-size: 2.5em;
     }
 }
 
@@ -24,6 +25,18 @@
 
 .navbar__logo_right {
     height: 34px;
+}
+
+.screenshot {
+    max-width: 20em;
+}
+
+.important-text {
+    font-size: 1.1em;
+}
+
+.row form {
+    margin: 0 0;
 }
 
 @media (max-width: 565px) {

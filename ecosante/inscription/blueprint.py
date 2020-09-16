@@ -7,13 +7,16 @@ bp = Blueprint("inscription", __name__, template_folder='templates', url_prefix=
 @bp.route('/', methods=['GET', 'POST'])
 def inscription():
     form = FormInscription()
-    if request.method == 'POST' and form.validate_on_submit():
-        inscription = Inscription.query.filter_by(mail=form.mail.data).first() or Inscription()
-        form.populate_obj(inscription)
-        db.session.add(inscription)
-        db.session.commit()
-        session['inscription'] = inscription
-        return redirect(url_for('inscription.personnalisation'))
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            inscription = Inscription.query.filter_by(mail=form.mail.data).first() or Inscription()
+            form.populate_obj(inscription)
+            db.session.add(inscription)
+            db.session.commit()
+            session['inscription'] = inscription
+            return redirect(url_for('inscription.personnalisation'))
+    else:
+        form.mail.process_data(request.args.get('mail'))
 
     if 'mail' in session:
         del session['mail']
