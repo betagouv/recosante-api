@@ -1,11 +1,16 @@
-{% if base_form %}
 {% extends 'base_form.html'%}
-{% else %}
-{% from "_formhelpers.html" import render_field %}
-{% endif %}
+
+{% block pre_form %}
+<div class="hero">
+    <div class="hero__container">
+        <h1>Personnaliser vos recommandations</h1>
+        <p>Afin de recevoir des recommandations d’actions personnalisées en fonction de vos habitudes et de votre santé, vous pouvez renseigner plus d’informations en répondant au questionnaire suivant :</p>
+    </div>
+</div>
+{% endblock %}
+
 {% block block_form %}
-<section class="section section-grey">
-<form method="POST" novalidate action="{{ action }}">
+<form method="POST" novalidate>
     {{ form.hidden_tag() }}
     {{ render_field(form.deplacement )}}
     {{ render_field(form.activites) }}
@@ -17,5 +22,4 @@
         <button class="button" type="submit" id="submit">Enregistrer ces informations</button>
     </div>
 </form>
-</section>
 {% endblock block_form %}

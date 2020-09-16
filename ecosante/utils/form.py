@@ -34,6 +34,11 @@ class RadioField(SelectField):
     widget = BlankListWidget(prefix_label=False, class_labels="label-inline")
     option_widget = widgets.RadioInput()
 
+def coerce(value):
+    if value is None:
+        return value
+    return value == True or value == 'oui'
+
 class OuiNonField(RadioField):
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -42,7 +47,7 @@ class OuiNonField(RadioField):
                 **kwargs,
                 **{
                     "choices":[('oui', 'Oui'), ('non', 'Non')],
-                    "coerce": lambda value: value is not None and value == 'oui'
+                    "coerce": coerce
                 }
             }
         )

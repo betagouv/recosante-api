@@ -1,7 +1,9 @@
+{% if base_form %}
 {% extends 'base_form.html'%}
+{% else %}
+{% from "_formhelpers.html" import render_field %}
+{% endif %}
 {% block block_form %}
-<form method="POST" novalidate>
-<h1>Votre sante</h1>
     {{ form.hidden_tag() }}
     {{ render_field(form.pathologie_respiratoire )}}
     {{ render_field(form.allergie_pollen) }}
