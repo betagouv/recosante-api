@@ -1,0 +1,15 @@
+{% extends 'base_form.html'%}
+{% block block_form %}
+<form method="POST" novalidate>
+<h1>Vos habitudes</h1>
+    {{ form.hidden_tag() }}
+    {{ render_field(form.deplacement )}}
+    {{ render_field(form.sport) }}
+    {{ render_field(form.apa) }}
+    {{ render_field(form.activites) }}
+    {{ render_field(form.enfants) }}
+    <div class="form__group">
+        <button class="button" type="submit" id="submit">Enregistrer ces informations</button>
+    </div>
+</form>
+{% endblock block_form %}

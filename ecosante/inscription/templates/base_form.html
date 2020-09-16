@@ -1,0 +1,38 @@
+{% extends 'base.html'%}
+{% from "_formhelpers.html" import render_field %}
+
+{% block content %}
+<style>
+body {
+    font-size: 25px;
+
+}
+.small-container {
+    max-width: 35em;
+}
+.description {
+    font-size: 0.8em;
+    margin-top: 0;
+}
+</style>
+{% block pre_form %}
+{% endblock %}
+
+<section class="section{% if self.pre_form() %} section-grey {% endif %}">
+    <div class="container">
+        {% if form.errors %}
+        <div class="notification error">
+        Vous avez fait des erreurs lorsque vous avez rempli le formulaire, veuillez les corriger    
+        </div>
+        {% endif %}
+
+    {% block block_form %}
+    {% endblock %}
+
+    </div>
+</section>
+
+{% block after_form %}
+{% endblock %}
+
+{% endblock %}

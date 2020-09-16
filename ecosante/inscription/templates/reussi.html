@@ -1,5 +1,48 @@
 {% extends 'base.html'%}
 
 {% block content %}
-<h1>Inscription réussie</h1>
+<section class="section">
+    <div class="container">
+    <h1>Personnaliser son profil</h1>
+    <p>
+    Vous êtes inscrit.e pour recevoir les alertes qualité de l’air Écosanté. Elles seront accompagnées de recommandations de comportement à adopter pour vous protéger. Si vous le souhaitez, vous pouvez nous donner plus de précisions sur vos habitudes et votre santé pour personnaliser ces recommandations.
+    </p>
+
+    Vous avez rempli les informations suivantes :
+    <ul>
+    <li>Vous vivez dans la ville de : {{ session['ville_entree'] }}</li>
+    <li>Vous souhaitez recevoir des informations par {{ session['diffusion'] }} sur la qualité de l'air {{ session['frequence'] }}</li>
+    <li>Adresse email : {{ session['mail']}}</li>
+    {% if session['habitudes'] %}
+    {% if session['habitudes']['sport'] %}
+    <li>Vous pratiquez du sport au moins une fois par semaine</li>
+    {% endif %}
+    {% if session['habitudes']['apa'] %}
+    <li>Vous pratiquez une activité physique adaptée au moins une fois par semaine</li>
+    {% endif %}
+    {% if session['habitudes']['deplacement'] %}
+    <li>Vous vous déplacez avec {{ session['habitudes']['deplacement']|join(', ')}} </li>
+    {% endif %}
+    {% if session['habitudes']['activites'] %}
+    <li>Vous pratiquez : {{ session['habitudes']['activites']|join(', ')}} </li>
+    {% endif %}
+    {% if session['habitudes']['enfants'] %}
+    <li>Vous vivez avec des enfants</li>
+    {% endif %}
+    {% endif %}
+    {% if session['sante'] %}
+    {% if session['sante']['pathologie_respiratoire'] %}
+    <li>Vous vivez avec une pathologie respiratoire</li>
+    {% endif %}
+    {% if session['sante']['allergie_pollen'] %}
+    <li>Vous êtes allergique au pollen</li>
+    {% endif %}
+    {% if session['sante']['fumeur'] %}
+    <li>Vous êtes fumeur</li>
+    {% endif %}
+    {% endif %}
+    <a class="button" href="/inscription/habitudes">Personnaliser ses habitudes</a>
+    <a class="button" href="/inscription/sante">Personnaliser votre santé</a>
+    </div>
+</section>
 {% endblock content %}

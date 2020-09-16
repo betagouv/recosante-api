@@ -1,33 +1,47 @@
-{% extends 'base.html'%}
-{% from "_formhelpers.html" import render_field %}
-
-{% block content %}
+{% extends 'base_form.html'%}
+{% block pre_form %}
 <section class="section">
-<div class="container">
-{% if form.errors %}
-<div class="notification error">
-Vous avez fait des erreurs lorsque vous avez rempli le formulaire, veuillez les corriger    
-</div>
-{% endif %}
+      <div class="container small-container">
+        <h1>Devenir testeur.se</h1>
+        <article class="article">
+            <p>Pour recevoir des alertes personnalisées, nous vous invitons à répondre à un questionnaire sur votre vos habitudes, vos modes de déplacement, et votre santé.</p>
+         </article>
+      </div>
+</section>
+{% endblock pre_form %}
+
+{% block block_form %}
 <form method="POST" novalidate>
     {{ form.hidden_tag() }}
-    <h1>Inscription</h1>
     {{ render_field(form.ville_entree )}}
-    {{ render_field(form.deplacement )}}
-    {{ render_field(form.sport )}}
-    {{ render_field(form.apa )}}
-    {{ render_field(form.activites) }}
-    {{ render_field(form.pathologie_respiratoire) }}
-    {{ render_field(form.allergie_pollen) }}
-    {{ render_field(form.fumeur) }}
-    {{ render_field(form.enfants) }}
-    {{ render_field(form.mail) }}
-    {{ render_field(form.diffusion) }}
-    {{ render_field(form.telephone) }}
     {{ render_field(form.frequence) }}
-    {{ render_field(form.accord) }}
-    <button class="button" type="submit" id="submit">Valider</button>
+    {{ render_field(form.diffusion) }}
+    {{ render_field(form.mail) }}
+    {{ render_field(form.telephone) }}
+    <div class="form__group">
+        <p>En passant à l'étape suivante vous consentez à partager vos données personnelles avec l'équipe écosanté <a href="#donnees-personnelles">En savoir plus</a></p>
+        <button class="button" type="submit" id="submit">M'inscrire et personnaliser mon profil</button>
+    </div>
 </form>
-</div>
+{% endblock block_form %}
+
+{% block after_form %}
+<section class="section" id="donnees-personnelles">
+      <div class="container">
+        <article class="article">
+            <h1>Données personnelles</h1>
+              <p>Dans le cadre de ces <strong>tests</strong>, nous pourrions vous contacter afin d'obtenir vos retours sur la newsletter Écosanté. 
+                  Ces échanges pourront prendre la forme d'appels téléphoniques avec un membre de l'équipe.</p>
+        
+            <p>
+                  Les données collectées ont exclusivement pour but de personnaliser les recommandations. 
+                  Elles ne sont utilisées pour aucun autre objectif. 
+                  Elles ne sont accessibles que par l'équipe Écosanté (projet porté par la <a href="https://beta.gouv.fr/">DINUM</a>, le Ministère de la Santé et le Ministère de la Transition Écologique)
+                  et les services que l'équipe utilise.
+            </p>
+            <p>Pour toute demande de rectification et suppression de données, vous pouvez écrire un email à l'équipe écosanté : <a href="mailto:ecosante@data.gouv.fr">ecosante@data.gouv.fr</a>. Nous y répondrons très rapidement. 
+                  Par ailleurs, les données que nous n'utilisons plus sont supprimées en moins d'un mois.</p>
+         </article>
+      </div>
 </section>
-{% endblock content %}
+{% endblock after_form %}

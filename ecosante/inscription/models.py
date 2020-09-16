@@ -23,7 +23,12 @@ class Inscription(db.Model):
     date_inscription = db.Column(db.Date())
 
     def __init__(self, **kwargs):
-        columns = self.__table__.columns
-        data = dict(filter(lambda v: f'inscription.{v[0]}' in columns, kwargs.items()))
-        super().__init__(**data)
+        #if 'mail' in kwargs:
+        #    inscription = self.__class__.query.filter_by(mail=kwargs['mail']).first()
+        #    if inscription:
+        #        for k, v in kwargs.items():
+        #            setattr(inscription, k, v)
+        #        return inscription
+
+        super().__init__(**kwargs)
         self.date_inscription = date.today()
