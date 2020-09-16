@@ -25,6 +25,19 @@ class BlankListWidget:
                 html.append(f"{subfield()} {subfield.label(class_=self.class_labels)}")
         return Markup("".join(html))
 
+
+class AutocompleteInputWidget(widgets.TextInput):
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        kwargs.setdefault('type', self.input_type)
+        if 'value' not in kwargs:
+            kwargs['value'] = field._value()
+        if 'required' not in kwargs and 'required' in getattr(field, 'flags', []):
+            kwargs['required'] = True
+        html_params = self.html_params(name=field.name, **kwargs)
+        class_ = kwargs.get('class_')
+        return Markup(f'<div class="{class_}" id="{field.name}"><input class="autocomplete-input" {html_params}><ul class="autocomplete-result-list"></ul></div>')
+
 class MultiCheckboxField(SelectMultipleField):
     widget = BlankListWidget(prefix_label=False, class_labels="label-inline")
     option_widget = widgets.CheckboxInput()

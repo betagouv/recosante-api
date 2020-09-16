@@ -13,7 +13,7 @@
 <form method="POST" novalidate>
     {{ form.hidden_tag() }}
     {{ render_field(form.mail, autofocus=form.mail.data == None) }}
-    {{ render_field(form.ville_entree, autofocus=form.mail.data != None )}}
+    {{ render_field(form.ville_entree, autofocus=form.mail.data != None, class_="ville-autocomplete" )}}
     {{ render_field(form.frequence) }}
     {{ render_field(form.diffusion) }}
     {{ render_field(form.telephone) }}
@@ -22,4 +22,37 @@
         <button class="button" type="submit" id="submit">M'inscrire et personnaliser mon profil</button>
     </div>
 </form>
+
+<script src="https://unpkg.com/@trevoreyre/autocomplete-js"></script>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/@trevoreyre/autocomplete-js/dist/style.css"
+/>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(event) {
+  new Autocomplete('#ville_entree', {
+    search: input => {
+      const url = `https://geo.api.gouv.fr/communes?&boost=population&fields=nom,code&format=json&nom=${encodeURI(input)}`
+
+      return new Promise(resolve => {
+        if (input.length < 3) {
+          return resolve([])
+        }
+
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            resolve(data)
+          })
+      })
+    },
+    getResultValue: result => result.nom,
+    onSubmit: ville => {
+      document.getElementById("ville_insee").value = ville.code
+      document.getElementById("ville_name").value = ville.nom
+    }
+  })
+});
+</script>
 {% endblock block_form %}

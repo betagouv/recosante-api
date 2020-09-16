@@ -58,3 +58,11 @@
         align-items: center;
     }
 }
+
+.ville-autocomplete {
+    input {
+        border: 1px solid var(--theme-border);
+        border-radius: var(--theme-border-radius);
+        background-color: var(--theme-background-white);
+    }
+}

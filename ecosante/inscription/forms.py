@@ -1,10 +1,16 @@
-from wtforms import BooleanField, StringField, validators
+from wtforms import BooleanField, StringField, validators, widgets, HiddenField
 from wtforms.fields.html5 import EmailField, TelField
 
-from ecosante.utils.form import MultiCheckboxField, OuiNonField, RadioField, BaseForm
+from ecosante.utils.form import MultiCheckboxField, OuiNonField, RadioField, BaseForm, AutocompleteInputWidget
 
 class FormInscription(BaseForm):
-    ville_entree = StringField('Dans quelle ville vivez-vous', [validators.DataRequired()])
+    ville_entree = StringField(
+        'Dans quelle ville vivez-vous',
+        [validators.DataRequired()],
+        widget=AutocompleteInputWidget()
+    )
+    ville_insee = HiddenField('ville_insee')
+    ville_name = HiddenField('ville_name')
     mail = EmailField(
         'Adresse email',
         [validators.DataRequired(), validators.Email()],
