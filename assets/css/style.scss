@@ -1,7 +1,6 @@
 ---
 ---
 
-
 .hero__container {
     text-align: center;
     h1 {
@@ -19,12 +18,23 @@
 }
 
 .navbar__home {
-    height: 150px;
+    height: unset;
+}
 
+.navbar__home img {
+    vertical-align: middle;
+}
+
+.navbar__logo {
+    height: 150px;
 }
 
 .navbar__logo_right {
     height: 34px;
+}
+
+.navbar__container {
+    align-items: baseline;
 }
 
 .screenshot {
