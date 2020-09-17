@@ -34,8 +34,11 @@
     font-size: 1.2em;
 }
 
-.screenshot {
+.screenshot__container {
     max-width: 20em;
+    img {
+        max-width: 100%;
+    }
 }
 
 .important-text {
