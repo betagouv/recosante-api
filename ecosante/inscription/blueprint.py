@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, session, url_for, make_response
+from flask import (Blueprint, render_template, request, redirect, session, url_for,
+     make_response, current_app)
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
 from ecosante.utils.decorators import admin_capability_url
@@ -99,7 +100,9 @@ def import_csv(secret_slug):
 
     if request.method == 'POST':
         if request.form.get('ecraser') == 'on':
-            Inscription.query.delete()
+            num_rows_deleted = db.session.query(Inscription).delete()
+            current_app.logger.info(f'{num_rows_deleted} inscriptions effacées')
+            db.session.commit()
         file = request.files['file']
         stream = StringIO(file.stream.read().decode("UTF8"), newline=None)
         reader = DictReader(stream, skipinitialspace=True)
