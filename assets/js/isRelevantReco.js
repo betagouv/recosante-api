@@ -2,7 +2,8 @@ import {
     OUI, NON,
     OUTPUT_AUTOMOBILISTE_COLUMN_NAME,
     OUTPUT_QUALITE_AIR_COLUMN_NAME,
-    OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME
+    OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME,
+    OUTPUT_BRICOLAGE_COLUMN_NAME
 } from './subscriberReceipientConstants.js'
 
 import {
@@ -11,7 +12,9 @@ import {
     RECO_QA_MAUVAISE_COLUMN,
     RECO_QA_MAUVAISE_RELATED,
     RECO_ACTIVITE_PHYIQUE_COLUMN,
-    RECO_ACTIVITE_PHYIQUE_RELATED
+    RECO_ACTIVITE_PHYIQUE_RELATED,
+    RECO_BRICOLAGE_COLUMN,
+    RECO_BRICOLAGE_RELATED
 } from './recommandationConstants.js'
 
 import {
@@ -41,6 +44,12 @@ export default function isRelevantReco(reciepient, reco){
     // activite physique
     if(reciepient[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] === NON && reco[RECO_ACTIVITE_PHYIQUE_COLUMN] === RECO_ACTIVITE_PHYIQUE_RELATED){
         console.log('false, activité physique', reciepient, reco)
+        return false;
+    }
+
+    // bricolage
+    if(reciepient[OUTPUT_BRICOLAGE_COLUMN_NAME] === NON && reco[RECO_BRICOLAGE_COLUMN] === RECO_BRICOLAGE_RELATED){
+        console.log('false, bricolage', reciepient, reco)
         return false;
     }
 
