@@ -12,6 +12,9 @@ export const RECO_QA_MAUVAISE_RELATED = MARKER;
 export const RECO_ACTIVITE_PHYIQUE_COLUMN = 'Activité physique';
 export const RECO_ACTIVITE_PHYIQUE_RELATED = MARKER;
 
+export const RECO_BRICOLAGE_COLUMN = 'Bricolage';
+export const RECO_BRICOLAGE_RELATED = MARKER;
+
 
 
 
