@@ -106,7 +106,7 @@ def import_csv(secret_slug):
             db.session.commit()
         file = request.files['file']
         stream = StringIO(file.stream.read().decode("UTF8"), newline=None)
-        reader = DictReader(stream, skipinitialspace=True)
+        reader = DictReader(stream, skipinitialspace=True, delimiter=';')
         for row in reader:
             mail = row["Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin."]
             inscription = Inscription.query.filter_by(mail=mail).first() or Inscription()
