@@ -1,35 +1,22 @@
-FROM ubuntu:20.04
+FROM jekyll/jekyll:3.8
 
-RUN apt-get update && \
-    apt-get install -y \
-      python3 \
-      python3-pip \
-      ruby \
-      ruby-dev \
-      build-essential \
-      zlib1g-dev \
-      libpq-dev
+RUN mkdir /ecosante/
+WORKDIR /ecosante/
+COPY ./ .
+RUN chmod -R o+w .
 
-RUN useradd www
+RUN jekyll build
 
-#Bug de ruby voir https://github.com/rubygems/rubygems/issues/3269
-ENV DEBIAN_DISABLE_RUBYGEMS_INTEGRATION=1
-RUN gem update --system
-RUN gem install bundler
+RUN mv _site/base.html ecosante/templates/base.html
 
-RUN mkdir ecosante
-WORKDIR /ecosante
-COPY ./ /ecosante
+FROM python:3.8
 
-RUN bundle install
-
-RUN ./build.sh
+WORKDIR /ecosante/
+COPY --from=0 /ecosante/ .
 
 RUN pip3 install -r requirements.txt
 RUN pip3 install uwsgi
 
 EXPOSE 8080
-
-USER www
 
 CMD ["uwsgi", "wsgi.ini"]

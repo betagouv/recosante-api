@@ -3,5 +3,12 @@ email: ecosante@data.gouv.fr
 lang: fr
 
 theme: jekyll-theme-minimal
-plugins:
-  - jekyll-feed
+
+exclude:
+  - ecosante
+  - build.sh
+  - Dockerfile
+  - LICENSE
+  - requirements.txt
+  - wsgi.ini
+  - wsgi.py
