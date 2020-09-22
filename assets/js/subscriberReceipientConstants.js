@@ -42,8 +42,8 @@ export const OUTPUT_RECOMMANDATION_DETAILS_COLUMN_NAME = `PRECISIONS`
 
 export const INPUT_FREQUENCY_COLUMN_NAME = `A quelle fréquence souhaitez-vous recevoir les recommandations ? *`
 
-export const INPUT_FREQUENCY_EVERYDAY = `tous les jours`.toLowerCase()
-export const INPUT_FREQUENCY_BAD_AIR_QUALITY = `Lorsque la qualité de l'air est mauvaise`.toLowerCase()
+export const INPUT_FREQUENCY_EVERYDAY = `quotidien`.toLowerCase()
+export const INPUT_FREQUENCY_BAD_AIR_QUALITY = `pollution`.toLowerCase()
 
 /*
 

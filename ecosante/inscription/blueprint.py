@@ -4,7 +4,7 @@ from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
 from ecosante.utils.decorators import admin_capability_url
 from io import StringIO
-from csv import DictWriter, DictReader
+from csv import DictWriter, DictReader, Error
 from datetime import datetime
 
 bp = Blueprint("inscription", __name__, template_folder='templates', url_prefix='/inscription')
@@ -93,10 +93,11 @@ def export_csv(secret_slug):
 @bp.route('<secret_slug>/import_csv', methods=['GET', 'POST'])
 @admin_capability_url
 def import_csv(secret_slug):
-    def convert_list(l):
-        if isinstance(l, list) and len(l) > 1:
-            return l.split("; ")
-        return [l]
+    def convert_list(to_convert):
+        to_convert = to_convert.strip().lower()
+        if len(to_convert) == 0:
+            return []
+        return [l.strip() for l in to_convert.split(";")]
 
     if request.method == 'POST':
         if request.form.get('ecraser') == 'on':
@@ -113,7 +114,7 @@ def import_csv(secret_slug):
             inscription.diffusion = row["Souhaitez-vous recevoir les recommandations par : *"]
             inscription.telephone = row["Numéro de téléphone :"]
             inscription.mail = mail
-            inscription.frequence = row["A quelle fréquence souhaitez-vous recevoir les recommandations ? *"]
+            inscription.frequence = "quotidien" if row["A quelle fréquence souhaitez-vous recevoir les recommandations ? *"] == "Tous les jours" else "pollution"
             inscription.deplacement = convert_list(row['Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?'])
             inscription.sport = row["Pratiquez-vous une activité sportive au moins une fois par semaine ? On entend par activité sportive toute forme d'activité physique ayant pour objectif l'amélioration et le maintien de la condition physique."] == "Oui"
             inscription.apa = row["Pratiquez-vous une Activité Physique Adaptée au moins une fois par semaine ? Les APA regroupent l’ensemble des activités physiques et sportives adaptées aux capacités des personnes atteintes de maladie chronique ou de handicap."] == "Oui"
@@ -124,6 +125,12 @@ def import_csv(secret_slug):
             inscription.fumeur = row["Êtes-vous fumeur.euse ?"] == "Oui"
             inscription.date_inscription = datetime.strptime(row["timestamp"], "%d/%m/%Y %H:%M")
             db.session.add(inscription)
+        db.session.execute("""
+            UPDATE inscription SET activites = array_append(activites, 'sport')
+            WHERE 
+                sport = true 
+                AND not (activites::text[] @> ARRAY['sport']::text[]);
+        """)
         db.session.commit()
         return render_template('import_csv_reussi.html')
         
