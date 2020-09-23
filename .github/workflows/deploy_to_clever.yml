@@ -6,9 +6,11 @@ on:
             - gh-pages
 jobs:
     deploy:
-        name: getstats
+        name: deploy-to-clever
         runs-on: ubuntu-latest
         steps:
+            - uses: actions/checkout@v2
+            - run: git fetch --prune --unshallow
             - uses: 47ng/actions-clever-cloud@v1
               with:
                   appID: app_770307b0-7eb6-4970-b611-9323cd467b94
