@@ -61,23 +61,16 @@ document.addEventListener("DOMContentLoaded", function(event) {
   });
 
   parent_telephone = document.getElementById('telephone').parentElement.parentElement
-  parent_telephone.style.visibility = 'hidden'
-  parent_telephone.style.display = 'none'
-  const diffusion_inputs = [...document.getElementsByName("diffusion")]
-  diffusion_inputs.forEach(
-    (input) => {
-      input.addEventListener('change', (event) => {
-        if (event.target.value === 'sms') {
-          parent_telephone.style.visibility = 'visible'
-          parent_telephone.style.display = 'contents'
-        } else {
-          parent_telephone.style.visibility = 'hidden'
-          parent_telephone.style.display = 'none'
-        }
-      })
-    }
-  )
-
+  parent_telephone.setAttribute('hidden', "")
+  for(const input of document.getElementsByName("diffusion")) {
+    input.addEventListener('change', (event) => {
+      if (event.target.value === 'sms') {
+        parent_telephone.removeAttribute('hidden')
+      } else {
+        parent_telephone.setAttribute('hidden', "")
+      }
+    })
+  }
 });
 </script>
 {% endblock block_form %}
