@@ -3,7 +3,7 @@ name: Deploy to clever cloud
 on:
     push:
         branches:
-            - gh-pages
+            - main
 jobs:
     deploy:
         name: getstats
