@@ -68,6 +68,12 @@ def export_csv(secret_slug):
     )
     writer.writeheader()
     for inscription in Inscription.query.all():
+        diffusion = inscription.diffusion
+        if diffusion == 'mail':
+            diffusion = 'Mail'
+        elif diffusion == 'sms':
+            diffusion = 'SMS'
+
         writer.writerow({
             'Dans quelle ville vivez-vous ?': inscription.ville_entree,
             'Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?': "; ".join(inscription.deplacement or []),
@@ -79,7 +85,7 @@ def export_csv(secret_slug):
             "Êtes-vous fumeur.euse ?": inscription.fumeur,
             "Vivez-vous avec des enfants ?": inscription.enfants,
             "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.": inscription.mail,
-            "Souhaitez-vous recevoir les recommandations par : *": inscription.diffusion.capitalize() if inscription.diffusion == 'mail' else inscription.diffusion,
+            "Souhaitez-vous recevoir les recommandations par : *": diffusion,
             "Numéro de téléphone :": inscription.telephone,
             "A quelle fréquence souhaitez-vous recevoir les recommandations ? *": inscription.frequence,
             "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.": True
