@@ -1,24 +1,25 @@
-from wtforms import BooleanField, StringField, validators, widgets, HiddenField
 from wtforms.fields.html5 import EmailField, TelField
+from ecosante.inscription.forms.validators import VilleValidator
+from wtforms import BooleanField, StringField, validators, widgets, HiddenField
 
 from ecosante.utils.form import MultiCheckboxField, OuiNonField, RadioField, BaseForm, AutocompleteInputWidget
 
 class FormInscription(BaseForm):
     ville_entree = StringField(
         'Dans quelle ville vivez-vous',
-        [validators.DataRequired()],
+        [validators.InputRequired()],
         widget=AutocompleteInputWidget()
     )
     ville_insee = HiddenField('ville_insee')
     ville_name = HiddenField('ville_name')
     mail = EmailField(
         'Adresse email',
-        [validators.DataRequired(), validators.Email()],
+        [validators.InputRequired(), validators.Email()],
         description='(attention, les mails Ecosanté peut se retrouver dans vos SPAM ou dans le dossier "Promotions" de votre boîte mail !)'
     )
     diffusion = RadioField(
         'Souhaitez-vous recevoir les recommandations par ?',
-        [validators.DataRequired()],
+        [validators.InputRequired()],
         choices=[('mail', 'Email'), ('sms', 'SMS')]
     )
     telephone = TelField(
@@ -27,7 +28,7 @@ class FormInscription(BaseForm):
     )
     frequence = RadioField(
         'À quelle fréquence souhaitez-vous recevoir les informations ?',
-        [validators.DataRequired()],
+        [validators.InputRequired()],
         description="En selectionnant «lorsque la qualité de l'air est mauvaise» il est possible que vous ne receviez peu ou pas d'alerte Ecosanté. C'est une bonne nouvelle, cela signifie que la qualité de l'air n'est pas mauvaise dans votre région.",
         choices=[
             ('quotidien',  'Tous les jours'),

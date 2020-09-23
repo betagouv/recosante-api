@@ -2,7 +2,7 @@
 <div class="form__group">
     <fieldset>
 
-        {% if field.is_required() %}
+        {% if field.flags.required %}
         {{ field.label(class_='required')|safe }}
         {% else %}
         {{ field.label|safe }}
