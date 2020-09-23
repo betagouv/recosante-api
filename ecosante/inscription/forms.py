@@ -34,6 +34,11 @@ class FormInscription(BaseForm):
             ('pollution',  "Lorsque la qualité de l'air est mauvaise")
         ]
     )
+    rgpd = BooleanField(
+        "En cochant cette case vous consentez à partager vos données personnelles avec l'équipe écosanté",
+        [validators.DataRequired(message='Vous devez accepter de partager vos données pour vous inscrire')],
+        description='<a href="#donnees-personnelles">En savoir plus sur les données personnelles</a>',
+    )
 
 class FormPersonnalisation(BaseForm):
     deplacement = MultiCheckboxField(
