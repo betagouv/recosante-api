@@ -79,7 +79,7 @@ def export_csv(secret_slug):
             "Êtes-vous fumeur.euse ?": inscription.fumeur,
             "Vivez-vous avec des enfants ?": inscription.enfants,
             "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.": inscription.mail,
-            "Souhaitez-vous recevoir les recommandations par : *": inscription.diffusion,
+            "Souhaitez-vous recevoir les recommandations par : *": inscription.diffusion.capitalize() if inscription.diffusion == 'mail' else inscription.diffusion,
             "Numéro de téléphone :": inscription.telephone,
             "A quelle fréquence souhaitez-vous recevoir les recommandations ? *": inscription.frequence,
             "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.": True
