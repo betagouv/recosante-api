@@ -85,7 +85,7 @@ def export_csv(secret_slug):
             "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.": True
         })
     output = make_response(stringio.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-Disposition"] = f"attachment; filename=export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
     output.headers["Content-type"] = "text/csv"
     stringio.close()
     return output
