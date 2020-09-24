@@ -19,7 +19,6 @@ SENDINBLUE_DEFAULT_POST_HEADERS = {"accept": "application/json", "content-type":
 
 @app.route('/', methods=['GET'])
 def respond():
-    print(request.query_string)
     return Response(response="coucou !", status=200)
 
 
@@ -80,7 +79,7 @@ def run():
         "notifyUrl": "http://app-5eedd47c-0ebb-4933-8c82-edcf2ed13a66.cleverapps.io/webhook?secret=onListImported"
     }
 
-    r_import = requests.request("POST", "https://api.sendinblue.com/v3/contacts/import", json=payload, headers=SENDINBLUE_DEFAULT_POST_HEADERS)
+    r_import = requests.request("POST", "https://api.sendinblue.com/v3/contacts/import", json=import_payload, headers=SENDINBLUE_DEFAULT_POST_HEADERS)
     r_import.raise_for_status()
     ## HTTP Status should be 202 Accepted
 
