@@ -29,7 +29,7 @@ def onListImported(request):
     # pprint(request.headers)
     # pprint(request.form)
 
-    pprint(f'list id: {request.form['listids']}')
+    pprint(f'list id: {request.form["listids"]}')
 
     
 
