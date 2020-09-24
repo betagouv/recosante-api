@@ -22,12 +22,17 @@ def respond():
     print(request.query_string)
     return Response(response="coucou !", status=200)
 
-# @app.route('/', methods=['POST'])
-# def respond():
-#     print(request);
-#     return Response(status=200)
+
+
+
+def onListImported(request):
+    print('YAY, list was imported!')
+    pprint(request.body)
 
 webhook_dict = dict()
+webhook_dict['onListImported'] = onListImported
+
+
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
@@ -36,9 +41,11 @@ def webhook():
     
     fun = webhook_dict[request.args.get("secret")]
 
-    fun()
+    fun(request)
 
     return Response(response="thank you!", status=202)
+
+
 
 @app.route('/run', methods=['GET'])
 def run():
@@ -60,8 +67,6 @@ def run():
 
     pprint(csv_file)
 
-    webhook_dict['yo'] = lambda: print('whoaaaaaa')
-
     import_payload = {
         "emailBlacklist": False,
         "smsBlacklist": False,
@@ -72,15 +77,13 @@ def run():
             "name": "test-api-list-by-davbru",
             "folder_id": listes_ecosante_folder_id
         }
-        #notifyUrl
+        "notifyUrl": "http://app-5eedd47c-0ebb-4933-8c82-edcf2ed13a66.cleverapps.io/webhook?secret=onListImported"
     }
 
-    # r_import = requests.request("POST", "https://api.sendinblue.com/v3/contacts/import", json=payload, headers=SENDINBLUE_DEFAULT_POST_HEADERS)
-    # r_import.raise_for_status()
-    # # HTTP Status should be 202 Accepted
-
-    # new_list_id = r_import.json()
-
-    # pprint(f'List creation from csv is a success! list id: id for "{LISTES_ECOSANTE_FOLDER_NAME}" is "{listes_ecosante_folder_id}"')
+    r_import = requests.request("POST", "https://api.sendinblue.com/v3/contacts/import", json=payload, headers=SENDINBLUE_DEFAULT_POST_HEADERS)
+    r_import.raise_for_status()
+    ## HTTP Status should be 202 Accepted
 
     return Response(response="<a href=\"https://console.clever-cloud.com/organisations/orga_35c34f04-1a7a-4fdf-b5bf-77b58d7540de/applications/app_5eedd47c-0ebb-4933-8c82-edcf2ed13a66/logs\">LOGS</a>", status=202)
+
+
