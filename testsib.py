@@ -29,6 +29,7 @@ def onListImported(request):
     pprint(request.headers)
     pprint(request.data)
     pprint(request.json)
+    pprint(request.form)
 
 webhook_dict = dict()
 webhook_dict['onListImported'] = onListImported
