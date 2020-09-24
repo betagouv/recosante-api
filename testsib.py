@@ -80,6 +80,7 @@ def run():
     }
 
     r_import = requests.request("POST", "https://api.sendinblue.com/v3/contacts/import", json=import_payload, headers=SENDINBLUE_DEFAULT_POST_HEADERS)
+    pprint(r_import.text)    
     r_import.raise_for_status()
     ## HTTP Status should be 202 Accepted
 
