@@ -67,3 +67,5 @@ def run():
     # new_list_id = r_import.json()
 
     # pprint(f'List creation from csv is a success! list id: id for "{LISTES_ECOSANTE_FOLDER_NAME}" is "{listes_ecosante_folder_id}"')
+
+    return Response(response="<a href=\"https://console.clever-cloud.com/organisations/orga_35c34f04-1a7a-4fdf-b5bf-77b58d7540de/applications/app_5eedd47c-0ebb-4933-8c82-edcf2ed13a66/logs\">LOGS</a>", status=202)
