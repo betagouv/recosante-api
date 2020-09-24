@@ -13,7 +13,7 @@ pprint('API key: {}'.format(api_key))
 SENDINBLUE_DEFAULT_GET_HEADERS = {"accept": "application/json", "api-key": api_key}
 SENDINBLUE_DEFAULT_POST_HEADERS = {"accept": "application/json", "content-type": "application/json", "api-key": api_key}
 
-def run():
+def run(x, y):
     print("Hurray!")
     # Get relevant folder id
 
