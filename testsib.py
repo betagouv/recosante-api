@@ -29,7 +29,7 @@ def respond():
 
 webhook_dict = dict()
 
-@app.route('/webhook', methods=['POST'])
+@app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     print('# WEBHOOK #')
     pprint(f'secret: {request.args.get("secret")}')
