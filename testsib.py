@@ -27,6 +27,19 @@ def respond():
 #     print(request);
 #     return Response(status=200)
 
+webhook_dict = dict()
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    print('# WEBHOOK #')
+    pprint(f'secret: {request.args.get("secret")}')
+    
+    fun = webhook_dict[request.args.get("secret")]
+
+    fun()
+
+    return Response(response="thank you!", status=202)
+
 @app.route('/run', methods=['GET'])
 def run():
     print("Hurray!")
@@ -46,6 +59,8 @@ def run():
     csv_file = open("./data/fake-Tous-les-jours-Mail.csv", 'r').read()
 
     pprint(csv_file)
+
+    webhook_dict['yo'] = lambda: print('whoaaaaaa')
 
     import_payload = {
         "emailBlacklist": False,
