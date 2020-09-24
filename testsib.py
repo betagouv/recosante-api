@@ -76,7 +76,7 @@ def run():
         "newList": {
             "name": "test-api-list-by-davbru",
             "folder_id": listes_ecosante_folder_id
-        }
+        },
         "notifyUrl": "http://app-5eedd47c-0ebb-4933-8c82-edcf2ed13a66.cleverapps.io/webhook?secret=onListImported"
     }
 
