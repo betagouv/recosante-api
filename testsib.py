@@ -19,7 +19,7 @@ SENDINBLUE_DEFAULT_POST_HEADERS = {"accept": "application/json", "content-type":
 
 @app.route('/', methods=['GET'])
 def respond():
-    print(request)
+    print(request.query_string)
     return Response(response="coucou !", status=200)
 
 # @app.route('/', methods=['POST'])
