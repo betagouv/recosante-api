@@ -1,4 +1,8 @@
 {% macro render_field(field) %}
+{% set safe_field = field(**kwargs)|safe %}
+
+{%if safe_field %}
+
 <div class="form__group">
     <fieldset>
 
@@ -12,11 +16,15 @@
         <p class="description">{{ field.description|safe }}</p>
         {% endif %}
 
-        {{ field(**kwargs)|safe }}
+        {{ safe_field }}
 
         {% for error in field.errors %}
             <span class="form__error">{{ error }}
+            {% if error.choices %}
+            Faire un choix
+            {% endif %}
         {% endfor %}
     </fieldset>
 </div>
+{% endif %}
 {% endmacro %}
