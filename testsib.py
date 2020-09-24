@@ -1,6 +1,9 @@
 import os
 import requests
 from pprint import pprint
+from flask import Flask, request, Response
+
+app = Flask(__name__)
 
 # Start with
 # SENDINBLUE_API_KEY=<key> python3 tools/sendinblueAPIPlayground.py 
@@ -12,6 +15,18 @@ pprint('API key: {}'.format(api_key))
 
 SENDINBLUE_DEFAULT_GET_HEADERS = {"accept": "application/json", "api-key": api_key}
 SENDINBLUE_DEFAULT_POST_HEADERS = {"accept": "application/json", "content-type": "application/json", "api-key": api_key}
+
+
+@app.route('/', methods=['GET'])
+def respond():
+    print(request)
+    return Response(response="coucou !", status=200)
+
+# @app.route('/', methods=['POST'])
+# def respond():
+#     print(request);
+#     return Response(status=200)
+
 
 def run(x, y):
     print("Hurray!")
