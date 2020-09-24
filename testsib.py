@@ -27,7 +27,7 @@ def respond():
 #     print(request);
 #     return Response(status=200)
 
-
+@app.route('/run', methods=['GET'])
 def run(x, y):
     print("Hurray!")
     # Get relevant folder id
