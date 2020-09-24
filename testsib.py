@@ -26,7 +26,9 @@ def respond():
 
 def onListImported(request):
     print('YAY, list was imported!')
-    pprint(request.get_json())
+    pprint(request.headers)
+    pprint(request.data)
+    pprint(request.json)
 
 webhook_dict = dict()
 webhook_dict['onListImported'] = onListImported
