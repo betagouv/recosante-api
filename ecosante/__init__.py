@@ -13,7 +13,6 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     db.init_app(app)
     alembic.init_app(app)
-    monkey_patch()
 
     with app.app_context():
         from .inscription import models, blueprint
@@ -22,11 +21,3 @@ def create_app():
         app.register_blueprint(blueprint.bp)
 
     return app
-
-def monkey_patch():
-    from wtforms import Field, validators
-
-    def is_required(self):
-        return any(map(lambda validator: isinstance(validator, validators.DataRequired), self.validators))
-
-    Field.is_required = is_required

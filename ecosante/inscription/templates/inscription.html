@@ -14,6 +14,7 @@
     {{ form.hidden_tag() }}
     {{ render_field(form.mail, autofocus=form.mail.data == None) }}
     {{ render_field(form.ville_entree, autofocus=form.mail.data != None, class_="ville-autocomplete" )}}
+    {{ render_field(form.ville_choices) }}
     {{ render_field(form.frequence) }}
     {{ render_field(form.diffusion) }}
     {{ render_field(form.telephone) }}
