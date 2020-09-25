@@ -1,10 +1,10 @@
 from flask import (Blueprint, render_template, request, redirect, session, url_for,
-     make_response, current_app)
+     current_app, stream_with_context)
+from flask.wrappers import Response
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
 from ecosante.utils.decorators import admin_capability_url
-from io import StringIO
-from csv import DictWriter, DictReader, Error
+from csv import DictReader
 from datetime import datetime
 
 bp = Blueprint("inscription", __name__, template_folder='templates', url_prefix='/inscription')
@@ -46,55 +46,13 @@ def reussie():
 @bp.route('<secret_slug>/csv')
 @admin_capability_url
 def export_csv(secret_slug):
-    stringio = StringIO()
-    writer = DictWriter(
-        stringio,
-        fieldnames=[
-            'Dans quelle ville vivez-vous ?',
-            'Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?',
-            "Pratiquez-vous une activité sportive au moins une fois par semaine ? On entend par activité sportive toute forme d'activité physique ayant pour objectif l'amélioration et le maintien de la condition physique.",
-            "Pratiquez-vous une Activité Physique Adaptée au moins une fois par semaine ? Les APA regroupent l’ensemble des activités physiques et sportives adaptées aux capacités des personnes atteintes de maladie chronique ou de handicap.",
-            "Pratiquez-vous au moins une fois par semaine les activités suivantes ?",
-            "Vivez-vous avec une pathologie respiratoire ?",
-            "Êtes-vous allergique aux pollens ?",
-            "Êtes-vous fumeur.euse ?",
-            "Vivez-vous avec des enfants ?",
-            "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.",
-            "Souhaitez-vous recevoir les recommandations par : *",
-            "Numéro de téléphone :",
-            "A quelle fréquence souhaitez-vous recevoir les recommandations ? *",
-            "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD."
-        ]
+    return Response(
+        stream_with_context(Inscription.generate_csv()),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
+        }
     )
-    writer.writeheader()
-    for inscription in Inscription.query.all():
-        diffusion = inscription.diffusion
-        if diffusion == 'mail':
-            diffusion = 'Mail'
-        elif diffusion == 'sms':
-            diffusion = 'SMS'
-
-        writer.writerow({
-            'Dans quelle ville vivez-vous ?': inscription.ville_entree,
-            'Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?': "; ".join(inscription.deplacement or []),
-            "Pratiquez-vous une activité sportive au moins une fois par semaine ? On entend par activité sportive toute forme d'activité physique ayant pour objectif l'amélioration et le maintien de la condition physique.": inscription.activites is not None and 'sport' in inscription.activites,
-            "Pratiquez-vous une Activité Physique Adaptée au moins une fois par semaine ? Les APA regroupent l’ensemble des activités physiques et sportives adaptées aux capacités des personnes atteintes de maladie chronique ou de handicap.": False,
-            "Pratiquez-vous au moins une fois par semaine les activités suivantes ?": "; ".join(inscription.activites or []),
-            "Vivez-vous avec une pathologie respiratoire ?": inscription.pathologie_respiratoire,
-            "Êtes-vous allergique aux pollens ?": inscription.allergie_pollen,
-            "Êtes-vous fumeur.euse ?": inscription.fumeur,
-            "Vivez-vous avec des enfants ?": inscription.enfants,
-            "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.": inscription.mail,
-            "Souhaitez-vous recevoir les recommandations par : *": diffusion,
-            "Numéro de téléphone :": inscription.telephone,
-            "A quelle fréquence souhaitez-vous recevoir les recommandations ? *": inscription.frequence,
-            "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.": True
-        })
-    output = make_response(stringio.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename=export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
-    output.headers["Content-type"] = "text/csv"
-    stringio.close()
-    return output
 
 @bp.route('<secret_slug>/import_csv', methods=['GET', 'POST'])
 @admin_capability_url
