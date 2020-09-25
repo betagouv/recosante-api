@@ -45,6 +45,8 @@ class FormInscription(BaseForm):
 
     def validate_ville_entree(form, field):
         if form.ville_insee.data and form.ville_name.data:
+            form.ville_choices.choices = [(form.ville_insee.data, form.ville_name.data)]
+            form.ville_choices.data = form.ville_insee.data
             return
 
         if form.ville_choices.data:
