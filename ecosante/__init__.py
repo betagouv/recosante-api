@@ -15,9 +15,11 @@ def create_app():
     alembic.init_app(app)
 
     with app.app_context():
-        from .inscription import models, blueprint
+        from .inscription import models, blueprint as inscription_bp
+        from .stats import blueprint as stats_bp
         alembic.upgrade()
 
-        app.register_blueprint(blueprint.bp)
+        app.register_blueprint(inscription_bp.bp)
+        app.register_blueprint(stats_bp.bp)
 
     return app

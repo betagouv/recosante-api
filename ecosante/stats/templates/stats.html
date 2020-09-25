@@ -1,16 +1,15 @@
----
-layout: home
----
+{% extends 'base.html' %}
 
-<script type="text/javascript" src="./assets/js/Chart.min.js"></script>
-<link rel="stylesheet" href="./assets/css/Chart.min.css">
-<link rel="stylesheet" href="./assets/css/stats.css">
+{% block content %}
+<script type="text/javascript" src="/assets/js/Chart.min.js"></script>
+<link rel="stylesheet" href="/assets/css/Chart.min.css">
+<link rel="stylesheet" href="/assets/css/stats.css">
 
 
 <section class="section section-grey">
     <div class="container">
         <div class="panel">
-            <h1><span class="number">{{ site.data.stats.actifs.total }}</span> utilisateurs actifs</h1>
+            <h1><span class="number">{{ actifs }}</span> utilisateurs actifs</h1>
             <canvas id="total_subscriptions"></canvas>
         </div>
         <div class="panel user_pref">
@@ -26,14 +25,13 @@ layout: home
         </div>
     </div>
 </section>
-
 <script>
 var color = Chart.helpers.color;
 var totalSubscriptionsChartData = {
-        labels: ["{{ site.data.stats.actifs.data | map: "mois" | join: '", "' }}"],
+        labels: {{ mois|safe }},
         datasets: [{
             label: '# inscrits',
-            data: [{{ site.data.stats.actifs.data | map: "valeur" | join: ", " }}],
+            data: {{ valeurs|safe }},
             backgroundColor: color('rgb(54, 162, 235)').alpha(0.5).rgbString(),
             borderColor: 'rgb(54, 162, 235)',
             borderWidth: 1
@@ -44,8 +42,8 @@ var formatChartData = {
     datasets: [{
         label: 'format',
         data: [
-            {{ site.data.stats.sms.total }},
-            {{ site.data.stats.mails.total}}
+            {{ sms }},
+            {{ mails }}
         ],
         backgroundColor: [
             '#ffa725',
@@ -58,8 +56,8 @@ var frequencyChartData = {
     datasets: [{
         label: 'frequency',
         data: [
-            {{ site.data.stats.quotidienne.total }},
-            {{ site.data.stats.mauvaise_qa.total}}
+            {{ quotidien }},
+            {{ pollution }}
         ],
         backgroundColor: [
             '#ffa725',
@@ -104,3 +102,4 @@ window.onload = function() {
     })                
 }
 </script>
+{% endblock content %}
