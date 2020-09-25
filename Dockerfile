@@ -10,6 +10,7 @@ RUN jekyll build
 RUN mv _site/base.html ecosante/templates/base.html
 
 FROM python:3.8
+RUN apt update && apt install -y --no-install-recommends locales; rm -rf /var/lib/apt/lists/*; sed -i '/^#.* fr_FR.UTF-8 /s/^#//' /etc/locale.gen; locale-gen
 
 WORKDIR /ecosante/
 COPY --from=0 /ecosante/ .
