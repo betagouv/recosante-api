@@ -40,6 +40,7 @@ import {
 } from './subscriberReceipientConstants.js'
 
 import {INDICE_ATMO_TO_EMAIL_QUALIFICATIF} from './qualiteAirConstants.js';
+import {slugify} from './utils.js';
 
 
 export default function subscriberToReceipient(subscriber, airAPIResult){
@@ -69,11 +70,11 @@ export default function subscriberToReceipient(subscriber, airAPIResult){
     receipient[OUTPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] = 
         subscriber[INPUT_ACTIVITE_SPORTIVE_COLUMN_NAME] === OUI || subscriber[INPUT_APA_COLUMN_NAME] === OUI ? 
             OUI : NON;
-    receipient[OUTPUT_JARDINAGE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Jardinage') ? OUI : NON;
-    receipient[OUTPUT_BRICOLAGE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Bricolage') ? OUI : NON;
-    receipient[OUTPUT_MÉNAGE_COLUMN_NAME] = subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME].includes('Ménage') ? OUI : NON;
-    receipient[OUTPUT_CYCLISTE_COLUMN_NAME] = subscriber[INPUT_TRANSPORT_COLUMN_NAME].includes('Vélo') ? OUI : NON;
-    receipient[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = subscriber[INPUT_TRANSPORT_COLUMN_NAME].includes('Voiture') ? OUI : NON;
+    receipient[OUTPUT_JARDINAGE_COLUMN_NAME] = slugify(subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME]).toLowerCase().includes('jardinage') ? OUI : NON;
+    receipient[OUTPUT_BRICOLAGE_COLUMN_NAME] = slugify(subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME]).toLowerCase().includes('bricolage') ? OUI : NON;
+    receipient[OUTPUT_MÉNAGE_COLUMN_NAME] = slugify(subscriber[INPUT_ACTIVITE_MAISON_COLUMN_NAME]).toLowerCase().includes('menage') ? OUI : NON;
+    receipient[OUTPUT_CYCLISTE_COLUMN_NAME] = slugify(subscriber[INPUT_TRANSPORT_COLUMN_NAME]).toLowerCase().includes('velo') ? OUI : NON;
+    receipient[OUTPUT_AUTOMOBILISTE_COLUMN_NAME] = slugify(subscriber[INPUT_TRANSPORT_COLUMN_NAME]).toLowerCase().includes('voiture') ? OUI : NON;
     receipient[OUTPUT_FUMEUR_COLUMN_NAME] = subscriber[INPUT_FUMEUR_COLUMN_NAME].trim()
 
     return receipient;
