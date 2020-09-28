@@ -80,7 +80,8 @@ class Inscription(db.Model):
             "Souhaitez-vous recevoir les recommandations par : *",
             "Numéro de téléphone :",
             "A quelle fréquence souhaitez-vous recevoir les recommandations ? *",
-            "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD."
+            "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.",
+            "Date d'inscription"
         ])
 
         for inscription in Inscription.query.all():
@@ -104,7 +105,8 @@ class Inscription(db.Model):
                 diffusion,
                 inscription.telephone,
                 inscription.frequence,
-                "Oui"
+                "Oui",
+                inscription.date_inscription
             ])
 
     @classmethod
