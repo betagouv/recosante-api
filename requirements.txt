@@ -1,6 +1,6 @@
 Flask
-Flask-Alembic
 Flask-SQLAlchemy
+Flask-Migrate
 Flask-WTF
 psycopg2
 email_validator

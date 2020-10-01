@@ -1,10 +1,10 @@
-from flask import Flask
-from flask_alembic import Alembic
+from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import os
 
 db = SQLAlchemy()
-alembic = Alembic()
+migrate = Migrate()  
 
 def create_app():
     app = Flask(__name__)
@@ -12,12 +12,13 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     db.init_app(app)
-    alembic.init_app(app)
+    migrate.init_app(app, db)
 
     with app.app_context():
         from .inscription import models, blueprint as inscription_bp
+        from .recommandations import models, commands
         from .stats import blueprint as stats_bp
-        alembic.upgrade()
+        from . import commands
 
         app.register_blueprint(inscription_bp.bp)
         app.register_blueprint(stats_bp.bp)
