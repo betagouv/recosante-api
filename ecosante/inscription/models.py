@@ -1,10 +1,15 @@
 from .. import db
+from ecosante.recommandations.models import Recommandation
 from sqlalchemy.dialects import postgresql
 from datetime import date
 from dataclasses import dataclass
 from typing import List
 import csv
+import uuid
+import random
 from io import StringIO
+from indice_pollution import forecast, today
+from flask import current_app
 
 @dataclass
 class Inscription(db.Model):
@@ -30,10 +35,10 @@ class Inscription(db.Model):
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
     ville_insee = db.Column(db.String)
-    diffusion = db.Column(db.String)
+    _diffusion = db.Column("diffusion", db.String)
     telephone = db.Column(db.String)
     mail = db.Column(db.String)
-    frequence = db.Column(db.String)
+    _frequence = db.Column('frequence', db.String)
     #Habitudes
     deplacement = db.Column(postgresql.ARRAY(db.String))
     sport = db.Column(db.Boolean)
@@ -47,6 +52,27 @@ class Inscription(db.Model):
 
     date_inscription = db.Column(db.Date())
 
+
+    QUALIFICATIF_TRES_BON = 'Très bonne'
+    QUALIFICATIF_BON = 'Bonne'
+    QUALIFICATIF_MOYEN = 'Moyenne'
+    QUALIFICATIF_MÉDIOCRE = 'Médiocre'
+    QUALIFICATIF_MAUVAIS = 'Mauvaise'
+    QUALIFICATIF_TRÈS_MAUVAIS = 'Très mauvaise'
+
+    INDICE_ATMO_TO_QUALIFICATIF = {
+        1: QUALIFICATIF_TRES_BON,
+        2: QUALIFICATIF_TRES_BON,
+        3: QUALIFICATIF_BON,
+        4: QUALIFICATIF_BON,
+        5: QUALIFICATIF_MOYEN,
+        6: QUALIFICATIF_MÉDIOCRE,
+        7: QUALIFICATIF_MÉDIOCRE,
+        8: QUALIFICATIF_MAUVAIS,
+        9: QUALIFICATIF_MAUVAIS,
+        10: QUALIFICATIF_TRÈS_MAUVAIS,
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.date_inscription = date.today()
@@ -57,8 +83,26 @@ class Inscription(db.Model):
     def has_sante(self):
         return any([getattr(self, k) is not None for k in ['pathologie_respiratoire', 'allergie_pollen', 'fumeur']])
 
+    @property
+    def frequence(self):
+        return "mauvaise" if "mauvaise" in self._frequence or "pollution" in self._frequence else "quotidien"
+
+    @property
+    def diffusion(self):
+        if self._diffusion == 'mail':
+            return 'mail'
+        return 'sms'
+
+    @property
+    def voiture(self):
+        return "voiture" in map(lambda s: s.lower(), self.deplacement)
+
+    @property
+    def bricolage(self):
+        return "bricolage" in map(lambda s: s.lower(), self.activites)
+
     @classmethod
-    def generate_csv(cls):
+    def generate_csv(cls, new_export=False, random_uuid=None):
         def generate_line(line):
             stringio = StringIO()
             writer = csv.writer(stringio)
@@ -66,6 +110,13 @@ class Inscription(db.Model):
             v = stringio.getvalue()
             stringio.close()
             return v
+
+        recommandations = Recommandation.query.filter_by(recommandabilite="Utilisable").all()
+        random.shuffle(
+            recommandations,
+            lambda: 1/(uuid.UUID(random_uuid, version=4).int) if random_uuid else random.random()
+        )
+
 
         yield generate_line(['Dans quelle ville vivez-vous ?',
             'Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?',
@@ -82,14 +133,33 @@ class Inscription(db.Model):
             "A quelle fréquence souhaitez-vous recevoir les recommandations ? *",
             "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.",
             "Date d'inscription"
-        ])
+        ] + ([
+            "Qualite de l'air",
+            "Région",
+            "site",
+            "Recommandation",
+            "Précisions"
+        ] if new_export else []))
 
+        d = today()
         for inscription in Inscription.query.all():
-            diffusion = inscription.diffusion
-            if diffusion == 'mail':
-                diffusion = 'Mail'
-            elif diffusion == 'sms':
-                diffusion = 'SMS'
+            if new_export:
+                try:
+                    f = forecast(inscription.ville_insee, d, True)
+                except KeyError as e:
+                    current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
+                    current_app.logger.error(e)
+                    f = {"data": [], "metadata": {"region": {"nom": "", "website": ""}}}
+                try:
+                    qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
+                except TypeError:
+                    qai = None
+                recommandation = next(filter(lambda r: r.is_relevant(inscription, qai), recommandations))
+                if inscription.frequence == "mauvaise" and qai < 8:
+                    continue
+            else:
+                f, qai, recommandation = None, None, None
+
 
             yield generate_line([
                 inscription.ville_entree,
@@ -102,12 +172,18 @@ class Inscription(db.Model):
                 cls.convert_boolean_to_oui_non(inscription.fumeur),
                 cls.convert_boolean_to_oui_non(inscription.enfants),
                 inscription.mail,
-                diffusion,
+                inscription.diffusion,
                 inscription.telephone,
                 inscription.frequence,
                 "Oui",
                 inscription.date_inscription
-            ])
+            ] + ([
+                cls.INDICE_ATMO_TO_QUALIFICATIF.get(qai),
+                f['metadata']['region']['nom'],
+                f['metadata']['region']['website'],
+                recommandation.format(inscription),
+                recommandation.precisions
+            ] if new_export else []))
 
     @classmethod
     def convert_boolean_to_oui_non(cls, value):
