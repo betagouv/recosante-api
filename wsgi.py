@@ -1,4 +1,4 @@
-from ecosante import create_app, alembic
+from ecosante import create_app
 from logging.config import dictConfig
 
 dictConfig({

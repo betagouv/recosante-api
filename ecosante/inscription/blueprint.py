@@ -47,7 +47,7 @@ def reussie():
 @admin_capability_url
 def export_csv(secret_slug):
     return Response(
-        stream_with_context(Inscription.generate_csv()),
+        stream_with_context(Inscription.generate_csv(request.args.get('new_export'))),
         mimetype="text/csv",
         headers={
             "Content-Disposition": f"attachment; filename=export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
