@@ -21,9 +21,9 @@ def stats():
         actifs=Inscription.query.count(),
         mois=mois,
         valeurs=valeurs,
-        sms=Inscription.query.filter(Inscription.diffusion.ilike('sms')).count(),
-        mails=Inscription.query.filter(Inscription.diffusion.ilike('mail')).count(),
+        sms=Inscription.query.filter_by(diffusion='sms').count(),
+        mails=Inscription.query.filter_by(diffusion='mail').count(),
         quotidien=Inscription.query.filter_by(frequence='quotidien').count(),
-        pollution=Inscription.query.filter(Inscription.frequence != 'quotidien').count()
+        pollution=Inscription.query.filter_by(frequence='pollution').count()
     )
 

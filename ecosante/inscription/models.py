@@ -1,12 +1,14 @@
 from .. import db
 from ecosante.recommandations.models import Recommandation
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import Enum
 from datetime import date
 from dataclasses import dataclass
 from typing import List
 import csv
 import uuid
 import random
+import enum
 from io import StringIO
 from indice_pollution import forecast, today
 from flask import current_app
@@ -35,10 +37,10 @@ class Inscription(db.Model):
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
     ville_insee = db.Column(db.String)
-    _diffusion = db.Column("diffusion", db.String)
+    diffusion = db.Column(db.Enum("sms", "mail", name="diffusion_enum"))
     telephone = db.Column(db.String)
     mail = db.Column(db.String)
-    _frequence = db.Column('frequence', db.String)
+    frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"))
     #Habitudes
     deplacement = db.Column(postgresql.ARRAY(db.String))
     _sport = db.Column("sport", db.Boolean)
@@ -82,16 +84,6 @@ class Inscription(db.Model):
 
     def has_sante(self):
         return any([getattr(self, k) is not None for k in ['pathologie_respiratoire', 'allergie_pollen', 'fumeur']])
-
-    @property
-    def frequence(self):
-        return "mauvaise" if "mauvaise" in self._frequence or "pollution" in self._frequence else "quotidien"
-
-    @property
-    def diffusion(self):
-        if self._diffusion.lower() == 'mail':
-            return 'mail'
-        return 'sms'
 
     @property
     def voiture(self):
