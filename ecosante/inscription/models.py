@@ -41,7 +41,7 @@ class Inscription(db.Model):
     _frequence = db.Column('frequence', db.String)
     #Habitudes
     deplacement = db.Column(postgresql.ARRAY(db.String))
-    sport = db.Column(db.Boolean)
+    _sport = db.Column("sport", db.Boolean)
     apa = db.Column(db.Boolean)
     activites = db.Column(postgresql.ARRAY(db.String))
     enfants = db.Column(db.Boolean)
@@ -100,6 +100,10 @@ class Inscription(db.Model):
     @property
     def bricolage(self):
         return "bricolage" in map(lambda s: s.lower(), self.activites)
+
+    @property
+    def sport(self):
+        return "sport" in map(lambda s: s.lower(), self.activites) or self._sport
 
     @classmethod
     def generate_csv(cls, new_export=False, random_uuid=None):
@@ -164,7 +168,7 @@ class Inscription(db.Model):
             yield generate_line([
                 inscription.ville_entree,
                 "; ".join(inscription.deplacement or []),
-                cls.convert_boolean_to_oui_non(inscription.activites is not None and 'sport' in inscription.activites),
+                cls.convert_boolean_to_oui_non(inscription.sport),
                 "Non",
                 ";".join(inscription.activites or []),
                 cls.convert_boolean_to_oui_non(inscription.pathologie_respiratoire),
