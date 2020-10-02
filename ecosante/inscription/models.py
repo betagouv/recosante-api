@@ -114,7 +114,8 @@ class Inscription(db.Model):
         )
 
 
-        yield generate_line(['Dans quelle ville vivez-vous ?',
+        yield generate_line([
+            'VILLE' if new_export else 'Dans quelle ville vivez-vous ?',
             'Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?',
             "Pratiquez-vous une activité sportive au moins une fois par semaine ? On entend par activité sportive toute forme d'activité physique ayant pour objectif l'amélioration et le maintien de la condition physique.",
             "Pratiquez-vous une Activité Physique Adaptée au moins une fois par semaine ? Les APA regroupent l’ensemble des activités physiques et sportives adaptées aux capacités des personnes atteintes de maladie chronique ou de handicap.",
@@ -123,18 +124,18 @@ class Inscription(db.Model):
             "Êtes-vous allergique aux pollens ?",
             "Êtes-vous fumeur.euse ?",
             "Vivez-vous avec des enfants ?",
-            "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.",
-            "Souhaitez-vous recevoir les recommandations par : *",
-            "Numéro de téléphone :",
+            'MAIL' if new_export else "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.",
+            'FORMAT' if new_export else "Souhaitez-vous recevoir les recommandations par : *",
+            'SMS' if new_export else "Numéro de téléphone :",
             "A quelle fréquence souhaitez-vous recevoir les recommandations ? *",
             "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.",
             "Date d'inscription"
         ] + ([
-            "Qualite de l'air",
+            "QUALITE_AIR",
             "Région",
-            "site",
-            "Recommandation",
-            "Précisions"
+            "LIEN_AASQA",
+            "RECOMMANDATION",
+            "PRECISIONS"
         ] if new_export else []))
 
         d = today()
