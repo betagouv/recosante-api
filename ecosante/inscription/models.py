@@ -89,7 +89,7 @@ class Inscription(db.Model):
 
     @property
     def diffusion(self):
-        if self._diffusion == 'mail':
+        if self._diffusion.lower() == 'mail':
             return 'mail'
         return 'sms'
 
