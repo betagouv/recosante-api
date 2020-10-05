@@ -159,7 +159,7 @@ class Inscription(db.Model):
 
 
             yield generate_line([
-                inscription.ville_entree,
+                inscription.ville_name,
                 "; ".join(inscription.deplacement or []),
                 cls.convert_boolean_to_oui_non(inscription.sport),
                 "Non",
