@@ -20,4 +20,4 @@ RUN pip3 install uwsgi
 
 EXPOSE 8080
 
-CMD ["uwsgi", "wsgi.ini"]
+CMD ["./startup.sh"]
