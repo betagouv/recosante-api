@@ -50,4 +50,4 @@ class Recommandation(db.Model):
         return True
 
     def format(self, inscription):
-        return self.recommandation if inscription.diffusion.lower() == 'mail' else self.recommandation_format_SMS
+        return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS
