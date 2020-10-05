@@ -5,4 +5,4 @@ Flask-WTF
 psycopg2
 email_validator
 requests
-indice_pollution==0.2.2
+indice_pollution==0.2.3
