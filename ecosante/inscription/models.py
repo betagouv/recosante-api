@@ -152,7 +152,7 @@ class Inscription(db.Model):
                 except TypeError:
                     qai = None
                 recommandation = next(filter(lambda r: r.is_relevant(inscription, qai), recommandations))
-                if inscription.frequence == "mauvaise" and qai < 8:
+                if inscription.frequence == "pollution" and qai and qai < 8:
                     continue
             else:
                 f, qai, recommandation = None, None, None
