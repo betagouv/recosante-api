@@ -2,8 +2,9 @@ from flask import (Blueprint, render_template, request, redirect, session, url_f
      current_app, stream_with_context)
 from flask.wrappers import Response
 from .models import Inscription, db
-from .forms import FormInscription, FormPersonnalisation
+from .forms import FormInscription, FormPersonnalisation, FormExport
 from ecosante.utils.decorators import admin_capability_url
+from ecosante.recommandations.models import Recommandation
 from csv import DictReader
 from datetime import datetime
 
@@ -47,7 +48,12 @@ def reussie():
 @admin_capability_url
 def export_csv(secret_slug):
     return Response(
-        stream_with_context(Inscription.generate_csv(request.args.get('new_export'))),
+        stream_with_context(
+            Inscription.generate_csv(
+                request.args.get('new_export'),
+                request.args.get('preferred_reco')
+            )
+        ),
         mimetype="text/csv",
         headers={
             "Content-Disposition": f"attachment; filename=export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
@@ -99,3 +105,20 @@ def import_csv(secret_slug):
         return render_template('import_csv_reussi.html')
         
     return render_template("import_csv.html")
+
+@bp.route('<secret_slug>/export', methods=['GET', 'POST'])
+@admin_capability_url
+def export(secret_slug):
+    form = FormExport()
+    form.recommandations.choices=[(r.id, r.recommandation) for r in Recommandation.query.all()]
+    if request.method == 'POST':
+        return redirect(
+            url_for(
+                "inscription.export_csv",
+                secret_slug=secret_slug,
+                preferred_reco=form.recommandations.data,
+                new_export="true"
+            )
+        )
+
+    return render_template('export.html', form=form)

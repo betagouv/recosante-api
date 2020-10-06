@@ -6,9 +6,6 @@ from datetime import date
 from dataclasses import dataclass
 from typing import List
 import csv
-import uuid
-import random
-import enum
 from io import StringIO
 from indice_pollution import forecast, today
 from flask import current_app
@@ -98,7 +95,7 @@ class Inscription(db.Model):
         return "sport" in map(lambda s: s.lower(), self.activites) or self._sport
 
     @classmethod
-    def generate_csv(cls, new_export=False, random_uuid=None):
+    def generate_csv(cls, new_export=False, preferred_reco=None, random_uuid=None):
         def generate_line(line):
             stringio = StringIO()
             writer = csv.writer(stringio)
@@ -107,12 +104,7 @@ class Inscription(db.Model):
             stringio.close()
             return v
 
-        recommandations = Recommandation.query.filter_by(recommandabilite="Utilisable").all()
-        random.shuffle(
-            recommandations,
-            lambda: 1/(uuid.UUID(random_uuid, version=4).int) if random_uuid else random.random()
-        )
-
+        recommandations = Recommandation.shuffled(random_uuid=random_uuid, preferred_reco=preferred_reco)
 
         yield generate_line([
             'VILLE' if new_export else 'Dans quelle ville vivez-vous ?',
@@ -151,7 +143,7 @@ class Inscription(db.Model):
                     qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
                 except TypeError:
                     qai = None
-                recommandation = next(filter(lambda r: r.is_relevant(inscription, qai), recommandations))
+                recommandation = Recommandation.get_revelant(recommandations, inscription, qai)
                 if inscription.frequence == "pollution" and qai and qai < 8:
                     continue
             else:

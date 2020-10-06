@@ -1,5 +1,7 @@
 from .. import db
 import sqlalchemy.types as types
+import uuid
+import random
 
 class CustomBoolean(types.TypeDecorator):
     impl = db.Boolean
@@ -51,3 +53,18 @@ class Recommandation(db.Model):
 
     def format(self, inscription):
         return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS
+
+    @classmethod
+    def shuffled(cls, random_uuid, preferred_reco):
+        recommandations = cls.query.filter_by(recommandabilite="Utilisable").all()
+        random.shuffle(
+            recommandations,
+            lambda: 1/(uuid.UUID(random_uuid, version=4).int) if random_uuid else random.random()
+        )
+        if preferred_reco:
+            recommandations = [cls.query.get(preferred_reco)] + recommandations
+        return recommandations
+
+    @classmethod
+    def get_revelant(cls, recommandations, inscription, qai):
+        return next(filter(lambda r: r.is_relevant(inscription, qai), recommandations))
