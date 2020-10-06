@@ -26,11 +26,6 @@ def upgrade():
         text(
             """
             UPDATE inscription SET activites=(SELECT array(SELECT lower(unnest(activites))));
-            UPDATE inscription SET deplacement=array_append(deplacement, 'tec') WHERE 'transports en commun' = ANY(deplacement);
-            UPDATE inscription SET deplacement=array_append(deplacement, 'velo') WHERE 'vélo' = ANY(deplacement);
-            UPDATE inscription SET deplacement=array_remove(deplacement, 'transports en commun');
-            UPDATE inscription SET deplacement=array_remove(deplacement, 'vélo');
-            WITH cte_distinct AS (SELECT array_agg(DISTINCT lower(d)) as dis FROM inscription, unnest(deplacement) d) UPDATE inscription SET deplacement=cte_distinct.dis FROM cte_distinct;
             """
         )
     )
