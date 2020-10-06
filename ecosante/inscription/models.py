@@ -51,7 +51,6 @@ class Inscription(db.Model):
 
     date_inscription = db.Column(db.Date())
 
-
     QUALIFICATIF_TRES_BON = 'Très bonne'
     QUALIFICATIF_BON = 'Bonne'
     QUALIFICATIF_MOYEN = 'Moyenne'
@@ -76,23 +75,39 @@ class Inscription(db.Model):
         super().__init__(**kwargs)
         self.date_inscription = date.today()
 
-    def has_habitudes(self):
-        return any([getattr(self, k) is not None for k in ['deplacement', 'sport', 'apa', 'activites', 'enfants']])
-
-    def has_sante(self):
-        return any([getattr(self, k) is not None for k in ['pathologie_respiratoire', 'allergie_pollen', 'fumeur']])
+    def has_deplacement(self, deplacement):
+        return self.deplacement and deplacement in self.deplacement
 
     @property
     def voiture(self):
-        return "voiture" in map(lambda s: s.lower(), self.deplacement)
+        return self.has_deplacement("voiture")
+
+    @property
+    def velo(self):
+        return self.has_deplacement("velo")
+
+    @property
+    def transport_en_commun(self):
+        return self.has_deplacement("tec")
+
+    def has_activite(self, activite):
+        return self.activites and activite in self.activites
 
     @property
     def bricolage(self):
-        return "bricolage" in map(lambda s: s.lower(), self.activites)
+        return self.has_activite("bricolage")
+
+    @property
+    def menage(self):
+        return self.has_activite("menage")
+
+    @property
+    def jardinage(self):
+        return self.has_activite("jardinage")
 
     @property
     def sport(self):
-        return "sport" in map(lambda s: s.lower(), self.activites) or self._sport
+        return self.has_activite("sport")
 
     @classmethod
     def generate_csv(cls, new_export=False, preferred_reco=None, random_uuid=None):

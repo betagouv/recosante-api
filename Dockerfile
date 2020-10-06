@@ -15,7 +15,7 @@ RUN apt update && apt install -y --no-install-recommends locales; rm -rf /var/li
 WORKDIR /ecosante/
 COPY --from=0 /ecosante/ .
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install .
 RUN pip3 install uwsgi
 
 EXPOSE 8080

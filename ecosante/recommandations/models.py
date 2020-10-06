@@ -34,16 +34,37 @@ class Recommandation(db.Model):
     categorie = db.Column(db.String)
     objectif = db.Column(db.String)
 
+    @property
+    def velo(self):
+        return self.velo_trott_skate
+
+    @property
+    def sport(self):
+        return self.activite_physique
+
+    @sport.setter
+    def sport(self, value):
+        self.activite_physique = value
+
+    @property
+    def allergie_pollen(self):
+        return self.allergies
+
+    @property
+    def fumeur(self):
+        return self.categorie and "tabagisme" in self.categorie.lower()
+
+    @fumeur.setter
+    def fumeur(self, value):
+        if value:
+            self.categorie = (self.categorie or "") + " tabagisme"
 
     def is_relevant(self, inscription, qai):
-        if not inscription.voiture and self.voiture:
-            return False
-
-        if not inscription.sport and self.activite_physique:
-            return False
-
-        if not inscription.bricolage and self.bricolage:
-            return False
+        for critere in ["menage", "bricolage", "jardinage", "velo",
+                        "transport_en_commun", "voiture", "sport",
+                        "allergie_pollen", "enfants", "fumeur"]:
+            if not getattr(inscription, critere) and getattr(self, critere):
+                return False
 
         #Quand la qualité de l'air est mauvaise
         if qai and (qai < 8) and self.qa_mauvaise:
