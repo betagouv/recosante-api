@@ -5,12 +5,19 @@
 <link rel="stylesheet" href="/assets/css/Chart.min.css">
 <link rel="stylesheet" href="/assets/css/stats.css">
 
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet' />
+
 
 <section class="section section-grey">
     <div class="container">
         <div class="panel">
             <h1><span class="number">{{ actifs }}</span> utilisateurs actifs</h1>
-            <canvas id="total_subscriptions"></canvas>
+            <canvas id="subscriptions_chart"></canvas>
+        </div>
+        <div class="panel panel-carte">
+            <h1>Provenance géographique des utilisateurs</h1>
+            <div id="carte"></div>
         </div>
         <div class="panel user_pref">
             <h1>Préférence des utilisateurs</h1>
@@ -23,83 +30,18 @@
                 </div>
             </div>
         </div>
+        <div class="panel">
+            <h1>Satisfaction des utilisateurs</h1>
+            <h2>{{ nb_reponses }} réponses aux questionnaires</h2>
+            <h3>{{ "%.2f"|format((nb_satisfaits/nb_reponses)*100) }}% des utilisateurs ayant répondu au questionnaire de satisfaction recommanderaient la newsletter Ecosanté à leur proche.</h3>
+            <canvas id="decouverte_chart"></canvas>
+        </div>
     </div>
 </section>
-<script>
-var color = Chart.helpers.color;
-var totalSubscriptionsChartData = {
-        labels: {{ mois|safe }},
-        datasets: [{
-            label: '# inscrits',
-            data: {{ valeurs|safe }},
-            backgroundColor: color('rgb(54, 162, 235)').alpha(0.5).rgbString(),
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 1
-        }]
-};
-var formatChartData = {
-    labels: ['SMS', 'Mail'],
-    datasets: [{
-        label: 'format',
-        data: [
-            {{ sms }},
-            {{ mails }}
-        ],
-        backgroundColor: [
-            '#ffa725',
-            '#2fa0f2'
-        ]
-    }]
-}
-var frequencyChartData = {
-    labels: ['Tous les jours', "Lorsque la qualité de l'air est mauvaise"],
-    datasets: [{
-        label: 'frequency',
-        data: [
-            {{ quotidien }},
-            {{ pollution }}
-        ],
-        backgroundColor: [
-            '#ffa725',
-            '#2fa0f2'
-        ]
-    }]
-}
-window.onload = function() {
-    var ctx_total = document.getElementById('total_subscriptions').getContext('2d');
-    window.totalSubscriptionsChart = new Chart(ctx_total, {
-        type: 'bar',
-        data: totalSubscriptionsChartData
-    })
-
-    var ctx_format = document.getElementById('user_formats').getContext('2d');
-    window.formatChart = new Chart(ctx_format, {
-        type: 'doughnut',
-        data: formatChartData,
-        options: {
-            responsive: true,
-            title: {
-                display: true,
-                text: 'Format',
-                verticalAlign: "center",
-                dockInsidePlotArea: true
-            }
-        }
-    })
-    var ctx_frequencies = document.getElementById('user_frequencies').getContext('2d');
-    window.formatChart = new Chart(ctx_frequencies, {
-        type: 'doughnut',
-        data: frequencyChartData,
-        options: {
-            responsive: true,
-            title: {
-                display: true,
-                text: 'Fréquence',
-                verticalAlign: "center",
-                dockInsidePlotArea: true
-            }
-        }
-    })                
-}
-</script>
+<script type="text/javascript" src="/assets/js/stats.js"></script>
+<script type="text/javascript" src="/assets/js/stats_map.js"></script>
+<script id="media" type="application/json">{{ media|safe}}</script>
+<script id="frequence" type="application/json">{{ frequence|safe}}</script>
+<script id="subscriptions" type="application/json">{{ subscriptions|safe}}</script>
+<script id="decouverte" type="application/json">{{ decouverte|safe}}</script>
 {% endblock content %}

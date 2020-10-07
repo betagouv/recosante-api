@@ -1,5 +1,5 @@
 from flask import (Blueprint, render_template, request, redirect, session, url_for,
-     current_app, stream_with_context)
+     current_app, stream_with_context, jsonify)
 from flask.wrappers import Response
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation, FormExport
@@ -43,6 +43,10 @@ def personnalisation():
 @bp.route('/reussie')
 def reussie():
     return render_template('reussi.html')
+
+@bp.route('/geojson')
+def geojson():
+    return jsonify(Inscription.export_geojson())
 
 @bp.route('<secret_slug>/csv')
 @admin_capability_url

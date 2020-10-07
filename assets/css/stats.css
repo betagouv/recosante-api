@@ -31,3 +31,8 @@ h1 {
         padding: 0;
     }
 }
+
+#carte {
+    height: 600px;
+    width: 95%;
+}

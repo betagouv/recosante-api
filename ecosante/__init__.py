@@ -17,6 +17,7 @@ def create_app():
     with app.app_context():
         from .inscription import models, blueprint as inscription_bp
         from .recommandations import models, commands
+        from .avis import models, commands
         from .stats import blueprint as stats_bp
         from . import commands
 
