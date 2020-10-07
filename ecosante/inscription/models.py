@@ -6,6 +6,8 @@ from datetime import date
 from dataclasses import dataclass
 from typing import List
 import csv
+import requests
+import json
 from io import StringIO
 from indice_pollution import forecast, today
 from flask import current_app
@@ -50,6 +52,7 @@ class Inscription(db.Model):
     fumeur = db.Column(db.Boolean)
 
     date_inscription = db.Column(db.Date())
+    _cache_api_commune = db.Column("cache_api_commune", db.String())
 
     QUALIFICATIF_TRES_BON = 'Très bonne'
     QUALIFICATIF_BON = 'Bonne'
@@ -108,6 +111,30 @@ class Inscription(db.Model):
     @property
     def sport(self):
         return self.has_activite("sport")
+
+    @property
+    def cache_api_commune(self):
+        if not self._cache_api_commune:
+            if not self.ville_insee:
+                return
+            r = requests.get(f'https://geo.api.gouv.fr/communes/{self.ville_insee}',
+                params={
+                    "fields": "nom,centre,region",
+                    "format": "json",
+                    "geometry": "centre"
+                }
+            )
+            self._cache_api_commune = r.text
+            db.session.add(self)
+        return json.loads(self._cache_api_commune)
+
+    @property
+    def ville_centre(self):
+        return self.cache_api_commune.get('centre')
+
+    @property
+    def region_name(self):
+        return self.cache_api_commune.get('region', {}).get('nom')
 
     @classmethod
     def generate_csv(cls, new_export=False, preferred_reco=None, random_uuid=None):
@@ -192,3 +219,17 @@ class Inscription(db.Model):
     @classmethod
     def convert_boolean_to_oui_non(cls, value):
         return "Oui" if value else "Non"
+
+    @classmethod
+    def export_geojson(cls):
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": [],
+                    "geometry": i.ville_centre
+                }
+                for i in cls.query.all()
+            ]
+        }
