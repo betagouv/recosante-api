@@ -7,6 +7,8 @@ from ecosante.utils.decorators import admin_capability_url
 from ecosante.recommandations.models import Recommandation
 from csv import DictReader
 from datetime import datetime
+import requests
+import os
 
 bp = Blueprint("inscription", __name__, template_folder='templates', url_prefix='/inscription')
 
@@ -42,6 +44,57 @@ def personnalisation():
 
 @bp.route('/reussie')
 def reussie():
+    inscription = Inscription.query.get(session['inscription']['id'])
+    qai, qualif, background, f = inscription.qai_qualif_background_f()
+    recommandation = Recommandation.get_one(inscription, qai)
+    r = requests.post(
+        'https://api.sendinblue.com/v3/contacts',
+        headers={
+            'accept': 'application/json',
+            'api-key': os.getenv('SIB_APIKEY')
+        },
+        json={
+            "email": inscription.mail,
+        }
+    )
+    r = requests.put(
+        f'https://api.sendinblue.com/v3/contacts/{inscription.mail}',
+        headers={
+            'accept': 'application/json',
+            'api-key': os.getenv('SIB_APIKEY')
+        },
+        json={
+            "attributes": {
+                "VILLE": inscription.ville_name,
+                "QUALITE_AIR": qualif,
+                "BACKGROUND_COLOR": background,
+                "RECOMMANDATION": recommandation.recommandation,
+                "PRECISIONS": recommandation.precisions,
+            }
+        }
+    )
+    r = requests.post(
+        'https://api.sendinblue.com/v3/smtp/email',
+        headers={
+            'accept': 'application/json',
+            'api-key': os.getenv('SIB_APIKEY')
+        },
+        json={
+            "sender": {
+                "name":"L'équipe écosanté",
+                "email":"contact@ecosante.data.gouv.fr"
+            },
+            "to": [{
+                    "email": inscription.mail,
+            }],
+            "replyTo": {
+                "name":"L'équipe écosanté",
+                "email":"contact@ecosante.data.gouv.fr"
+            },
+            "templateId":108
+        }
+    )
+
     return render_template('reussi.html')
 
 @bp.route('/geojson')

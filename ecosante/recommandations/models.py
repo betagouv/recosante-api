@@ -76,7 +76,7 @@ class Recommandation(db.Model):
         return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS
 
     @classmethod
-    def shuffled(cls, random_uuid, preferred_reco):
+    def shuffled(cls, random_uuid=None, preferred_reco=None):
         recommandations = cls.query.filter_by(recommandabilite="Utilisable").all()
         random.shuffle(
             recommandations,
@@ -89,3 +89,7 @@ class Recommandation(db.Model):
     @classmethod
     def get_revelant(cls, recommandations, inscription, qai):
         return next(filter(lambda r: r.is_relevant(inscription, qai), recommandations))
+
+    @classmethod
+    def get_one(cls, inscription, qai):
+        return cls.get_revelant(cls.shuffled(), inscription, qai)

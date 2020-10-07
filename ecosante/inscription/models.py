@@ -54,12 +54,12 @@ class Inscription(db.Model):
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.String())
 
-    QUALIFICATIF_TRES_BON = 'Très bon'
-    QUALIFICATIF_BON = 'Bon'
-    QUALIFICATIF_MOYEN = 'Moyen'
-    QUALIFICATIF_MÉDIOCRE = 'Médiocre'
-    QUALIFICATIF_MAUVAIS = 'Mauvais'
-    QUALIFICATIF_TRÈS_MAUVAIS = 'Très mauvais'
+    QUALIFICATIF_TRES_BON = 'très bon'
+    QUALIFICATIF_BON = 'bon'
+    QUALIFICATIF_MOYEN = 'moyen'
+    QUALIFICATIF_MÉDIOCRE = 'médiocre'
+    QUALIFICATIF_MAUVAIS = 'mauvais'
+    QUALIFICATIF_TRÈS_MAUVAIS = 'très mauvais'
 
     INDICE_ATMO_TO_QUALIFICATIF = {
         1: QUALIFICATIF_TRES_BON,
@@ -72,6 +72,15 @@ class Inscription(db.Model):
         8: QUALIFICATIF_MAUVAIS,
         9: QUALIFICATIF_MAUVAIS,
         10: QUALIFICATIF_TRÈS_MAUVAIS,
+    }
+
+    QUALIF_TO_BACKGROUND = {
+        QUALIFICATIF_TRES_BON: '#37C55F',
+        QUALIFICATIF_BON: '#8FDA2C',
+        QUALIFICATIF_MOYEN: '#F9E000',
+        QUALIFICATIF_MÉDIOCRE: '#FFAA27',
+        QUALIFICATIF_MAUVAIS: '#FF090D',
+        QUALIFICATIF_TRÈS_MAUVAIS: '#800103'
     }
 
     def __init__(self, **kwargs):
@@ -183,8 +192,9 @@ class Inscription(db.Model):
             'SMS',
             "Fréquence",
             "Consentement",
-            "Date d'inscription"
+            "Date d'inscription",
             "QUALITE_AIR",
+            "BACKGROUND_COLOR",
             "Région",
             "LIEN_AASQA",
             "RECOMMANDATION",
@@ -193,20 +203,10 @@ class Inscription(db.Model):
 
         d = today()
         for inscription in Inscription.query.all():
-            try:
-                f = forecast(inscription.ville_insee, d, True)
-            except KeyError as e:
-                current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
-                current_app.logger.error(e)
-                f = {"data": [], "metadata": {"region": {"nom": "", "website": ""}}}
-            try:
-                qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
-            except TypeError:
-                qai = None
+            qai, qualif, background, f = inscription.qai_qualif_background_f()
             recommandation = Recommandation.get_revelant(recommandations, inscription, qai)
             if inscription.frequence == "pollution" and qai and qai < 8:
                 continue
-
 
             yield generate_line([
                 inscription.ville_name,
@@ -224,12 +224,29 @@ class Inscription(db.Model):
                 inscription.frequence,
                 "Oui",
                 inscription.date_inscription,
-                cls.INDICE_ATMO_TO_QUALIFICATIF.get(qai),
+                qualif,
+                background,
                 f['metadata']['region']['nom'],
                 f['metadata']['region']['website'],
                 recommandation.format(inscription),
                 recommandation.precisions
             ])
+
+    def qai_qualif_background_f(self):
+        d = today()
+        try:
+            f = forecast(self.ville_insee, d, True)
+        except KeyError as e:
+            current_app.logger.error(f'Unable to find region for {self.ville_name} ({self.ville_insee})')
+            current_app.logger.error(e)
+            f = {"data": [], "metadata": {"region": {"nom": "", "website": ""}}}
+        try:
+            qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
+            qualif = self.INDICE_ATMO_TO_QUALIFICATIF.get(qai)
+            background = self.QUALIF_TO_BACKGROUND.get(qualif)
+            return qai, qualif, background, f
+        except TypeError:
+            return None, None, None
 
     @classmethod
     def convert_boolean_to_oui_non(cls, value):
