@@ -37,7 +37,7 @@ class Inscription(db.Model):
     ville_name = db.Column(db.String)
     ville_insee = db.Column(db.String)
     diffusion = db.Column(db.Enum("sms", "mail", name="diffusion_enum"))
-    telephone = db.Column(db.String)
+    _telephone = db.Column("telephone", db.String)
     mail = db.Column(db.String)
     frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"))
     #Habitudes
@@ -54,12 +54,12 @@ class Inscription(db.Model):
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.String())
 
-    QUALIFICATIF_TRES_BON = 'Très bonne'
-    QUALIFICATIF_BON = 'Bonne'
-    QUALIFICATIF_MOYEN = 'Moyenne'
+    QUALIFICATIF_TRES_BON = 'Très bon'
+    QUALIFICATIF_BON = 'Bon'
+    QUALIFICATIF_MOYEN = 'Moyen'
     QUALIFICATIF_MÉDIOCRE = 'Médiocre'
-    QUALIFICATIF_MAUVAIS = 'Mauvaise'
-    QUALIFICATIF_TRÈS_MAUVAIS = 'Très mauvaise'
+    QUALIFICATIF_MAUVAIS = 'Mauvais'
+    QUALIFICATIF_TRÈS_MAUVAIS = 'Très mauvais'
 
     INDICE_ATMO_TO_QUALIFICATIF = {
         1: QUALIFICATIF_TRES_BON,
@@ -80,6 +80,26 @@ class Inscription(db.Model):
 
     def has_deplacement(self, deplacement):
         return self.deplacement and deplacement in self.deplacement
+
+    @staticmethod
+    def convert_telephone(value):
+        if not value:
+            return value
+        if value[:1] == "+":
+            return value
+        if value[:2] in ("00", "33"):
+            return value
+        if value[:1] == "0":
+            return "+33" + value[1:]
+        return "+33" + value
+
+    @property
+    def telephone(self):
+        return self.convert_telephone(self._telephone)
+
+    @telephone.setter
+    def telephone(self, value):
+        self._telephone = self.convert_telephone(value)
 
     @property
     def voiture(self):
@@ -137,7 +157,7 @@ class Inscription(db.Model):
         return self.cache_api_commune.get('region', {}).get('nom')
 
     @classmethod
-    def generate_csv(cls, new_export=False, preferred_reco=None, random_uuid=None):
+    def generate_csv(cls, preferred_reco=None, random_uuid=None):
         def generate_line(line):
             stringio = StringIO()
             writer = csv.writer(stringio)
@@ -149,47 +169,43 @@ class Inscription(db.Model):
         recommandations = Recommandation.shuffled(random_uuid=random_uuid, preferred_reco=preferred_reco)
 
         yield generate_line([
-            'VILLE' if new_export else 'Dans quelle ville vivez-vous ?',
-            'Parmi les choix suivants, quel(s) moyen(s) de transport utilisez-vous principalement pour vos déplacements ?',
-            "Pratiquez-vous une activité sportive au moins une fois par semaine ? On entend par activité sportive toute forme d'activité physique ayant pour objectif l'amélioration et le maintien de la condition physique.",
-            "Pratiquez-vous une Activité Physique Adaptée au moins une fois par semaine ? Les APA regroupent l’ensemble des activités physiques et sportives adaptées aux capacités des personnes atteintes de maladie chronique ou de handicap.",
-            "Pratiquez-vous au moins une fois par semaine les activités suivantes ?",
-            "Vivez-vous avec une pathologie respiratoire ?",
-            "Êtes-vous allergique aux pollens ?",
-            "Êtes-vous fumeur.euse ?",
-            "Vivez-vous avec des enfants ?",
-            'MAIL' if new_export else "Votre adresse e-mail : elle permettra à l'Equipe Ecosanté de communiquer avec vous si besoin.",
-            'FORMAT' if new_export else "Souhaitez-vous recevoir les recommandations par : *",
-            'SMS' if new_export else "Numéro de téléphone :",
-            "A quelle fréquence souhaitez-vous recevoir les recommandations ? *",
-            "Consentez-vous à partager vos données avec l'équipe Écosanté ? Ces données sont stockées sur nextcloud, dans le respect de la réglementation RGPD.",
+            'VILLE',
+            'Moyens de transport',
+            "Activité sportive",
+            "Activité physique adaptée",
+            "Activités",
+            "Pathologie respiratoire",
+            "Allergie aux pollens",
+            "Fume",
+            "Enfants",
+            'MAIL',
+            'FORMAT',
+            'SMS',
+            "Fréquence",
+            "Consentement",
             "Date d'inscription"
-        ] + ([
             "QUALITE_AIR",
             "Région",
             "LIEN_AASQA",
             "RECOMMANDATION",
             "PRECISIONS"
-        ] if new_export else []))
+        ])
 
         d = today()
         for inscription in Inscription.query.all():
-            if new_export:
-                try:
-                    f = forecast(inscription.ville_insee, d, True)
-                except KeyError as e:
-                    current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
-                    current_app.logger.error(e)
-                    f = {"data": [], "metadata": {"region": {"nom": "", "website": ""}}}
-                try:
-                    qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
-                except TypeError:
-                    qai = None
-                recommandation = Recommandation.get_revelant(recommandations, inscription, qai)
-                if inscription.frequence == "pollution" and qai and qai < 8:
-                    continue
-            else:
-                f, qai, recommandation = None, None, None
+            try:
+                f = forecast(inscription.ville_insee, d, True)
+            except KeyError as e:
+                current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
+                current_app.logger.error(e)
+                f = {"data": [], "metadata": {"region": {"nom": "", "website": ""}}}
+            try:
+                qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
+            except TypeError:
+                qai = None
+            recommandation = Recommandation.get_revelant(recommandations, inscription, qai)
+            if inscription.frequence == "pollution" and qai and qai < 8:
+                continue
 
 
             yield generate_line([
@@ -207,14 +223,13 @@ class Inscription(db.Model):
                 inscription.telephone,
                 inscription.frequence,
                 "Oui",
-                inscription.date_inscription
-            ] + ([
+                inscription.date_inscription,
                 cls.INDICE_ATMO_TO_QUALIFICATIF.get(qai),
                 f['metadata']['region']['nom'],
                 f['metadata']['region']['website'],
                 recommandation.format(inscription),
                 recommandation.precisions
-            ] if new_export else []))
+            ])
 
     @classmethod
     def convert_boolean_to_oui_non(cls, value):

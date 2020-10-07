@@ -54,7 +54,6 @@ def export_csv(secret_slug):
     return Response(
         stream_with_context(
             Inscription.generate_csv(
-                request.args.get('new_export'),
                 request.args.get('preferred_reco')
             )
         ),
@@ -120,8 +119,7 @@ def export(secret_slug):
             url_for(
                 "inscription.export_csv",
                 secret_slug=secret_slug,
-                preferred_reco=form.recommandations.data,
-                new_export="true"
+                preferred_reco=form.recommandations.data
             )
         )
 
