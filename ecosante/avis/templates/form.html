@@ -1,0 +1,29 @@
+{% extends "base_form.html" %}
+
+{% block block_form %}
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    {{ render_field(form.mail) }}
+    {{ render_field(form.decouverte, class_="multifield" ) }}
+    {{ render_field(form.satisfaction_nombre_recommandations) }}
+    {{ render_field(form.satisfaction_frequence, class_="multifield" ) }}
+    {{ render_field(form.recommandabilite) }}
+    {{ render_field(form.encore) }}
+    {{ render_field(form.autres_thematiques) }}
+
+    <div class="form__group">
+        <button class="button" type="submit" id="submit">Donner mon avis</button>
+    </div>
+</form>
+
+<style>
+.multifield li {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+</style>
+{% endblock block_form %}
