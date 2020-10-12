@@ -4,8 +4,7 @@
     <div class="hero__container">
         <h1>Vous êtes inscrit.e !</h1>
         <p>Vous êtes désormais inscrit.e pour recevoir les alertes qualité de l'air Écosanté.</p>
-
-        {% if session.inscription.frequence == 'quotidien '%}
+        {% if session.inscription.frequence == 'quotidien'%}
         <p>Vous recevrez tous les jours des informations sur la qualité de l'air autour de chez vous ainsi que des recommandations associées.</p>
         {% else %}
         <p>Vous serez informé.e lorsque la qualité de l'air est mauvaise et recevrez des recommandations associées.</p>
