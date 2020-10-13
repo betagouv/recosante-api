@@ -120,7 +120,14 @@ def export_csv(secret_slug):
 @admin_capability_url
 def export(secret_slug):
     form = FormExport()
-    form.recommandations.choices=[(r.id, r.recommandation) for r in Recommandation.query.all()]
+    form.recommandations.choices=[
+        (
+            r.id,
+            r.recommandation
+        )
+        for r in Recommandation.query.all()
+    ]
+    form.recommandations.widget.secret_slug = secret_slug
     if request.method == 'POST':
         return redirect(
             url_for(

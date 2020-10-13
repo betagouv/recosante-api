@@ -16,7 +16,7 @@ def create_app():
 
     with app.app_context():
         from .inscription import models, blueprint as inscription_bp
-        from .recommandations import models, commands
+        from .recommandations import models, commands, blueprint as recommandation_bp
         from .avis import models, commands, blueprint as avis_bp
         from .stats import blueprint as stats_bp
         from . import commands
@@ -24,5 +24,6 @@ def create_app():
         app.register_blueprint(inscription_bp.bp)
         app.register_blueprint(stats_bp.bp)
         app.register_blueprint(avis_bp.bp)
+        app.register_blueprint(recommandation_bp.bp)
 
     return app
