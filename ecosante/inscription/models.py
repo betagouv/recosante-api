@@ -8,6 +8,7 @@ from typing import List
 import csv
 import requests
 import json
+import os
 from io import StringIO
 from indice_pollution import forecast, today
 from flask import current_app
@@ -265,3 +266,57 @@ class Inscription(db.Model):
                 for i in cls.query.all()
             ]
         }
+
+    def send_success_email(self):
+        qai, qualif, background, f = self.qai_qualif_background_f()
+        recommandation = Recommandation.get_one(self, qai)
+        sib_apikey = os.getenv('SIB_APIKEY')
+        success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
+
+        r = requests.post(
+            'https://api.sendinblue.com/v3/contacts',
+            headers={
+                'accept': 'application/json',
+                'api-key': sib_apikey 
+            },
+            json={
+                "email": self.mail,
+            }
+        )
+        r = requests.put(
+            f'https://api.sendinblue.com/v3/contacts/{self.mail}',
+            headers={
+                'accept': 'application/json',
+                'api-key': sib_apikey
+            },
+            json={
+                "attributes": {
+                    "VILLE": self.ville_name,
+                    "QUALITE_AIR": qualif,
+                    "BACKGROUND_COLOR": background,
+                    "RECOMMANDATION": recommandation.recommandation,
+                    "PRECISIONS": recommandation.precisions,
+                }
+            }
+        )
+        r = requests.post(
+            'https://api.sendinblue.com/v3/smtp/email',
+            headers={
+                'accept': 'application/json',
+                'api-key': sib_apikey
+            },
+            json={
+                "sender": {
+                    "name":"L'équipe écosanté",
+                    "email":"contact@ecosante.data.gouv.fr"
+                },
+                "to": [{
+                        "email": self.mail,
+                }],
+                "replyTo": {
+                    "name":"L'équipe écosanté",
+                    "email":"contact@ecosante.data.gouv.fr"
+                },
+                "templateId": success_template_id
+            }
+        )
