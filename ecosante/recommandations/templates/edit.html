@@ -2,6 +2,9 @@
 
 {% block block_form %}
 <form method="POST">
+    <div class="form__group">
+        <button class="button" type="submit" id="submit">Éditer</button>
+    </div>
     {{ form.hidden_tag() }}
     {{ render_field(form.recommandabilite) }}
     {{ render_field(form.recommandation) }}
