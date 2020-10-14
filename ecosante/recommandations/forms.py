@@ -15,7 +15,7 @@ class Form(BaseForm):
         ]
     )
     recommandation = TextAreaField('Recommandation')
-    precisisions = TextAreaField('Précisions')
+    precisions = TextAreaField('Précisions')
     recommandation_format_SMS = TextAreaField('Recommandation format SMS')
     qa_mauvaise = OuiNonField("Qualité de l'air mauvaise")
     bricolage = OuiNonField("Bricolage")
