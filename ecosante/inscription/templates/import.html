@@ -1,0 +1,24 @@
+{% extends "base_form.html" %}
+
+{% block block_form %}
+
+{% if sms_campaign_id %}
+<h2>Envoyer la campagne SMS en cliquant <a href="https://my.sendinblue.com/camp/sms/{{sms_campaign_id}}/setup">ici</a></h2>
+{% endif %}
+{% if email_campaign_id %}
+<h2>Envoyer la campagne email en cliquant <a href="https://my.sendinblue.com/camp/classic/{{email_campaign_id}}/setup">ici</a></h2>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data">
+
+    {{ form.hidden_tag() }}
+
+    {{ render_field(form.file) }}
+
+    <div class="form__group">
+        <button class="button" type="submit" id="submit">Importer le fichier dans sendinblue</button>
+    </div>
+
+</form>
+
+{% endblock block_form %}
