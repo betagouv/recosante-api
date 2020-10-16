@@ -1,15 +1,14 @@
 from .. import db
+from ecosante.utils.funcs import generate_line
 from ecosante.recommandations.models import Recommandation
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import Enum
 from datetime import date
 from dataclasses import dataclass
 from typing import List
-import csv
 import requests
 import json
 import os
-from io import StringIO
 from indice_pollution import forecast, today
 from flask import current_app
 
@@ -169,14 +168,6 @@ class Inscription(db.Model):
 
     @classmethod
     def generate_csv(cls, preferred_reco=None, random_uuid=None):
-        def generate_line(line):
-            stringio = StringIO()
-            writer = csv.writer(stringio)
-            writer.writerow(line)
-            v = stringio.getvalue()
-            stringio.close()
-            return v
-
         recommandations = Recommandation.shuffled(random_uuid=random_uuid, preferred_reco=preferred_reco)
 
         yield generate_line([
