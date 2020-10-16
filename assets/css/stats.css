@@ -34,5 +34,10 @@ h1 {
 
 #carte {
     height: 600px;
-    width: 95%;
+}
+
+.users-profile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }

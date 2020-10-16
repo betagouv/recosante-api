@@ -32,6 +32,10 @@ def stats():
     }
     nb_reponses = Avis.query.count()
     nb_satisfaits = Avis.query.filter(Avis.recommandabilite > 8).count()
+
+    nb_inscriptions = Inscription.query.count()
+    nb_allergies = Inscription.query.filter_by(allergie_pollen=True).count()
+    nb_pathologie_respiratoire = Inscription.query.filter_by(pathologie_respiratoire=True).count()
     return render_template(
         'stats.html', 
         actifs=Inscription.query.count(),
@@ -46,6 +50,9 @@ def stats():
         }),
         nb_reponses=nb_reponses,
         nb_satisfaits=nb_satisfaits,
+        nb_inscriptions=nb_inscriptions,
+        nb_allergies=nb_allergies,
+        nb_pathologie_respiratoire=nb_pathologie_respiratoire,
         decouverte=json.dumps(decouverte)
     )
 

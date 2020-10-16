@@ -156,6 +156,7 @@ class Inscription(db.Model):
             )
             self._cache_api_commune = r.text
             db.session.add(self)
+            db.session.commit()
         return json.loads(self._cache_api_commune)
 
     @property

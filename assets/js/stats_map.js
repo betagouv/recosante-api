@@ -3,8 +3,10 @@ document.addEventListener('DOMContentLoaded', e => {
     var map = new mapboxgl.Map({
             container: 'carte',
             style: 'https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json',
-            center: [2, 44.9],
-            zoom: 4.5
+            bounds: [-5.0, 42.5, 9.56, 51.15],
+            fitBoundsOptions: {
+                padding: 20
+            }
         });
     map.on('load', function(){
         map.addSource('inscriptions', {

@@ -5,8 +5,8 @@
 <link rel="stylesheet" href="/assets/css/Chart.min.css">
 <link rel="stylesheet" href="/assets/css/stats.css">
 
-<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.js'></script>
-<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css' rel='stylesheet' />
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
 
 
 <section class="section section-grey">
@@ -16,8 +16,17 @@
             <canvas id="subscriptions_chart"></canvas>
         </div>
         <div class="panel panel-carte">
-            <h1>Provenance géographique des utilisateurs</h1>
-            <div id="carte"></div>
+            <h1>Profil des utilisateurs</h1>
+            <div class="row">
+                <div>
+                    <h2>Provenance géographique des utilisateurs</h2>
+                    <div id="carte"></div>
+                </div>
+                <div class="users-profile">
+                    <h3>{{ "%.2f"|format((nb_allergies/nb_inscriptions)*100) }}% des utilisateurs se déclarent allergiques au pollens</h3>
+                    <h3>{{ "%.2f"|format((nb_pathologie_respiratoire/nb_inscriptions)*100) }}% des utilisateurs déclarent avoir une pathologie respiratoire</h3>
+                </div>
+            </div>
         </div>
         <div class="panel user_pref">
             <h1>Préférence des utilisateurs</h1>
