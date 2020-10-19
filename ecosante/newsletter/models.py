@@ -55,15 +55,13 @@ class Newsletter(object):
         except KeyError as e:
             current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
             current_app.logger.error(e)
-            raise e
+            self.forecast = None
         try:
-            print(self.forecast)
             self.qai = int(next(iter([v['indice'] for v in self.forecast['data'] if v['date'] == str(self.date)]), None))
-        except TypeError as e:
-            print(self.forecast)
+        except (TypeError, ValueError) as e:
             current_app.logger.error(f'Unable to get qai for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
             current_app.logger.error(e)
-            raise e
+            self.qai = None
 
         self.recommandation = Recommandation.get_revelant(
             recommandations,

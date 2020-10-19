@@ -1,3 +1,4 @@
+from ecosante.newsletter.forms.edit_indice import FormEditIndice
 from flask import (
     Blueprint,
     render_template,
@@ -7,18 +8,28 @@ from flask import (
      stream_with_context
 )
 from flask.wrappers import Response
-from datetime import datetime
+from datetime import date, datetime
 import csv
 import codecs
 import os
 import requests
+import json
 from urllib.parse import quote
 from uuid import uuid4
+from indice_pollution.regions.solvers import region
+from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
-from ecosante.recommandations.forms import Form as FormRecommandation
 from ecosante.utils.decorators import admin_capability_url
-from .forms import FormExport, FormImport
-from .models import Newsletter, Recommandation
+from .forms import (
+    FormEditIndices,
+    FormExport,
+    FormImport,
+    FormRecommandations
+)
+from .models import (
+    Newsletter,
+    Recommandation
+)
 
 bp = Blueprint("newsletter", __name__, template_folder='templates', url_prefix='/newsletter')
 
@@ -37,7 +48,48 @@ def csv(secret_slug):
         }
     )
 
-@bp.route('<secret_slug>/link_export', methods=['GET', 'POST'])
+@bp.route('<secret_slug>/edit_indices', methods=['POST'])
+@admin_capability_url
+def edit_indices(secret_slug):
+    form_indices = FormEditIndices()
+    if form_indices.validate_on_submit():
+        for form_indice in form_indices.indices.entries:
+            indice = IndiceHistory.query.filter_by(
+                date_=date.today(),
+                insee=form_indice.data['insee']
+            ).first()
+            if not indice:
+                indice = IndiceHistory(date_=date.today(), insee=form_indice.data['insee'])
+                db.session.add(indice)
+            indice._features = json.dumps({"indice": form_indice.data['indice'], "date": date.today()})
+            db.session.commit()
+    return redirect(
+        url_for(
+            "newsletter.link_export",
+            secret_slug=secret_slug,
+            **request.args
+        )
+    )
+
+
+@bp.route('<secret_slug>/edit_recommandations', methods=['POST'])
+@admin_capability_url
+def edit_recommandations(secret_slug):
+    form_recommandations = FormRecommandations()
+    if form_recommandations.validate_on_submit():
+        for form_recommandation in form_recommandations.recommandations.entries:
+            recommandation = Recommandation.query.get(int(form_recommandation.data['id']))
+            form_recommandation.form.populate_obj(recommandation)
+        db.session.commit()
+    return redirect(
+        url_for(
+            "newsletter.link_export",
+            secret_slug=secret_slug,
+            **request.args
+        )
+    )
+
+@bp.route('<secret_slug>/link_export')
 @admin_capability_url
 def link_export(secret_slug):
     if not request.args.get('seed'):
@@ -49,26 +101,24 @@ def link_export(secret_slug):
                 **request.args
             )
         )
-    if request.method == "POST":
-        recommandation = Recommandation.query.get(request.form.get('id'))
-        form = FormRecommandation(obj=recommandation)
-        if form.validate_on_submit():
-            form.populate_obj(recommandation)
-            db.session.add(recommandation)
-            db.session.commit()
-    newsletters = Newsletter.export(
+    newsletters = list(Newsletter.export(
         preferred_reco=request.args.get('preferred_reco'),
         seed=request.args.get('seed')
-    )
-    recommandations_forms = [
-        FormRecommandation(obj=recommandation) 
-        for recommandation in set([n.recommandation for n in newsletters])
-    ]
+    ))
+    form_recommandations = FormRecommandations()
+    for recommandation in set([n.recommandation for n in newsletters]):
+        form_recommandations.recommandations.append_entry(recommandation)
+    form_indices = FormEditIndices()
+    for inscription in [n.inscription for n in newsletters if n.qai is None]:
+        form_field = form_indices.indices.append_entry({"insee": inscription.ville_insee})
+        form_field.indice.label.text = f'Indice pour la ville de {inscription.ville_name}'
+        form_field.indice.description = f' Région: <a target="_blank" href="{region(region_name=inscription.region_name).website}">{inscription.region_name}</a>'
     return render_template(
         'link_export.html',
         secret_slug=secret_slug,
         args=request.args,
-        recommandations_forms=recommandations_forms
+        form_recommandations=form_recommandations,
+        form_indices=form_indices
     )
     
 @bp.route('<secret_slug>/export', methods=['GET', 'POST'])
