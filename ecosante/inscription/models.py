@@ -228,7 +228,7 @@ class Inscription(db.Model):
     def qai_qualif_background_f(self):
         d = today()
         try:
-            f = forecast(self.ville_insee, d, True)
+            f = forecast(self.ville_insee, d, True) or {'data': [], 'metadata': {'region': {'nom': None, 'website': None}}}
         except KeyError as e:
             current_app.logger.error(f'Unable to find region for {self.ville_name} ({self.ville_insee})')
             current_app.logger.error(e)
@@ -238,8 +238,11 @@ class Inscription(db.Model):
             qualif = self.INDICE_ATMO_TO_QUALIFICATIF.get(qai)
             background = self.QUALIF_TO_BACKGROUND.get(qualif)
             return qai, qualif, background, f
-        except TypeError:
-            return None, None, None
+        except TypeError as e:
+            current_app.logger.error(e)
+        except ValueError as e:
+            current_app.logger.error(e)
+        return None, None, None, f
 
     @classmethod
     def convert_boolean_to_oui_non(cls, value):
