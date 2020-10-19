@@ -8,3 +8,6 @@ def generate_line(line):
     v = stringio.getvalue()
     stringio.close()
     return v
+
+def convert_boolean_to_oui_non(value):
+    return "Oui" if value else "Non"

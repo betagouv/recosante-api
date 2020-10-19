@@ -1,0 +1,44 @@
+{% extends "base_form.html" %}
+{% block content %}
+
+<h1>Export</h1>
+
+<a href="{{url_for("inscription.import_", secret_slug=secret_slug)}}">Importer une liste dans sendinblue</a>
+<ul>
+{% if form_indices.indices %}
+<form method="POST" action="{{ url_for("newsletter.edit_indices", secret_slug=secret_slug, **args)}}">
+{{ form_indices.hidden_tag() }}
+{% for form_indice in form_indices.indices.entries %}
+{{ form_indice.hidden_tag() }}
+{{ render_field(form_indice.indice) }}
+{% endfor %}
+<div class="form__group">
+    <button class="button" type="submit" id="submit">Ajouter les indices</button>
+</div>
+
+</form>
+{% endif %}
+
+<form method="POST" action="{{ url_for("newsletter.edit_recommandations", secret_slug=secret_slug, **args)}}">
+{{ form_recommandations.hidden_tag() }}
+{% for form_recommandation in form_recommandations.recommandations.entries %}
+<li>
+    {{ form_recommandation.hidden_tag() }}
+    {{ render_field(form_recommandation.recommandation) }}
+    {{ render_field(form_recommandation.precisions) }}
+    {{ render_field(form_recommandation.recommandation_format_SMS) }}
+    <div class="form__group">
+        <button class="button" type="submit" id="submit">Éditer</button>
+    </div>
+</li>
+{% endfor %}
+</form>
+</ul>
+
+<script>
+document.addEventListener('DOMContentLoaded', e=>{
+    window.location.href = "{{ url_for("newsletter.csv", secret_slug=secret_slug, **args) }}";
+})
+</script>
+
+{% endblock content %}

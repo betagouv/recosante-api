@@ -1,9 +1,6 @@
 
-from ecosante.utils.form import RadioField, BaseForm, MultiCheckboxField, OuiNonField
-from wtforms import validators, widgets, SelectField, TextAreaField
-from wtforms.fields.html5 import EmailField
-from wtforms.validators import ValidationError
-from ecosante.inscription.models import Inscription
+from ecosante.utils.form import RadioField, BaseForm, OuiNonField
+from wtforms import TextAreaField, HiddenField
 
 class Form(BaseForm):
     recommandabilite = RadioField(
@@ -41,3 +38,4 @@ class Form(BaseForm):
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
     objectif = TextAreaField("Objectif")
+    id = HiddenField("id")

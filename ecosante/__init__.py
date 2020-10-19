@@ -19,11 +19,13 @@ def create_app():
         from .recommandations import models, commands, blueprint as recommandation_bp
         from .avis import models, commands, blueprint as avis_bp
         from .stats import blueprint as stats_bp
+        from .newsletter import blueprint as newsletter_bp
         from . import commands
 
         app.register_blueprint(inscription_bp.bp)
         app.register_blueprint(stats_bp.bp)
         app.register_blueprint(avis_bp.bp)
         app.register_blueprint(recommandation_bp.bp)
+        app.register_blueprint(newsletter_bp.bp)
 
     return app

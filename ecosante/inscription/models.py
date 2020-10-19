@@ -54,35 +54,6 @@ class Inscription(db.Model):
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.String())
 
-    QUALIFICATIF_TRES_BON = 'très bon'
-    QUALIFICATIF_BON = 'bon'
-    QUALIFICATIF_MOYEN = 'moyen'
-    QUALIFICATIF_MÉDIOCRE = 'médiocre'
-    QUALIFICATIF_MAUVAIS = 'mauvais'
-    QUALIFICATIF_TRÈS_MAUVAIS = 'très mauvais'
-
-    INDICE_ATMO_TO_QUALIFICATIF = {
-        1: QUALIFICATIF_TRES_BON,
-        2: QUALIFICATIF_TRES_BON,
-        3: QUALIFICATIF_BON,
-        4: QUALIFICATIF_BON,
-        5: QUALIFICATIF_MOYEN,
-        6: QUALIFICATIF_MÉDIOCRE,
-        7: QUALIFICATIF_MÉDIOCRE,
-        8: QUALIFICATIF_MAUVAIS,
-        9: QUALIFICATIF_MAUVAIS,
-        10: QUALIFICATIF_TRÈS_MAUVAIS,
-    }
-
-    QUALIF_TO_BACKGROUND = {
-        QUALIFICATIF_TRES_BON: '#37C55F',
-        QUALIFICATIF_BON: '#8FDA2C',
-        QUALIFICATIF_MOYEN: '#F9E000',
-        QUALIFICATIF_MÉDIOCRE: '#FFAA27',
-        QUALIFICATIF_MAUVAIS: '#FF090D',
-        QUALIFICATIF_TRÈS_MAUVAIS: '#800103'
-    }
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.date_inscription = date.today()
@@ -166,87 +137,6 @@ class Inscription(db.Model):
     def region_name(self):
         return self.cache_api_commune.get('region', {}).get('nom')
 
-    @classmethod
-    def generate_csv(cls, preferred_reco=None, random_uuid=None):
-        recommandations = Recommandation.shuffled(random_uuid=random_uuid, preferred_reco=preferred_reco)
-
-        yield generate_line([
-            'VILLE',
-            'Moyens de transport',
-            "Activité sportive",
-            "Activité physique adaptée",
-            "Activités",
-            "Pathologie respiratoire",
-            "Allergie aux pollens",
-            "Fume",
-            "Enfants",
-            'MAIL',
-            'FORMAT',
-            'SMS',
-            "Fréquence",
-            "Consentement",
-            "Date d'inscription",
-            "QUALITE_AIR",
-            "BACKGROUND_COLOR",
-            "Région",
-            "LIEN_AASQA",
-            "RECOMMANDATION",
-            "PRECISIONS"
-        ])
-
-        d = today()
-        for inscription in Inscription.query.all():
-            qai, qualif, background, f = inscription.qai_qualif_background_f()
-            recommandation = Recommandation.get_revelant(recommandations, inscription, qai)
-            if inscription.frequence == "pollution" and qai and qai < 8:
-                continue
-
-            yield generate_line([
-                inscription.ville_name,
-                "; ".join(inscription.deplacement or []),
-                cls.convert_boolean_to_oui_non(inscription.sport),
-                "Non",
-                ";".join(inscription.activites or []),
-                cls.convert_boolean_to_oui_non(inscription.pathologie_respiratoire),
-                cls.convert_boolean_to_oui_non(inscription.allergie_pollen),
-                cls.convert_boolean_to_oui_non(inscription.fumeur),
-                cls.convert_boolean_to_oui_non(inscription.enfants),
-                inscription.mail,
-                inscription.diffusion,
-                inscription.telephone,
-                inscription.frequence,
-                "Oui",
-                inscription.date_inscription,
-                qualif,
-                background,
-                f['metadata']['region']['nom'],
-                f['metadata']['region']['website'],
-                recommandation.format(inscription),
-                recommandation.precisions
-            ])
-
-    def qai_qualif_background_f(self):
-        d = today()
-        try:
-            f = forecast(self.ville_insee, d, True) or {'data': [], 'metadata': {'region': {'nom': None, 'website': None}}}
-        except KeyError as e:
-            current_app.logger.error(f'Unable to find region for {self.ville_name} ({self.ville_insee})')
-            current_app.logger.error(e)
-            f = {"data": [], "metadata": {"region": {"nom": "", "website": ""}}}
-        try:
-            qai = int(next(iter([v['indice'] for v in f['data'] if v['date'] == str(d)]), None))
-            qualif = self.INDICE_ATMO_TO_QUALIFICATIF.get(qai)
-            background = self.QUALIF_TO_BACKGROUND.get(qualif)
-            return qai, qualif, background, f
-        except TypeError as e:
-            current_app.logger.error(e)
-        except ValueError as e:
-            current_app.logger.error(e)
-        return None, None, None, f
-
-    @classmethod
-    def convert_boolean_to_oui_non(cls, value):
-        return "Oui" if value else "Non"
 
     @classmethod
     def export_geojson(cls):
