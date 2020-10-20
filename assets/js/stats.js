@@ -1,6 +1,11 @@
+import './../css/stats.css'
+import './stats_map'
+
+import Chart from 'chart.js';
+
 var color = Chart.helpers.color;
 
-makeChartData = (data_id, style, label) => {
+const makeChartData = (data_id, style, label) => {
     var data = JSON.parse(document.getElementById(data_id).innerHTML);
     return {
         labels: Object.keys(data),
@@ -11,7 +16,7 @@ makeChartData = (data_id, style, label) => {
     }
 }
 
-new_chart = (elem_id, data_id, title, type, style, label) => {
+const new_chart = (elem_id, data_id, title, type, style, label) => {
     const ChartData = makeChartData(data_id, style, label)
     var ctx_format = document.getElementById(elem_id).getContext('2d');
     window.charts.push(
@@ -31,7 +36,7 @@ new_chart = (elem_id, data_id, title, type, style, label) => {
     )
 }
 
-new_doughnut = (elem_id, data_id, title) => {
+const new_doughnut = (elem_id, data_id, title) => {
     const backgroundColor = [
         '#ffa725',
         '#2fa0f2'
@@ -39,7 +44,7 @@ new_doughnut = (elem_id, data_id, title) => {
     new_chart(elem_id, data_id, title, 'doughnut', {backgroundColor: backgroundColor}, 'data')
 }
 
-new_bar_chart = (elem_id, data_id, title, type_) => {
+const new_bar_chart = (elem_id, data_id, title, type_) => {
     if (type_ === undefined) {
         type_ = 'bar'
     }

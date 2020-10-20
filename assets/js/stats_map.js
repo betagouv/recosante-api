@@ -1,3 +1,5 @@
+import mapboxgl from 'mapbox-gl';
+
 document.addEventListener('DOMContentLoaded', e => {
 
     var map = new mapboxgl.Map({
