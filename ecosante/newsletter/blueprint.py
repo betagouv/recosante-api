@@ -35,7 +35,7 @@ bp = Blueprint("newsletter", __name__, template_folder='templates', url_prefix='
 
 @bp.route('<secret_slug>/csv')
 @admin_capability_url
-def csv(secret_slug):
+def csv_(secret_slug):
     return Response(
         stream_with_context(
             Newsletter.generate_csv(

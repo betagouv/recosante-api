@@ -62,4 +62,4 @@ def export(secret_slug):
 @bp.route('<secret_slug>/import', methods=['GET', 'POST'])
 @admin_capability_url
 def import_(secret_slug):
-    return redirect(url_for("newsletter.import", secret_slug=secret_slug))
+    return redirect(url_for("newsletter.import_", secret_slug=secret_slug))
