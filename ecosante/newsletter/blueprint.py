@@ -54,7 +54,7 @@ def edit_indices(secret_slug):
     form_indices = FormEditIndices()
     if form_indices.validate_on_submit():
         for form_indice in form_indices.indices.entries:
-            indice = IndiceHistory.query.filter_by(
+            indice = db.session.query(IndiceHistory).filter_by(
                 date_=date.today(),
                 insee=form_indice.data['insee']
             ).first()
@@ -78,7 +78,7 @@ def edit_recommandations(secret_slug):
     form_recommandations = FormRecommandations()
     if form_recommandations.validate_on_submit():
         for form_recommandation in form_recommandations.recommandations.entries:
-            recommandation = Recommandation.query.get(int(form_recommandation.data['id']))
+            recommandation = db.session.query(Recommandation).get(int(form_recommandation.data['id']))
             form_recommandation.form.populate_obj(recommandation)
         db.session.commit()
     return redirect(
