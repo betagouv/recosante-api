@@ -1,3 +1,3 @@
 #!/bin/bash
-flask startup
+flask db upgrade
 uwsgi wsgi.ini
