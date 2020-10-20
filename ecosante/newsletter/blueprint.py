@@ -61,7 +61,7 @@ def edit_indices(secret_slug):
             if not indice:
                 indice = IndiceHistory(date_=date.today(), insee=form_indice.data['insee'])
                 db.session.add(indice)
-            indice._features = json.dumps({"indice": form_indice.data['indice'], "date": date.today()})
+            indice._features = json.dumps({"indice": form_indice.data['indice'], "date": str(date.today())})
             db.session.commit()
     return redirect(
         url_for(
