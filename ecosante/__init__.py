@@ -20,7 +20,6 @@ def create_app():
         from .avis import models, commands, blueprint as avis_bp
         from .stats import blueprint as stats_bp
         from .newsletter import blueprint as newsletter_bp
-        from . import commands
 
         app.register_blueprint(inscription_bp.bp)
         app.register_blueprint(stats_bp.bp)
