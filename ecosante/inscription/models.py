@@ -1,16 +1,11 @@
 from .. import db
-from ecosante.utils.funcs import generate_line
-from ecosante.recommandations.models import Recommandation
 from sqlalchemy.dialects import postgresql
-from sqlalchemy import Enum
 from datetime import date
 from dataclasses import dataclass
 from typing import List
 import requests
 import json
 import os
-from indice_pollution import forecast, today
-from flask import current_app
 
 @dataclass
 class Inscription(db.Model):
@@ -153,8 +148,8 @@ class Inscription(db.Model):
         }
 
     def send_success_email(self):
-        qai, qualif, background, f = self.qai_qualif_background_f()
-        recommandation = Recommandation.get_one(self, qai)
+        from ecosante.newsletter.models import Newsletter
+        newsletter = Newsletter(self)
         sib_apikey = os.getenv('SIB_APIKEY')
         success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
 
@@ -177,10 +172,10 @@ class Inscription(db.Model):
             json={
                 "attributes": {
                     "VILLE": self.ville_name,
-                    "QUALITE_AIR": qualif,
-                    "BACKGROUND_COLOR": background,
-                    "RECOMMANDATION": recommandation.recommandation,
-                    "PRECISIONS": recommandation.precisions,
+                    "QUALITE_AIR": newsletter.qualif,
+                    "BACKGROUND_COLOR": newsletter.background,
+                    "RECOMMANDATION": newsletter.recommandation.recommandation,
+                    "PRECISIONS": newsletter.recommandation.precisions,
                 }
             }
         )

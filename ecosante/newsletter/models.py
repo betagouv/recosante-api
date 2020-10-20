@@ -51,7 +51,7 @@ class Newsletter(object):
         self.date = today()
         self.inscription = inscription
         try:
-            self.forecast = forecast or forecast(self.inscription.ville_insee, self.date, True)
+            self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
         except KeyError as e:
             current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
             current_app.logger.error(e)
