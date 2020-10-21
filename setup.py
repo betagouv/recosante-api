@@ -8,7 +8,7 @@ DEPENDENCIES = [
     'psycopg2',
     'email_validator',
     'requests',
-    'indice_pollution==0.3.2'
+    'indice_pollution==0.3.3'
 ]
 
 setup(
