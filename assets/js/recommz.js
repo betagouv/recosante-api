@@ -1,10 +1,10 @@
 import Store from 'https://cdn.jsdelivr.net/gh/DavidBruant/baredux@master/main.js'
 import { html, render } from 'https://unpkg.com/htm/preact/standalone.module.js'
-import {
-    RECOMMANDATION_COLUMN,
-    RECOMMANDATION_SMS_COLUMN,
-    RECOMMANDATION_DETAILS_COLUMN
-} from './makeSendingCSVs.js'
+import './../css/recommz.css'
+
+const RECOMMANDATION_COLUMN = 'Recommandation';
+const RECOMMANDATION_DETAILS_COLUMN = 'Précisions';
+const RECOMMANDATION_SMS_COLUMN = 'Recommandation format SMS';
 
 const NIVEAU_DIFFICULTÉ_COLUMN = 'Niveau de difficulté'
 

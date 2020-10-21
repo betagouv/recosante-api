@@ -5,6 +5,7 @@ DEPENDENCIES = [
     'Flask-SQLAlchemy',
     'Flask-Migrate',
     'Flask-WTF',
+    'Flask-Static-Digest',
     'psycopg2',
     'email_validator',
     'requests',
@@ -30,5 +31,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=DEPENDENCIES,
-    extras_require={"test": ["pytest"]}
+    extras_require={"dev": ["honcho"]},
+    setup_requires=['pytest-runner'],
+    tests_requires=['pytest']
 )

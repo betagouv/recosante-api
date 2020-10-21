@@ -1,6 +1,7 @@
----
-layout: home
----
+{% extends "base.html" %}
+
+{% block content %}
+
 
 <div class="notification full-width" role="alert">Écosanté est en phase de construction, nous informons pour l'instant sur la qualité de l'air.</div>
 
@@ -14,11 +15,11 @@ layout: home
   <div class="container">
     <div class="row">
       <div class="screenshot__container">
-        <img src="/assets/images/Iphone.png">
+        <img src="{{ static_url_for('static', filename='images/Iphone.png') }}">
       </div>
       <div>
         <h3>Soyez informé.e de la qualité de l'air autour de chez vous et des bonnes pratiques à adopter</h3>
-        <form action="/inscription">
+        <form action="{{ url_for('inscription.inscription') }}">
           <input type="email" name="mail" placeholder="Adresse email">
           <input type="submit" value="S'inscrire">
         </form>
@@ -36,3 +37,5 @@ layout: home
       </article>
   </div>
 </section>
+
+{% endblock content %}
