@@ -30,5 +30,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=DEPENDENCIES,
-    extras_require={"test": ["pytest"]}
+    extras_require={"dev": ["honcho"]},
+    setup_requires=['pytest-runner'],
+    tests_requires=['pytest']
 )
