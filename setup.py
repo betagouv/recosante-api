@@ -5,6 +5,7 @@ DEPENDENCIES = [
     'Flask-SQLAlchemy',
     'Flask-Migrate',
     'Flask-WTF',
+    'Flask-Static-Digest',
     'psycopg2',
     'email_validator',
     'requests',

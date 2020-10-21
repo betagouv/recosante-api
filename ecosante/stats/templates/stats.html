@@ -5,7 +5,6 @@
 
 <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
 
-
 <section class="section section-grey">
     <div class="container">
         <div class="panel">
@@ -44,7 +43,7 @@
         </div>
     </div>
 </section>
-<script type="text/javascript" src="/assets/js/stats.js"></script>
+<script type="text/javascript" src="{{ static_url_for('static', filename='js/stats.js') }}"></script>
 <script id="media" type="application/json">{{ media|safe}}</script>
 <script id="frequence" type="application/json">{{ frequence|safe}}</script>
 <script id="subscriptions" type="application/json">{{ subscriptions|safe}}</script>

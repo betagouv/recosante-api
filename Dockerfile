@@ -16,6 +16,7 @@ COPY --from=0 /ecosante/ .
 
 RUN pip3 install .
 RUN pip3 install uwsgi
+RUN flask digest compile
 
 EXPOSE 8080
 
