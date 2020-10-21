@@ -4,6 +4,7 @@ _site
 .jekyll-metadata
 .env
 .eggs
+ecosante.egg-info
 *.pyc
 vendor
 .clever.json
