@@ -1,2 +1,2 @@
 python: flask run
-rollup: rollup -cw
+watchstatic: yarn watch
