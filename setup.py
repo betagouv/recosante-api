@@ -2,6 +2,7 @@ from setuptools import find_packages, setup
 
 DEPENDENCIES = [
     'Flask',
+    'Flask-Assets',
     'Flask-SQLAlchemy',
     'Flask-Migrate',
     'Flask-WTF',
