@@ -1,6 +1,5 @@
 from ecosante.newsletter.forms.edit_indice import FormEditIndice
 from flask import (
-    Blueprint,
     render_template,
     request,
     redirect,
@@ -20,6 +19,7 @@ from indice_pollution.regions.solvers import region
 from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
 from ecosante.utils.decorators import admin_capability_url
+from ecosante.utils import Blueprint
 from .forms import (
     FormEditIndices,
     FormExport,
@@ -31,7 +31,7 @@ from .models import (
     Recommandation
 )
 
-bp = Blueprint("newsletter", __name__, template_folder='templates', url_prefix='/newsletter')
+bp = Blueprint("newsletter", __name__)
 
 @bp.route('<secret_slug>/csv')
 @admin_capability_url
