@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+from setuptools.command.install import install
+from subprocess import call
 
 DEPENDENCIES = [
     'Flask',
@@ -6,11 +8,15 @@ DEPENDENCIES = [
     'Flask-SQLAlchemy',
     'Flask-Migrate',
     'Flask-WTF',
-    'psycopg2',
     'email_validator',
     'requests',
     'indice_pollution==0.3.3'
 ]
+
+class CustomPsycopg2Install(install):
+    def run(self):
+        install.run(self)
+        call(['pip', 'install', '>=2.7', '--no-binary', 'psycopg2'])
 
 setup(
     name='ecosante',
@@ -33,5 +39,8 @@ setup(
     install_requires=DEPENDENCIES,
     extras_require={"dev": ["honcho"]},
     setup_requires=['pytest-runner'],
-    tests_requires=['pytest']
+    tests_requires=['pytest'],
+    cmdclass={
+          'install': CustomPsycopg2Install,
+    },
 )

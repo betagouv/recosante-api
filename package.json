@@ -5,7 +5,6 @@
   "author": "Vincent <lara.vincent@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "@rollup/plugin-babel": "^5.2.1",
