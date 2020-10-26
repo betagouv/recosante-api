@@ -18,12 +18,7 @@
     </div>
 </form>
 
-<style>
-.multifield li {
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: flex-start;
-    justify-content: flex-end;
-}
-</style>
+{% scss "avis/css/multifield.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
 {% endblock block_form %}
