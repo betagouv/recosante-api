@@ -7,7 +7,7 @@ class Blueprint(BaseBlueprint):
             name,
             import_name,
             template_folder='templates',
-            url_prefix=f'/{name}',
+            url_prefix=url_prefix,
             static_folder='assets',
             static_url_path='/assets/'
         )
