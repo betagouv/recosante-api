@@ -1,2 +1,2 @@
 python: flask run
-watchstatic: yarn watch
+watchstatic: flask assets watch

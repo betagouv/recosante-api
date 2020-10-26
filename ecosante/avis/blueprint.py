@@ -1,6 +1,5 @@
 from flask import (
     render_template,
-    Blueprint,
     redirect,
     request,
     url_for,
@@ -12,8 +11,12 @@ from .forms import Form
 from .models import Avis
 from .models import db
 from ecosante.utils.decorators import admin_capability_url
+from ecosante.utils import Blueprint
 
-bp = Blueprint("avis", __name__, template_folder='templates', url_prefix='/avis')
+bp = Blueprint(
+    "avis",
+    __name__,
+)
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():

@@ -1,5 +1,4 @@
 from flask import (
-    Blueprint,
     render_template,
     request,
     redirect,
@@ -10,8 +9,11 @@ from flask import (
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
 from ecosante.utils.decorators import admin_capability_url
+from ecosante.utils import Blueprint
+from ecosante.extensions import assets_env
+from flask_assets import Bundle
 
-bp = Blueprint("inscription", __name__, template_folder='templates', url_prefix='/inscription')
+bp = Blueprint("inscription", __name__)
 
 @bp.route('/', methods=['GET', 'POST'])
 def inscription():

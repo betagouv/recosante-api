@@ -1,13 +1,18 @@
-from flask import render_template, Blueprint, abort, request, url_for, redirect
+from flask import (
+    render_template,
+    abort,
+    request,
+    url_for,
+    redirect
+)
 from .models import Recommandation, db
 from .forms import Form
 from ecosante.utils.decorators import admin_capability_url
+from ecosante.utils import Blueprint
 
 bp = Blueprint(
     "recommandations",
     __name__,
-    template_folder='templates',
-    url_prefix='/recommandations'
 )
 
 @bp.route('<secret_slug>/edit/<id>', methods=['GET', 'POST'])

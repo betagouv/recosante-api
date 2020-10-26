@@ -35,10 +35,8 @@
 </form>
 </ul>
 
-<script>
-document.addEventListener('DOMContentLoaded', e=>{
-    window.location.href = "{{ url_for("newsletter.csv_", secret_slug=secret_slug, **args) }}";
-})
-</script>
+{% rollupjs "newsletter/js/load_export.js" %}
+<script src="{{ ASSET_URL }}"></script>
+{% endassets %}
 
 {% endblock content %}

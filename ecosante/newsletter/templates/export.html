@@ -1,22 +1,15 @@
 {% extends 'base_form.html'%}
 
 {% block pre_form %}
-<style>
-ul#recommandations {
-    list-style-type: none;
-}
-#recommandations > li {
-    display: flex;
-    padding-bottom: 2ch;
-}
-#recommandations > li > input[type="radio"]{
-    flex-shrink: 0;
-}
-</style>
+
+{% scss "newsletter/css/recommandations.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
+
 {% endblock pre_form %}
 
 {% block block_form %}
-Rechercher : <input type="text" onchange="search(this)">
+Rechercher : <input type="text" id="search">
 <form method="POST" novalidate>
     {{ form.hidden_tag() }}
     <div class="form__group">
@@ -29,21 +22,8 @@ Rechercher : <input type="text" onchange="search(this)">
     </div>
 </form>
 
-<script>
-function search(search_input) {
-    const recommandations = document.getElementById("recommandations")
-    const lis = [...recommandations.getElementsByTagName("li")];
-    const value = search_input.value.toLowerCase();
-    lis.forEach( (li) => {
-        const labels = [...li.getElementsByTagName("label")]
-        labels.forEach((label) => {
-            if (label.innerHTML.toLowerCase().includes(value)) {
-                li.style.display="flex";
-            } else {
-                li.style.display = "none";
-            }
-        })
-    })
-}
-</script>
+{% rollupjs "newsletter/js/search.js" %}
+<script src="{{ ASSET_URL}}"></script>
+{% endassets %}
+
 {% endblock block_form %}

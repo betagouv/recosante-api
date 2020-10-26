@@ -2,10 +2,10 @@ from setuptools import find_packages, setup
 
 DEPENDENCIES = [
     'Flask',
+    'Flask-Assets',
     'Flask-SQLAlchemy',
     'Flask-Migrate',
     'Flask-WTF',
-    'Flask-Static-Digest',
     'psycopg2',
     'email_validator',
     'requests',

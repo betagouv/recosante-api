@@ -1,0 +1,12 @@
+#recommandations {
+    list-style-type: none;
+
+    li {
+        display: flex;
+        padding-bottom: 2ch;
+
+        input[type="radio"] {
+            flex-shrink: 0;
+        }
+    }
+}
