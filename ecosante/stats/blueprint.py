@@ -1,7 +1,8 @@
-from flask import current_app, render_template, Blueprint
+from flask import render_template
 from ecosante.inscription.models import Inscription, db
 from ecosante.avis.models import Avis
 from ecosante.avis.forms import Form
+from ecosante.utils.blueprint import Blueprint
 from sqlalchemy import func
 from calendar import month_name, different_locale
 import json
@@ -11,7 +12,7 @@ def get_month_name(month_no, locale):
         return month_name[month_no]
 
 
-bp = Blueprint("stats", __name__, template_folder='templates', url_prefix='/stats')
+bp = Blueprint("stats", __name__)
 
 @bp.route('/')
 def stats():

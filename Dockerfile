@@ -8,7 +8,7 @@ WORKDIR /ecosante/
 COPY ./ .
 
 RUN yarn install
-RUN yarn global add node-sass rollup
+RUN yarn global add node-sass rollup @babel/core @rollup/plugin-babel @rollup/plugin-commonjs @rollup/plugin-node-resolve rollup-plugin-postcss
 
 RUN pip3 install .
 RUN pip3 install uwsgi
