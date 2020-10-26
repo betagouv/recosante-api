@@ -1,6 +1,6 @@
 from flask import Flask, g
 import os
-from .extensions import db, migrate, flask_static_digest, assets_env
+from .extensions import db, migrate, assets_env
 
 def create_app():
     app = Flask(
@@ -16,7 +16,6 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
-    flask_static_digest.init_app(app)
     assets_env.init_app(app)
 
     with app.app_context():
