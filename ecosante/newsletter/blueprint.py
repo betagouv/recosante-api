@@ -1,3 +1,4 @@
+from flask.helpers import flash
 from ecosante.newsletter.forms.edit_indice import FormEditIndice
 from flask import (
     render_template,
@@ -168,11 +169,17 @@ def import_(secret_slug):
             )
             r.raise_for_status()
             lists[format] = r.json()['id']
-
-        stream = codecs.iterdecode(form.file.data.stream, 'utf-8')
-        reader = csv.DictReader(stream)
+        for delimiter in [',', ';']:
+            form.file.data.stream.seek(0)
+            stream = codecs.iterdecode(form.file.data.stream, 'utf-8')
+            reader = csv.DictReader(stream, delimiter=delimiter)
+            if 'MAIL' in reader.fieldnames:
+                break
+        else:
+            flash("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`", "error")
+            return render_template("import.html", form=form)
         for row in reader:
-            mail = quote(row['MAIL'])
+            mail = quote({row['MAIL']})
             r = requests.put(
                 f'https://api.sendinblue.com/v3/contacts/{mail}',
                 headers=headers,
@@ -188,7 +195,6 @@ def import_(secret_slug):
                 }
             )
             r.raise_for_status()
-
         r = requests.post(
             'https://api.sendinblue.com/v3/emailCampaigns',
             headers=headers,
