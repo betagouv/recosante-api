@@ -3,14 +3,15 @@ from setuptools.command.install import install
 from subprocess import call
 
 DEPENDENCIES = [
+    'celery',
+    'email_validator',
     'Flask',
     'Flask-Assets',
-    'Flask-SQLAlchemy',
     'Flask-Migrate',
+    'Flask-SQLAlchemy',
     'Flask-WTF',
-    'email_validator',
+    'indice_pollution==0.3.3',
     'requests',
-    'indice_pollution==0.3.3'
 ]
 
 class CustomPsycopg2Install(install):
