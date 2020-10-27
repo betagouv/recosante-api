@@ -80,6 +80,7 @@ def edit_recommandations(secret_slug):
         for form_recommandation in form_recommandations.recommandations.entries:
             recommandation = db.session.query(Recommandation).get(int(form_recommandation.data['id']))
             form_recommandation.form.populate_obj(recommandation)
+            db.session.add(recommandation)
         db.session.commit()
     return redirect(
         url_for(
