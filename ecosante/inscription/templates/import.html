@@ -2,23 +2,6 @@
 
 {% block block_form %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for category, message in messages %}
-      <li class="{{ category }}">{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-
-{% if sms_campaign_id %}
-<h2>Envoyer la campagne SMS en cliquant <a href="https://my.sendinblue.com/camp/sms/{{sms_campaign_id}}/setup">ici</a></h2>
-{% endif %}
-{% if email_campaign_id %}
-<h2>Envoyer la campagne email en cliquant <a href="https://my.sendinblue.com/camp/classic/{{email_campaign_id}}/setup">ici</a></h2>
-{% endif %}
-
 <form method="POST" enctype="multipart/form-data">
 
     {{ form.hidden_tag() }}

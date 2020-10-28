@@ -9,12 +9,7 @@ from flask import (
 )
 from flask.wrappers import Response
 from datetime import date, datetime
-import csv
-import codecs
-import os
-import requests
 import json
-from urllib.parse import quote
 from uuid import uuid4
 from indice_pollution.regions.solvers import region
 from indice_pollution.history.models import IndiceHistory
@@ -31,6 +26,7 @@ from .models import (
     Newsletter,
     Recommandation
 )
+from .tasks import import_in_sb
 
 bp = Blueprint("newsletter", __name__)
 
@@ -150,88 +146,13 @@ def export(secret_slug):
 @admin_capability_url
 def import_(secret_slug):
     form = FormImport()
-    sms_campaign_id, email_campaign_id = None, None
+    task_id = None
     if request.method == 'POST' and form.validate_on_submit():
-        headers = {
-            "accept": "application/json",
-            "api-key": os.getenv('SIB_APIKEY')
-        }
-        lists = dict()
-        now = datetime.now()
-        for format in ["sms", "mail"]:
-            r = requests.post(
-                "https://api.sendinblue.com/v3/contacts/lists",
-                headers=headers,
-                json={
-                    "name": f'{now} - {format}',
-                    "folderId": os.getenv('SIB_FOLDERID', 5)
-                }
-            )
-            r.raise_for_status()
-            lists[format] = r.json()['id']
-        for delimiter in [',', ';']:
-            form.file.data.stream.seek(0)
-            stream = codecs.iterdecode(form.file.data.stream, 'utf-8')
-            reader = csv.DictReader(stream, delimiter=delimiter)
-            if 'MAIL' in reader.fieldnames:
-                break
-        else:
-            flash("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`", "error")
-            return render_template("import.html", form=form)
-        for row in reader:
-            mail = quote({row['MAIL']})
-            r = requests.put(
-                f'https://api.sendinblue.com/v3/contacts/{mail}',
-                headers=headers,
-                json={
-                    "attributes": {
-                        k: row[k]
-                        for k in [
-                            'FORMAT', 'QUALITE_AIR', 'LIEN_AASQA',
-                            'RECOMMANDATION', 'PRECISIONS', 'VILLE', 'BACKGROUND_COLOR'
-                        ]
-                    },
-                    "listIds":[lists[row['FORMAT']]]
-                }
-            )
-            r.raise_for_status()
-        r = requests.post(
-            'https://api.sendinblue.com/v3/emailCampaigns',
-            headers=headers,
-            json={
-                    "sender": {"name": "L'équipe Écosanté", "email": "ecosante@data.gouv.fr"},
-                    "name": f'{now}',
-                    "templateId": os.getenv('SIB_EMAIL_TEMPLATE_ID', 96),
-                    "subject": "Vos recommandations Écosanté",
-                    "replyTo": "ecosante@data.gouv.fr",
-                    "recipients":{"listIds":[lists['mail']]},
-                    "header": "Aujourd'hui, la qualité de l'air autour de chez vous est…"
-            })
-        r.raise_for_status()
-        email_campaign_id = r.json()['id']
-
-        r = requests.post(
-            'https://api.sendinblue.com/v3/smsCampaigns',
-            headers=headers,
-            json={
-                "name": f'{now}',
-                "sender": "Ecosante",
-                "content":
-"""Aujourd'hui l'indice de la qualité de l'air à {VILLE} est {QUALITE_AIR}
-Plus d'information : {LIEN_AASQA}
-{RECOMMANDATION}
-STOP au [STOP_CODE]
-""",
-                "recipients": {"listIds": [lists['sms']]}
-            }
-        )
-        r.raise_for_status()
-        sms_campaign_id = r.json()['id']
-
+        task = import_in_sb.apply_async()
+        task_id = task.id
 
     return render_template(
         "import.html",
         form=form,
-        sms_campaign_id=sms_campaign_id,
-        email_campaign_id=email_campaign_id
+        task_id=task_id
     )
