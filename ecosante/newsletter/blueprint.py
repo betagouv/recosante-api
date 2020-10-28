@@ -179,7 +179,7 @@ def import_(secret_slug):
             flash("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`", "error")
             return render_template("import.html", form=form)
         for row in reader:
-            mail = quote({row['MAIL']})
+            mail = quote(row['MAIL'])
             r = requests.put(
                 f'https://api.sendinblue.com/v3/contacts/{mail}',
                 headers=headers,
