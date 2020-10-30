@@ -19,8 +19,6 @@
     "@trevoreyre/autocomplete-js": "^2.2.0",
     "chart.js": "^2.9.4",
     "mapbox-gl": "^1.12.0",
-    "preact": "^10.5.5",
-    "preact-progress": "^1.0.0",
     "template.data.gouv.fr": "^1.3.2"
   }
 }
