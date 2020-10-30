@@ -3,7 +3,7 @@ from ecosante.newsletter.models import Newsletter
 from flask import current_app
 from celery.schedules import crontab
 
-from .import_in_sb import import_in_sb #noqa
+from .import_in_sb import import_in_sb, delete_file, delete_file_error #noqa
 
 @celery.task()
 def save_indice():

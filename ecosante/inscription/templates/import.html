@@ -2,6 +2,9 @@
 
 {% block block_form %}
 
+<div id="progress"></div>
+<div id="progress_details"></div>
+
 <form method="POST" enctype="multipart/form-data">
 
     {{ form.hidden_tag() }}
@@ -13,5 +16,10 @@
     </div>
 
 </form>
+
+<script type="application/json" id="task_id">{"task_id": "{{ task_id }}" }</script>
+{% rollupjs "newsletter/js/get_task_status.js" %}
+<script type="application/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
 
 {% endblock block_form %}

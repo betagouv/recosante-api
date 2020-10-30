@@ -5,11 +5,13 @@ from flask import (
     request,
     redirect,
     url_for,
-     stream_with_context
+    stream_with_context
 )
 from flask.wrappers import Response
 from datetime import date, datetime
 import json
+import os
+from time import time
 from uuid import uuid4
 from indice_pollution.regions.solvers import region
 from indice_pollution.history.models import IndiceHistory
@@ -26,7 +28,7 @@ from .models import (
     Newsletter,
     Recommandation
 )
-from .tasks import import_in_sb
+from .tasks import import_in_sb, delete_file, delete_file_error
 
 bp = Blueprint("newsletter", __name__)
 
@@ -148,7 +150,13 @@ def import_(secret_slug):
     form = FormImport()
     task_id = None
     if request.method == 'POST' and form.validate_on_submit():
-        task = import_in_sb.apply_async()
+        filepath = os.path.join('/tmp/', f"{time()}-{form.file.data.filename}")
+        form.file.data.save(filepath)
+        task = import_in_sb.apply_async(
+            (filepath,),
+            link=delete_file.s(),
+            link_error=delete_file_error.s(filepath)
+        )
         task_id = task.id
 
     return render_template(
@@ -156,3 +164,12 @@ def import_(secret_slug):
         form=form,
         task_id=task_id
     )
+
+@bp.route('<secret_slug>/task_status/<task_id>')
+@admin_capability_url
+def task_status(secret_slug, task_id):
+    task = import_in_sb.AsyncResult(task_id)
+    return {
+        **{'state': task.state},
+        **task.info
+    }
