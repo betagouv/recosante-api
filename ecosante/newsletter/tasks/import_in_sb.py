@@ -16,8 +16,9 @@ def get_lines_csv(filepath):
     raise ValueError("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`")
 
 @celery.task(bind=True)
-def delete_file(self, filepath):
+def delete_file(self, return_, filepath):
     os.remove(filepath)
+    return return_
 
 @celery.task(bind=True)
 def delete_file_error(uuid, filepath):
@@ -42,7 +43,6 @@ def import_in_sb(self, filepath):
     now = datetime.now()
     total_nb_requests = 4 + len(lines)
     nb_requests = 0
-    current_app.logger.info(1)
     for format in ["sms", "mail"]:
         r = requests.post(
             "https://api.sendinblue.com/v3/contacts/lists",
@@ -80,6 +80,7 @@ def import_in_sb(self, filepath):
             }
         )
         r.raise_for_status()
+        current_app.logger.info(f"Mise à jour de {mail}")
         nb_requests += 1
         self.update_state(
             state='STARTED',
@@ -131,7 +132,7 @@ STOP au [STOP_CODE]
     sms_campaign_id = r.json()['id']
     nb_requests += 1
     self.update_state(
-        state='SUCCESS',
+        state='STARTED',
         meta={
             "progress": 100,
             "details": f"Création de la campagne SMS",
@@ -139,4 +140,10 @@ STOP au [STOP_CODE]
             "sms_campaign_id": sms_campaign_id
         }
     )
-    return filepath
+    return {
+        "state": "STARTED",
+        "progress": 100,
+        "details": "Terminé",
+        "email_campaign_id": email_campaign_id,
+        "sms_campaign_id": sms_campaign_id
+    }

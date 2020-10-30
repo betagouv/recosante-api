@@ -15,7 +15,7 @@ function update_task_status() {
                         progress_details.innerHTML += `<h2>Envoyer la campagne email en cliquant <a href="https://my.sendinblue.com/camp/classic/${json['email_campaign_id']}/setup">ici</a></h2>`
                     }
                     if (json['state'] == 'STARTED' || json['state'] == 'PENDING') {
-                        update_task_status()
+                        setTimeout(update_task_status, 500)
                     }
                 }
             )

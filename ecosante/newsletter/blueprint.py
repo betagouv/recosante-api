@@ -154,7 +154,7 @@ def import_(secret_slug):
         form.file.data.save(filepath)
         task = import_in_sb.apply_async(
             (filepath,),
-            link=delete_file.s(),
+            link=delete_file.s(filepath),
             link_error=delete_file_error.s(filepath)
         )
         task_id = task.id
@@ -171,5 +171,5 @@ def task_status(secret_slug, task_id):
     task = import_in_sb.AsyncResult(task_id)
     return {
         **{'state': task.state},
-        **task.info
+        **(task.info or {"progress": 0, "details": ""})
     }
