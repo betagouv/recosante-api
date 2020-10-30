@@ -2,22 +2,8 @@
 
 {% block block_form %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for category, message in messages %}
-      <li class="{{ category }}">{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-
-{% if sms_campaign_id %}
-<h2>Envoyer la campagne SMS en cliquant <a href="https://my.sendinblue.com/camp/sms/{{sms_campaign_id}}/setup">ici</a></h2>
-{% endif %}
-{% if email_campaign_id %}
-<h2>Envoyer la campagne email en cliquant <a href="https://my.sendinblue.com/camp/classic/{{email_campaign_id}}/setup">ici</a></h2>
-{% endif %}
+<div id="progress"></div>
+<div id="progress_details"></div>
 
 <form method="POST" enctype="multipart/form-data">
 
@@ -30,5 +16,9 @@
     </div>
 
 </form>
+<script type="application/json" id="task_id">{"task_id": "{{ task_id }}" }</script>
+{% rollupjs "newsletter/js/get_task_status.js" %}
+<script type="application/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
 
 {% endblock block_form %}
