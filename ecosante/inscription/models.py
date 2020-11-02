@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List
 import requests
 import json
-import os
 
 @dataclass
 class Inscription(db.Model):
@@ -83,7 +82,6 @@ class Inscription(db.Model):
     @property
     def velo(self):
         return self.has_deplacement("velo")
-
     @property
     def transport_en_commun(self):
         return self.has_deplacement("tec")
@@ -146,57 +144,3 @@ class Inscription(db.Model):
                 for i in cls.query.all()
             ]
         }
-
-    def send_success_email(self):
-        from ecosante.newsletter.models import Newsletter
-        newsletter = Newsletter(self)
-        sib_apikey = os.getenv('SIB_APIKEY')
-        success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
-
-        r = requests.post(
-            'https://api.sendinblue.com/v3/contacts',
-            headers={
-                'accept': 'application/json',
-                'api-key': sib_apikey 
-            },
-            json={
-                "email": self.mail,
-            }
-        )
-        r = requests.put(
-            f'https://api.sendinblue.com/v3/contacts/{self.mail}',
-            headers={
-                'accept': 'application/json',
-                'api-key': sib_apikey
-            },
-            json={
-                "attributes": {
-                    "VILLE": self.ville_name,
-                    "QUALITE_AIR": newsletter.qualif,
-                    "BACKGROUND_COLOR": newsletter.background,
-                    "RECOMMANDATION": newsletter.recommandation.recommandation,
-                    "PRECISIONS": newsletter.recommandation.precisions,
-                }
-            }
-        )
-        r = requests.post(
-            'https://api.sendinblue.com/v3/smtp/email',
-            headers={
-                'accept': 'application/json',
-                'api-key': sib_apikey
-            },
-            json={
-                "sender": {
-                    "name":"L'équipe écosanté",
-                    "email":"contact@ecosante.data.gouv.fr"
-                },
-                "to": [{
-                        "email": self.mail,
-                }],
-                "replyTo": {
-                    "name":"L'équipe écosanté",
-                    "email":"contact@ecosante.data.gouv.fr"
-                },
-                "templateId": success_template_id
-            }
-        )

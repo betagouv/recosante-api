@@ -8,6 +8,7 @@ from flask import (
 )
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
+from .tasks import send_success_email
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from ecosante.extensions import assets_env
@@ -48,7 +49,7 @@ def personnalisation():
 @bp.route('/reussie')
 def reussie():
     inscription = Inscription.query.get(session['inscription']['id'])
-    inscription.send_success_email()
+    send_success_email.apply_async((inscription.id,))
 
     return render_template('reussi.html')
 
