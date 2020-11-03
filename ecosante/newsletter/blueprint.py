@@ -1,5 +1,3 @@
-from flask.helpers import flash
-from ecosante.newsletter.forms.edit_indice import FormEditIndice
 from flask import (
     render_template,
     request,
@@ -106,7 +104,9 @@ def link_export(secret_slug):
         seed=request.args.get('seed')
     ))
     form_recommandations = FormRecommandations()
-    for recommandation in set([n.recommandation for n in newsletters]):
+    recommandations = list(set([n.recommandation for n in newsletters]))
+    recommandations.sort(key=lambda r: r.id)
+    for recommandation in recommandations:
         form_recommandations.recommandations.append_entry(recommandation)
     form_indices = FormEditIndices()
     for inscription in [n.inscription for n in newsletters if n.qai is None]:
