@@ -32,7 +32,8 @@ def delete_file_error(self, exc, traceback, filepath):
 
 @celery.task(bind=True)
 def import_in_sb(self, filepath):
-    print("import in sb")
+    email_campaign_id = None,
+    sms_campaign_id = None
     self.update_state(state='PENDING', meta={"progress": 0, "details": "Lecture du fichier CSV"})
     lines = get_lines_csv(filepath)
     
@@ -95,8 +96,7 @@ def import_in_sb(self, filepath):
         inscription = Inscription.query.filter_by(mail=line['MAIL']).first()
         if inscription is None:
             continue
-        newsletter = Newsletter(inscription)
-        newsletter.recommandation_id = line['ID RECOMMANDATION']
+        newsletter = Newsletter(inscription, recommandation_id=line['ID RECOMMANDATION'])
         db.session.add(newsletter)
     db.session.commit()
 

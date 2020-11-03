@@ -70,6 +70,9 @@ class Recommandation(db.Model):
         if qai and (qai < 8) and self.qa_mauvaise:
             return False
 
+        if self.id in [n.recommandation_id for n in inscription.last_month_newsletters()]:
+            return False
+
         return True
 
     def format(self, inscription):

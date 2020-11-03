@@ -1,6 +1,10 @@
+from ecosante import newsletter
 from .. import db
 from sqlalchemy.dialects import postgresql
-from datetime import date
+from datetime import (
+    date,
+    timedelta
+)
 from dataclasses import dataclass
 from typing import List
 import requests
@@ -44,6 +48,11 @@ class Inscription(db.Model):
     pathologie_respiratoire = db.Column(db.Boolean)
     allergie_pollen = db.Column(db.Boolean)
     fumeur = db.Column(db.Boolean)
+
+    newsletters = db.relationship(
+        "ecosante.newsletter.models.Newsletter",
+        backref="newsletter",
+        lazy="dynamic")
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.String())
@@ -144,3 +153,11 @@ class Inscription(db.Model):
                 for i in cls.query.all()
             ]
         }
+
+    def last_month_newsletters(self):
+        from ecosante.newsletter.models import Newsletter
+
+        last_week = date.today() - timedelta(days=30)
+        return self.newsletters.filter(
+            Newsletter.date>=last_week
+        ).all()

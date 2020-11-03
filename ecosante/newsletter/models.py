@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
@@ -55,7 +55,7 @@ class Newsletter(db.Model):
         QUALIFICATIF_TRÈS_MAUVAIS: '#800103'
     }
 
-    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None):
+    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None):
         recommandations = recommandations or Recommandation.shuffled(random_uuid=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
@@ -73,11 +73,14 @@ class Newsletter(db.Model):
             current_app.logger.error(e)
             self.qai = None
 
-        self.recommandation = Recommandation.get_revelant(
-            recommandations,
-            inscription,
-            self.qai
+        self.recommandation =\
+             Recommandation.query.get(recommandation_id) or\
+             Recommandation.get_revelant(
+                recommandations,
+                inscription,
+                self.qai
         )
+        self.recommandation_id = self.recommandation.id
 
     @property
     def qualif(self):
