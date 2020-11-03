@@ -7,15 +7,24 @@ from ecosante.utils.funcs import (
     convert_boolean_to_oui_non,
     generate_line
 )
+from ecosante.extensions import db
 from indice_pollution import bulk_forecast, today, forecast as get_forecast
 
 @dataclass
-class Newsletter(object):
+class Newsletter(db.Model):
+    qai: int
+    forecast: dict
     date: datetime
     inscription: Inscription
     recommandation: Recommandation
-    qai: int
-    forecast: dict
+
+
+    id = db.Column(db.Integer, primary_key=True)
+    inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'))
+    inscription = db.relationship("Inscription", backref="inscription")
+    recommandation_id = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation = db.relationship("Recommandation")
+    date = db.Column(db.Date())
 
     QUALIFICATIF_TRES_BON = 'très bon'
     QUALIFICATIF_BON = 'bon'
@@ -50,6 +59,7 @@ class Newsletter(object):
         recommandations = recommandations or Recommandation.shuffled(random_uuid=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
+        self.inscription_id = inscription.id
         try:
             self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
         except KeyError as e:
@@ -100,7 +110,8 @@ class Newsletter(object):
             "Région",
             "LIEN_AASQA",
             "RECOMMANDATION",
-            "PRECISIONS"
+            "PRECISIONS",
+            "ID RECOMMANDATION"
         ])
         for newsletter in cls.export(preferred_reco, seed):
             yield newsletter.csv_line()
@@ -138,5 +149,6 @@ class Newsletter(object):
             self.forecast['metadata']['region']['nom'],
             self.forecast['metadata']['region']['website'],
             self.recommandation.format(self.inscription),
-            self.recommandation.precisions
+            self.recommandation.precisions,
+            self.recommandation.id
         ])

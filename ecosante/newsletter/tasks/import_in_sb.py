@@ -5,7 +5,9 @@ import csv
 import os
 import requests
 from urllib.parse import quote
-from celery import result
+from ecosante.newsletter.models import Newsletter
+from ecosante.inscription.models import Inscription
+from ecosante.extensions import db
 
 def get_lines_csv(filepath):
     for delimiter in [',', ';']:
@@ -20,18 +22,17 @@ def delete_file(self, return_, filepath):
     os.remove(filepath)
     return return_
 
-@celery.task(bind=True)
-def delete_file_error(uuid, filepath):
+@celery.task()
+def delete_file_error(self, exc, traceback, filepath):
     os.remove(filepath)
-    r = result.AsyncResult(uuid)
-    exc = r.get(propagate=False)
     current_app.logger.error('Task {0} raised exception: {1!r}\n{2!r}'.format(
-          uuid, exc, r.traceback))
+          self.id, exc, traceback))
 
 
 
 @celery.task(bind=True)
 def import_in_sb(self, filepath):
+    print("import in sb")
     self.update_state(state='PENDING', meta={"progress": 0, "details": "Lecture du fichier CSV"})
     lines = get_lines_csv(filepath)
     
@@ -89,6 +90,16 @@ def import_in_sb(self, filepath):
                 "details": f"Mise à jour des contacts {i}/{len(lines)}"
             }
         )
+        if not "ID RECOMMANDATION" in line:
+            continue
+        inscription = Inscription.query.filter_by(mail=line['MAIL']).first()
+        if inscription is None:
+            continue
+        newsletter = Newsletter(inscription)
+        newsletter.recommandation_id = line['ID RECOMMANDATION']
+        db.session.add(newsletter)
+    db.session.commit()
+
     r = requests.post(
         'https://api.sendinblue.com/v3/emailCampaigns',
         headers=headers,
