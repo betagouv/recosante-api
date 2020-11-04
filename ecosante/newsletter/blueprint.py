@@ -107,8 +107,9 @@ def link_export(secret_slug):
         remove_reco=request.args.getlist('remove_reco')
     ))
     form_recommandations = FormRecommandations()
-    recommandations = list(set([n.recommandation for n in newsletters]))
-    recommandations.sort(key=lambda r: r.id)
+    recommandations_list = list([n.recommandation for n in newsletters])
+    recommandations = list(set(recommandations_list))
+    recommandations.sort(key=lambda r: recommandations_list.count(r), reverse=True)
     for recommandation in recommandations:
         form_recommandations.recommandations.append_entry(recommandation)
 
