@@ -5,44 +5,47 @@
 
 
 <a href="{{url_for("inscription.import_", secret_slug=secret_slug)}}">Importer une liste dans sendinblue</a>
-<div class="main">
-{% if form_indices.indices %}
-<div class="panel">
-<form method="POST" action="{{ url_for("newsletter.edit_indices", secret_slug=secret_slug, **args)}}">
-{{ form_indices.hidden_tag() }}
-{% for form_indice in form_indices.indices.entries %}
-{{ form_indice.hidden_tag() }}
-{{ render_field(form_indice.indice) }}
-{% endfor %}
-<div class="form__group">
-    <button class="button" type="submit" id="submit">Ajouter les indices</button>
-</div>
 
-</form>
-</div>
-{% endif %}
+<section class="section">
+    <div class="container">
+        {% if form_indices.indices %}
+            <div class="panel">
+            <form method="POST" action="{{ url_for("newsletter.edit_indices", secret_slug=secret_slug, **args)}}">
+                {{ form_indices.hidden_tag() }}
+                {% for form_indice in form_indices.indices.entries %}
+                {{ form_indice.hidden_tag() }}
+                {{ render_field(form_indice.indice) }}
+                {% endfor %}
+                <div class="form__group">
+                    <button class="button" type="submit" id="submit">Ajouter les indices</button>
+                </div>
 
-<form method="POST" action="{{ url_for("newsletter.edit_recommandations", secret_slug=secret_slug, **request.args)}}">
-{{ form_recommandations.hidden_tag() }}
-{% for form_recommandation in form_recommandations.recommandations.entries %}
-    <div class="panel">
-        {{ form_recommandation.hidden_tag() }}
-        {{ render_field(form_recommandation.recommandation) }}
-        {{ render_field(form_recommandation.precisions) }}
-        {{ render_field(form_recommandation.recommandation_format_SMS) }}
-        <div class="form__group">
-            <button class="button" type="submit" id="submit">Éditer</button>
-            {% set new_args = request.args.copy() %}
-            {% set reco_value = form_recommandation.__getitem__("id").data %}
-            {% set never_used = new_args.add("remove_reco",  reco_value) %}
-            {% set qs = url_encode(new_args) %}
-            <a href="{{ url_for("newsletter.link_export", secret_slug=secret_slug) }}?{{ qs }}" class="button warning">Ne pas utiliser</a>
-        </div>
+                </form>
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for("newsletter.edit_recommandations", secret_slug=secret_slug)}}?{{ url_encode(request.args) }}">
+        {{ form_recommandations.hidden_tag() }}
+        {% for form_recommandation in form_recommandations.recommandations.entries %}
+            <div class="panel">
+                    {{ form_recommandation.hidden_tag() }}
+                    {{ render_field(form_recommandation.recommandation) }}
+                    {{ render_field(form_recommandation.precisions) }}
+                    {{ render_field(form_recommandation.recommandation_format_SMS) }}
+                    <div class="form__group">
+                        <button class="button" type="submit" id="submit">Éditer</button>
+                        {% set new_args = request.args.copy() %}
+                        {% set reco_value = form_recommandation.__getitem__("id").data %}
+                        {% set never_used = new_args.add("remove_reco",  reco_value) %}
+                        {% set qs = url_encode(new_args) %}
+                        <a href="{{ url_for("newsletter.link_export", secret_slug=secret_slug) }}?{{ qs }}" class="button warning">Ne pas utiliser</a>
+                    </div>
+            </div>
+        {% endfor %}
+        </form>
+
     </div>
-{% endfor %}
-</form>
-
-</div>
+</section>
 {% scss "newsletter/css/link_export.scss" %}
   <link href="{{ ASSET_URL }}" rel="stylesheet">
 {% endassets %}

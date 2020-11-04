@@ -11,6 +11,8 @@ import json
 import os
 from time import time
 from uuid import uuid4
+
+from werkzeug.urls import url_encode
 from indice_pollution.regions.solvers import region
 from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
@@ -74,19 +76,19 @@ def edit_indices(secret_slug):
 @bp.route('<secret_slug>/edit_recommandations', methods=['POST'])
 @admin_capability_url
 def edit_recommandations(secret_slug):
-    form_recommandations = FormRecommandations()
+    form_recommandations = FormRecommandations(request.form)
     if form_recommandations.validate_on_submit():
         for form_recommandation in form_recommandations.recommandations.entries:
             recommandation = db.session.query(Recommandation).get(int(form_recommandation.data['id']))
             form_recommandation.form.populate_obj(recommandation)
             db.session.add(recommandation)
         db.session.commit()
+
     return redirect(
         url_for(
             "newsletter.link_export",
             secret_slug=secret_slug,
-            **request.args
-        )
+        ) + "?" + url_encode(request.args)
     )
 
 @bp.route('<secret_slug>/link_export')

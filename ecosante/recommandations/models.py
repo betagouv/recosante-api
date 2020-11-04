@@ -1,3 +1,4 @@
+from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types
 import uuid
@@ -80,12 +81,10 @@ class Recommandation(db.Model):
 
     @classmethod
     def shuffled(cls, random_uuid=None, preferred_reco=None, remove_reco=[]):
-        recommandations = cls.query.filter_by(recommandabilite="Utilisable").all()
+        recommandations = cls.query.filter_by(recommandabilite="Utilisable").order_by(cls.id).all()
         recommandations = list(filter(lambda r: str(r.id) not in set(remove_reco), recommandations))
-        random.shuffle(
-            recommandations,
-            lambda: 1/(uuid.UUID(random_uuid, version=4).int) if random_uuid else random.random()
-        )
+        seed = 1/(uuid.UUID(random_uuid, version=4).int) if random_uuid else random.random()
+        random.Random(seed).shuffle(recommandations)
         if preferred_reco:
             recommandations = [cls.query.get(preferred_reco)] + recommandations
         return recommandations
