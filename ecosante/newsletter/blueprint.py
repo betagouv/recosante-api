@@ -36,7 +36,9 @@ def csv_(secret_slug):
     return Response(
         stream_with_context(
             Newsletter.generate_csv(
-                request.args.get('preferred_reco')
+                preferred_reco=request.args.get('preferred_reco'),
+                seed=request.args.get('seed'),
+                remove_reco=request.args.getlist('remove_reco')
             )
         ),
         mimetype="text/csv",
@@ -101,13 +103,15 @@ def link_export(secret_slug):
         )
     newsletters = list(Newsletter.export(
         preferred_reco=request.args.get('preferred_reco'),
-        seed=request.args.get('seed')
+        seed=request.args.get('seed'),
+        remove_reco=request.args.getlist('remove_reco')
     ))
     form_recommandations = FormRecommandations()
     recommandations = list(set([n.recommandation for n in newsletters]))
     recommandations.sort(key=lambda r: r.id)
     for recommandation in recommandations:
         form_recommandations.recommandations.append_entry(recommandation)
+
     form_indices = FormEditIndices()
     for inscription in [n.inscription for n in newsletters if n.qai is None]:
         form_field = form_indices.indices.append_entry({"insee": inscription.ville_insee})
@@ -116,9 +120,8 @@ def link_export(secret_slug):
     return render_template(
         'link_export.html',
         secret_slug=secret_slug,
-        args=request.args,
         form_recommandations=form_recommandations,
-        form_indices=form_indices
+        form_indices=form_indices,
     )
     
 @bp.route('<secret_slug>/export', methods=['GET', 'POST'])

@@ -79,7 +79,7 @@ class Newsletter(db.Model):
                 recommandations,
                 inscription,
                 self.qai
-        )
+            )
         self.recommandation_id = self.recommandation.id
 
     @property
@@ -91,7 +91,7 @@ class Newsletter(db.Model):
         return self.QUALIF_TO_BACKGROUND.get(self.qualif)
 
     @classmethod
-    def generate_csv(cls, preferred_reco=None, seed=None):
+    def generate_csv(cls, preferred_reco=None, seed=None, remove_reco=[]):
         yield generate_line([
             'VILLE',
             'Moyens de transport',
@@ -116,12 +116,12 @@ class Newsletter(db.Model):
             "PRECISIONS",
             "ID RECOMMANDATION"
         ])
-        for newsletter in cls.export(preferred_reco, seed):
+        for newsletter in cls.export(preferred_reco, seed, remove_reco):
             yield newsletter.csv_line()
 
     @classmethod
-    def export(cls, preferred_reco=None, seed=None):
-        recommandations = Recommandation.shuffled(random_uuid=seed, preferred_reco=preferred_reco)
+    def export(cls, preferred_reco=None, seed=None, remove_reco=[]):
+        recommandations = Recommandation.shuffled(random_uuid=seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         insee_region = {i.ville_insee: i.region_name for i in Inscription.query.distinct(Inscription.ville_insee)}
         insee_forecast = bulk_forecast(insee_region)
         for inscription in Inscription.query.all():

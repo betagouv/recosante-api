@@ -2,6 +2,7 @@ from flask import Flask, g
 import os
 from celery import Celery
 from .extensions import db, migrate, assets_env, celery
+from werkzeug.urls import url_encode
 
 
 def configure_celery(flask_app):
@@ -64,5 +65,6 @@ def create_app():
 
         app.jinja_env.add_extension("ecosante.utils.rollup.RollupJSExtension")
         app.jinja_env.add_extension("ecosante.utils.rollup.SCSSExtension")
+        app.add_template_global(url_encode, name='url_encode')
 
     return app
