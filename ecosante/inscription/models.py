@@ -1,4 +1,7 @@
-from .. import db
+from ecosante.extensions import (
+    celery,
+    db
+)
 from sqlalchemy.dialects import postgresql
 from datetime import (
     date,
@@ -162,10 +165,10 @@ class Inscription(db.Model):
         ).all()
 
     def unsubscribe(self):
-        from .tasks import send_unsubscribe, send_unsubscribe_error
-        send_unsubscribe.apply_async(
+        celery.send_task(
+            "ecosante.inscription.tasks.send_subscribe",
             (self.mail,),
-            link_error=send_unsubscribe_error.s(self.mail)
+            link_error="ecosante.inscription.tasks.send_unsubscribe_error"
         )
         db.session.delete(self)
         db.session.commit()
