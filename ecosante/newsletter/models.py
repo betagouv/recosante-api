@@ -82,6 +82,11 @@ class Newsletter(db.Model):
             )
         self.recommandation_id = self.recommandation.id
 
+    @classmethod
+    def from_inscription_id(cls, inscription_id):
+        inscription = Inscription.query.get(inscription_id)
+        return cls(inscription)
+
     @property
     def qualif(self):
         return self.INDICE_ATMO_TO_QUALIFICATIF.get(self.qai)
