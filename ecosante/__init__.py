@@ -3,6 +3,7 @@ import os
 from celery import Celery
 from .extensions import db, migrate, assets_env, celery
 from werkzeug.urls import url_encode
+import logging
 
 
 def configure_celery(flask_app):
@@ -36,6 +37,7 @@ def create_app():
         static_url_path='/assets/'
     )
 
+    app.logger.setLevel(logging.DEBUG)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI') or os.getenv('POSTGRESQL_ADDON_URI')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
