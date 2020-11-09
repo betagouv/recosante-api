@@ -44,14 +44,14 @@ def send_success_email(inscription_id):
         json={
             "sender": {
                 "name":"L'équipe écosanté",
-                "email":"contact@ecosante.data.gouv.fr"
+                "email":"equipe@ecosante.data.gouv.fr"
             },
             "to": [{
                     "email": newsletter.inscription.mail,
             }],
             "replyTo": {
                 "name":"L'équipe écosanté",
-                "email":"contact@ecosante.data.gouv.fr"
+                "email":"equipe@ecosante.data.gouv.fr"
             },
             "templateId": success_template_id
         }

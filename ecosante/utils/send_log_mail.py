@@ -12,14 +12,14 @@ def send_log_mail(subject, text_content):
         json={
             "sender": {
                 "name":"L'équipe écosanté",
-                "email":"contact@ecosante.data.gouv.fr"
+                "email":"equipe@ecosante.data.gouv.fr"
             },
             "to": [{
                     "email": "equipe@ecosante.data.gouv.fr"
             }],
             "replyTo": {
                 "name":"L'équipe écosanté",
-                "email":"contact@ecosante.data.gouv.fr"
+                "email":"equipe@ecosante.data.gouv.fr"
             },
             "subject": subject,
             "textContent": text_content
