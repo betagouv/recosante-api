@@ -68,4 +68,9 @@ def create_app():
         app.jinja_env.add_extension("ecosante.utils.rollup.SCSSExtension")
         app.add_template_global(url_encode, name='url_encode')
 
+    @app.before_first_request
+    def before_first_request():
+        log_level = logging.DEBUG
+        app.logger.setLevel(log_level)
+
     return app
