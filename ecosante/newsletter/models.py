@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from flask import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation

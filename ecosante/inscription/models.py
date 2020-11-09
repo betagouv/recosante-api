@@ -1,4 +1,3 @@
-from ecosante import newsletter
 from .. import db
 from sqlalchemy.dialects import postgresql
 from datetime import (
@@ -161,3 +160,13 @@ class Inscription(db.Model):
         return self.newsletters.filter(
             Newsletter.date>=last_week
         ).all()
+
+    def unsubscribe(self):
+        from .tasks import send_unsubscribe, send_unsubscribe_error
+        send_unsubscribe.apply_async(
+            (self.mail,),
+            link_error=send_unsubscribe_error.s(self.mail)
+        )
+        db.session.delete(self)
+        db.session.commit()
+

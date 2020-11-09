@@ -1,12 +1,10 @@
 from ecosante.extensions import celery
-from ecosante.inscription.models import Inscription
 from ecosante.newsletter.models import Newsletter
 import os
 import requests
 
 @celery.task()
-def send_success_email(inscription_id):
-    inscription = Inscription.query.get(inscription_id)
+def send_success_email(inscription):
     newsletter = Newsletter(inscription)
     sib_apikey = os.getenv('SIB_APIKEY')
     success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)

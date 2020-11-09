@@ -8,8 +8,11 @@ from flask import (
 )
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
-from .tasks import send_success_email
-from ecosante.utils.decorators import admin_capability_url
+from .tasks import send_success_email, send_unsubscribe_error
+from ecosante.utils.decorators import (
+    admin_capability_url,
+    webhook_capability_url
+)
 from ecosante.utils import Blueprint
 from ecosante.extensions import assets_env
 from flask_assets import Bundle
@@ -66,3 +69,14 @@ def export(secret_slug):
 @admin_capability_url
 def import_(secret_slug):
     return redirect(url_for("newsletter.import_", secret_slug=secret_slug))
+
+@bp.route('<secret_slug>/user_unsubscription', methods=['POST'])
+@webhook_capability_url
+def user_unsubscription(secret_slug):
+    mail = request.json['email']
+    user = Inscription.query.filter_by(mail=mail).first()
+    if not user:
+        send_unsubscribe_error(mail)
+    else:
+        user.unsubscribe()
+    return jsonify(request.json)
