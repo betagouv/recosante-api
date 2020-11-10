@@ -50,7 +50,7 @@ def create_app():
     celery = configure_celery(app)
 
     with app.app_context():
-        from .inscription import models, blueprint as inscription_bp
+        from .inscription import models, blueprint as inscription_bp, tasks
         from .recommandations import models, commands, blueprint as recommandation_bp
         from .avis import models, commands, blueprint as avis_bp
         from .stats import blueprint as stats_bp

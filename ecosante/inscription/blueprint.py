@@ -8,13 +8,12 @@ from flask import (
 )
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
-from .tasks import send_success_email, send_unsubscribe_error
 from ecosante.utils.decorators import (
     admin_capability_url,
     webhook_capability_url
 )
 from ecosante.utils import Blueprint
-from ecosante.extensions import assets_env
+from ecosante.extensions import celery
 from flask_assets import Bundle
 
 bp = Blueprint("inscription", __name__)
@@ -46,14 +45,15 @@ def personnalisation():
         db.session.add(inscription)
         db.session.commit()
         session['inscription'] = inscription
+        celery.send_task(
+            "ecosante.inscription.tasks.send_success_email.send_success_email",
+            (inscription.id,),
+        )
         return redirect(url_for('inscription.reussie'))
     return render_template(f'personnalisation.html', form=form)
 
 @bp.route('/reussie')
 def reussie():
-    inscription = Inscription.query.get(session['inscription']['id'])
-    send_success_email.apply_async((inscription.id,))
-
     return render_template('reussi.html')
 
 @bp.route('/geojson')
@@ -76,7 +76,7 @@ def user_unsubscription(secret_slug):
     mail = request.json['email']
     user = Inscription.query.filter_by(mail=mail).first()
     if not user:
-        send_unsubscribe_error(mail)
+        celery.send_task("send_unsubscribe_error", (mail,))
     else:
         user.unsubscribe()
     return jsonify(request.json)

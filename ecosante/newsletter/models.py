@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from ecosante.inscription.blueprint import inscription
 from flask import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
@@ -87,6 +88,15 @@ class Newsletter(db.Model):
         inscription = Inscription.query.get(inscription_id)
         return cls(inscription)
 
+    @classmethod
+    def from_csv_line(cls, line):
+        inscription = Inscription.query.filter_by(mail=line['MAIL']).first()
+        return cls(
+            inscription,
+            recommandation_id=line['ID RECOMMANDATION']
+        )
+
+
     @property
     def qualif(self):
         return self.INDICE_ATMO_TO_QUALIFICATIF.get(self.qai)
@@ -160,3 +170,14 @@ class Newsletter(db.Model):
             self.recommandation.precisions,
             self.recommandation.id
         ])
+
+    def attributes(self):
+        return {
+            'FORMAT': self.inscription.diffusion,
+            'QUALITE_AIR': self.qualif,
+            'LIEN_AASQA': self.forecast['metadata']['region']['website'],
+            'RECOMMANDATION': self.recommandation.format(self.inscription),
+            'PRECISIONS': self.recommandation.precisions,
+            'VILLE': self.inscription.ville_name,
+            'BACKGROUND_COLOR': self.background
+        }

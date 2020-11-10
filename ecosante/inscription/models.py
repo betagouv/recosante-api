@@ -166,10 +166,9 @@ class Inscription(db.Model):
 
     def unsubscribe(self):
         celery.send_task(
-            "ecosante.inscription.tasks.send_subscribe",
+            "ecosante.inscription.tasks.send_unsubscribe.send_unsubscribe",
             (self.mail,),
-            link_error="ecosante.inscription.tasks.send_unsubscribe_error"
+            link_error="ecosante.inscription.tasks.send_unsubscribe.send_unsubscribe_error"
         )
         db.session.delete(self)
         db.session.commit()
-

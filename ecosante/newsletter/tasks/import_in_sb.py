@@ -9,12 +9,12 @@ from ecosante.newsletter.models import Newsletter
 from ecosante.inscription.models import Inscription
 from ecosante.extensions import db
 
-def get_lines_csv(filepath):
+def get_nl_csv(filepath):
     for delimiter in [',', ';']:
         with open(filepath) as f:
             reader = csv.DictReader(f, delimiter=delimiter)
             if 'MAIL' in reader.fieldnames:
-                return [l for l in reader]
+                return [Newsletter.from_csv_line(l) for l in reader]
     raise ValueError("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`")
 
 @celery.task(bind=True)
@@ -35,7 +35,7 @@ def import_in_sb(self, filepath):
     email_campaign_id = None,
     sms_campaign_id = None
     self.update_state(state='PENDING', meta={"progress": 0, "details": "Lecture du fichier CSV"})
-    lines = get_lines_csv(filepath)
+    newsletters = get_nl_csv(filepath)
     
     headers = {
         "accept": "application/json",
@@ -43,7 +43,7 @@ def import_in_sb(self, filepath):
     }
     lists = dict()
     now = datetime.now()
-    total_nb_requests = 4 + len(lines)
+    total_nb_requests = 4 + len(newsletters)
     nb_requests = 0
     for format in ["sms", "mail"]:
         r = requests.post(
@@ -65,20 +65,14 @@ def import_in_sb(self, filepath):
             }
         )
 
-    for i, line in enumerate(lines):
-        mail = quote(line['MAIL'])
+    for i, nl in enumerate(newsletters):
+        mail = quote(nl.inscription.mail)
         r = requests.put(
             f'https://api.sendinblue.com/v3/contacts/{mail}',
             headers=headers,
             json={
-                "attributes": {
-                    k: line[k]
-                    for k in [
-                        'FORMAT', 'QUALITE_AIR', 'LIEN_AASQA',
-                        'RECOMMANDATION', 'PRECISIONS', 'VILLE', 'BACKGROUND_COLOR'
-                    ]
-                },
-                "listIds":[lists[line['FORMAT']]]
+                "attributes": nl.attributes(),
+                "listIds":[lists[nl.inscription.diffusion]]
             }
         )
         r.raise_for_status()
@@ -88,16 +82,10 @@ def import_in_sb(self, filepath):
             state='STARTED',
             meta={
                 "progress": (nb_requests/total_nb_requests)*100,
-                "details": f"Mise à jour des contacts {i}/{len(lines)}"
+                "details": f"Mise à jour des contacts {i}/{len(newsletters)}"
             }
         )
-        if not "ID RECOMMANDATION" in line:
-            continue
-        inscription = Inscription.query.filter_by(mail=line['MAIL']).first()
-        if inscription is None:
-            continue
-        newsletter = Newsletter(inscription, recommandation_id=line['ID RECOMMANDATION'])
-        db.session.add(newsletter)
+        db.session.add(nl)
     db.session.commit()
 
     r = requests.post(
