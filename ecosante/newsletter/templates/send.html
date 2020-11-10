@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section">
+<h1>Import dans send in blue</h1>
+<div class="container">
+<div id="progress"></div>
+<div id="progress_details"></div>
+</div>
+</section>
+
+<script type="application/json" id="task_id">{"task_id": "{{ task_id }}" }</script>
+{% rollupjs "newsletter/js/get_task_status.js" %}
+<script type="application/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
+
+{% endblock content %}

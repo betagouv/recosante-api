@@ -6,7 +6,6 @@ import os
 import requests
 from urllib.parse import quote
 from ecosante.newsletter.models import Newsletter
-from ecosante.inscription.models import Inscription
 from ecosante.extensions import db
 
 def get_nl_csv(filepath):
@@ -29,13 +28,84 @@ def delete_file_error(self, exc, traceback, filepath):
           self.id, exc, traceback))
 
 
-
 @celery.task(bind=True)
 def import_in_sb(self, filepath):
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress": 0,
+            "details": "Lecture du fichier CSV"
+        }
+    )
+    newsletters = get_nl_csv(filepath)
+    result = import_(self, newsletters)
+    self.update_state(
+        state='STARTED',
+        meta={
+            "progress": 100,
+            "details": f"Création de la campagne SMS",
+            "email_campaign_id": result['email_campaign_id'],
+            "sms_campaign_id": result['sms_campaign_id']
+        }
+    )
+    return result
+
+@celery.task(bind=True)
+def import_and_send(self, seed, preferred_reco, remove_reco):
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress": 0,
+            "details": "Constitution de la liste"
+        }
+    )
+    result = import_(
+        self,
+        list(Newsletter.export(
+            preferred_reco=preferred_reco,
+            seed=seed,
+            remove_reco=remove_reco
+        )),
+        2
+    )
+    headers = {
+        "accept": "application/json",
+        "api-key": os.getenv('SIB_APIKEY')
+    }
+    r = requests.post(
+        f'https://api.sendinblue.com/v3/emailCampaigns/{result["email_campaign_id"]}/sendNow',
+        headers=headers
+    )
+    r.raise_for_status()
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress": 99,
+            "details": "Envoi de la liste email",
+            "email_campaign_id": result['email_campaign_id'],
+            "sms_campaign_id": result['sms_campaign_id']
+        }
+    )
+    r = requests.post(
+        f'https://api.sendinblue.com/v3/smsCampaigns/{result["sms_campaign_id"]}/sendNow',
+        headers=headers
+    )
+    r.raise_for_status()
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress": 100,
+            "details": "Envoi de la liste email",
+            "email_campaign_id": result['email_campaign_id'],
+            "sms_campaign_id": result['sms_campaign_id']
+        }
+    )
+    result['progress'] = 100
+    return result
+
+def import_(task, newsletters, overhead=0):
     email_campaign_id = None,
     sms_campaign_id = None
-    self.update_state(state='PENDING', meta={"progress": 0, "details": "Lecture du fichier CSV"})
-    newsletters = get_nl_csv(filepath)
     
     headers = {
         "accept": "application/json",
@@ -43,7 +113,7 @@ def import_in_sb(self, filepath):
     }
     lists = dict()
     now = datetime.now()
-    total_nb_requests = 4 + len(newsletters)
+    total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
     for format in ["sms", "mail"]:
         r = requests.post(
@@ -57,7 +127,7 @@ def import_in_sb(self, filepath):
         r.raise_for_status()
         lists[format] = r.json()['id']
         nb_requests += 1
-        self.update_state(
+        task.update_state(
             state='STARTED',
             meta={
                 "progress": (nb_requests/total_nb_requests)*100,
@@ -78,7 +148,7 @@ def import_in_sb(self, filepath):
         r.raise_for_status()
         current_app.logger.info(f"Mise à jour de {mail}")
         nb_requests += 1
-        self.update_state(
+        task.update_state(
             state='STARTED',
             meta={
                 "progress": (nb_requests/total_nb_requests)*100,
@@ -103,7 +173,7 @@ def import_in_sb(self, filepath):
     r.raise_for_status()
     email_campaign_id = r.json()['id']
     nb_requests += 1
-    self.update_state(
+    task.update_state(
         state='STARTED',
         meta={
             "progress": (nb_requests/total_nb_requests)*100,
@@ -130,10 +200,10 @@ STOP au [STOP_CODE]
     r.raise_for_status()
     sms_campaign_id = r.json()['id']
     nb_requests += 1
-    self.update_state(
+    task.update_state(
         state='STARTED',
         meta={
-            "progress": 100,
+            "progress": (nb_requests/total_nb_requests)*100,
             "details": f"Création de la campagne SMS",
             "email_campaign_id": email_campaign_id,
             "sms_campaign_id": sms_campaign_id
@@ -141,7 +211,7 @@ STOP au [STOP_CODE]
     )
     return {
         "state": "STARTED",
-        "progress": 100,
+        "progress": (nb_requests/total_nb_requests)*100,
         "details": "Terminé",
         "email_campaign_id": email_campaign_id,
         "sms_campaign_id": sms_campaign_id

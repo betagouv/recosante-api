@@ -4,7 +4,7 @@ from ecosante.extensions import db
 from flask import current_app
 from celery.schedules import crontab
 
-from .import_in_sb import import_in_sb, delete_file, delete_file_error #noqa
+from .import_in_sb import import_in_sb, delete_file, delete_file_error, import_and_send #noqa
 
 @celery.task()
 def save_indice():

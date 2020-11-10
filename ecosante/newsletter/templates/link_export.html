@@ -7,12 +7,14 @@
 <a href="{{url_for("inscription.import_", secret_slug=secret_slug)}}">Importer une liste dans sendinblue</a>
 <br>
 <a href="{{url_for("newsletter.link_export", secret_slug=secret_slug) }}">Obtenir un autre export</a>
+<br>
+<a href="{{url_for("newsletter.send", secret_slug=secret_slug, **request.args)}}" class="button">Envoyer la newsletter avec ces recommandations</a>
 
 <section class="section">
     <div class="container">
         {% if form_indices.indices %}
             <div class="panel">
-            <form method="POST" action="{{ url_for("newsletter.edit_indices", secret_slug=secret_slug, **args)}}">
+            <form method="POST" action="{{ url_for("newsletter.edit_indices", secret_slug=secret_slug, **request.args)}}">
                 {{ form_indices.hidden_tag() }}
                 {% for form_indice in form_indices.indices.entries %}
                 {{ form_indice.hidden_tag() }}

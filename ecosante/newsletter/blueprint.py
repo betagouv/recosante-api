@@ -1,3 +1,4 @@
+from ecosante.newsletter.tasks.import_in_sb import import_and_send
 from flask import (
     render_template,
     request,
@@ -18,6 +19,7 @@ from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
+from ecosante.extensions import celery
 from .forms import (
     FormEditIndices,
     FormExport,
@@ -28,7 +30,7 @@ from .models import (
     Newsletter,
     Recommandation
 )
-from .tasks import import_in_sb, delete_file, delete_file_error
+from .tasks import import_in_sb, delete_file, delete_file_error, import_and_send
 
 bp = Blueprint("newsletter", __name__)
 
@@ -174,8 +176,21 @@ def import_(secret_slug):
 @bp.route('<secret_slug>/task_status/<task_id>')
 @admin_capability_url
 def task_status(secret_slug, task_id):
-    task = import_in_sb.AsyncResult(task_id)
+    task = celery.AsyncResult(task_id)
     return {
         **{'state': task.state},
         **(task.info or {"progress": 0, "details": ""})
     }
+
+@bp.route('<secret_slug>/send')
+@admin_capability_url
+def send(secret_slug):
+    task = import_and_send.delay(
+        request.args.get('seed'),
+        request.args.get('preferred_reco'),
+        request.args.getlist('remove_reco')
+    )
+    return render_template(
+        "send.html",
+        task_id=task.id
+    )
