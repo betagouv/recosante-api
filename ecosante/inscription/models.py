@@ -170,13 +170,13 @@ class Inscription(db.Model):
             )\
             .group_by(
                 Newsletter.date
+            ).order_by(
+                Newsletter.date
             )
-        nls = db.session\
+        return db.session\
             .query(Newsletter)\
             .filter(Newsletter.id.in_(query_sent_nl))\
             .all()
-
-        return nls
 
     def unsubscribe(self):
         celery.send_task(

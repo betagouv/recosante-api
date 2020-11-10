@@ -71,9 +71,6 @@ class Recommandation(db.Model):
         if qai and (qai < 8) and self.qa_mauvaise:
             return False
 
-        if self.id in [n.recommandation_id for n in inscription.last_month_newsletters()]:
-            return False
-
         return True
 
     def format(self, inscription):
@@ -91,7 +88,20 @@ class Recommandation(db.Model):
 
     @classmethod
     def get_revelant(cls, recommandations, inscription, qai):
-        return next(filter(lambda r: r.is_relevant(inscription, qai), recommandations))
+        copy_recommandations = []
+        recent_recommandation_ids = [
+            nl.recommandation_id
+            for nl in inscription.last_month_newsletters()
+        ]
+        recent_recommandations = []
+        for recommandation in recommandations:
+            if not recommandation.id in recent_recommandation_ids:
+                copy_recommandations.append(recommandation)
+            else:
+                recent_recommandations.append(recommandation)
+        copy_recommandations.extend(recent_recommandations)
+
+        return next(filter(lambda r: r.is_relevant(inscription, qai), copy_recommandations))
 
     @classmethod
     def get_one(cls, inscription, qai):
