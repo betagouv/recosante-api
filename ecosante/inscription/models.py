@@ -3,6 +3,7 @@ from ecosante.extensions import (
     db
 )
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import func
 from datetime import (
     date,
     timedelta
@@ -159,10 +160,23 @@ class Inscription(db.Model):
     def last_month_newsletters(self):
         from ecosante.newsletter.models import Newsletter
 
-        last_week = date.today() - timedelta(days=30)
-        return self.newsletters.filter(
-            Newsletter.date>=last_week
-        ).all()
+        last_month = date.today() - timedelta(days=30)
+
+        query_sent_nl = db.session\
+            .query(func.max(Newsletter.id))\
+            .filter(
+                Newsletter.date>=last_month,
+                Newsletter.inscription_id==self.id
+            )\
+            .group_by(
+                Newsletter.date
+            )
+        nls = db.session\
+            .query(Newsletter)\
+            .filter(Newsletter.id.in_(query_sent_nl))\
+            .all()
+
+        return nls
 
     def unsubscribe(self):
         celery.send_task(
