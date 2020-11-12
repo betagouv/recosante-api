@@ -3,12 +3,13 @@ from .. import db
 import sqlalchemy.types as types
 import uuid
 import random
+from datetime import date
 
 class CustomBoolean(types.TypeDecorator):
     impl = db.Boolean
 
     def process_bind_param(self, value, dialect):
-        return 'x' in value.lower()
+        return 'x' in value.lower() or 't' in value.lower()
 
 class Recommandation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +35,8 @@ class Recommandation(db.Model):
     sources = db.Column(db.String)
     categorie = db.Column(db.String)
     objectif = db.Column(db.String)
+    automne = db.Column(CustomBoolean)
+    hiver = db.Column(CustomBoolean)
 
     @property
     def velo(self):
@@ -66,11 +69,16 @@ class Recommandation(db.Model):
                         "allergie_pollen", "enfants", "fumeur"]:
             if not getattr(inscription, critere) and getattr(self, critere):
                 return False
-
         #Quand la qualité de l'air est mauvaise
         if qai and (qai < 8) and self.qa_mauvaise:
             return False
-
+        #Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
+        #Pour déterminer la saison
+        season = (date.today().month()%12 +3)//3
+        if self.automne and season != 3:
+            return False
+        if self.hiver and season != 4:
+            return False
         return True
 
     def format(self, inscription):
