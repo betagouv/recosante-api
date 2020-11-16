@@ -74,7 +74,7 @@ class Recommandation(db.Model):
             return False
         #Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         #Pour déterminer la saison
-        season = (date.today().month()%12 +3)//3
+        season = (date.today().month%12 +3)//3
         if self.automne and season != 3:
             return False
         if self.hiver and season != 4:

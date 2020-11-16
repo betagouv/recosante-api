@@ -1,0 +1,20 @@
+{% extends "base_form.html" %}
+
+{% block block_form %}
+
+<div class="notification">
+    <h1>Votre avis a bien été pris en compte</h1>
+    <p>Merci pour votre contribution ! C'est grâce à vos retours que nous construisons un service utile !</p>
+</div>
+
+{% if not nl.appliquee %}
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {{ render_field(form.avis)}}
+    <div class="form__group">
+        <button class="button" type="submit" id="submit">Envoyer</button>
+    </div>
+</form>
+{% endif %}
+
+{% endblock block_form %}

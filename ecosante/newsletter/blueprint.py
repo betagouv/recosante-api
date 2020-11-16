@@ -1,5 +1,6 @@
 from ecosante.newsletter.tasks.import_in_sb import import_and_send
 from flask import (
+    abort,
     render_template,
     request,
     redirect,
@@ -24,7 +25,8 @@ from .forms import (
     FormEditIndices,
     FormExport,
     FormImport,
-    FormRecommandations
+    FormRecommandations,
+    FormAvis
 )
 from .models import (
     Newsletter,
@@ -194,3 +196,28 @@ def send(secret_slug):
         "send.html",
         task_id=task.id
     )
+
+@bp.route('<short_id>/avis', methods=['GET', 'POST'])
+def avis(short_id):
+    nl = db.session.query(Newsletter).filter_by(short_id=short_id).first()
+    if not nl:
+        abort(404)
+    nl.appliquee = request.args.get('avis') == 'oui'
+    form = FormAvis(request.form, obj=nl)
+    if request.method=='POST' and form.validate_on_submit():
+        form.populate_obj(nl)
+        return redirect(
+            url_for('newsletter.avis_enregistre', short_id=short_id)
+        )
+    db.session.add(nl)
+    db.session.commit()
+
+    return render_template(
+        'avis.html',
+        nl=nl,
+        form=form
+    )
+
+@bp.route('<short_id>/avis/enregistre')
+def avis_enregistre(short_id):
+    return render_template('avis_enregistre.html')

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from sqlalchemy import text
 from ecosante.inscription.blueprint import inscription
 from flask import current_app
 from ecosante.inscription.models import Inscription
@@ -18,14 +19,22 @@ class Newsletter(db.Model):
     date: datetime
     inscription: Inscription
     recommandation: Recommandation
-
+    appliquee: bool
+    avis: str
+    short_id: str
 
     id = db.Column(db.Integer, primary_key=True)
+    short_id = db.Column(
+        db.String(),
+        server_default=text("generate_random_id('public', 'newsletter', 'short_id', 8)")
+    )
     inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'))
     inscription = db.relationship("Inscription", backref="inscription")
     recommandation_id = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
     recommandation = db.relationship("Recommandation")
     date = db.Column(db.Date())
+    appliquee = db.Column(db.Boolean())
+    avis = db.Column(db.String())
 
     QUALIFICATIF_TRES_BON = 'très bon'
     QUALIFICATIF_BON = 'bon'
