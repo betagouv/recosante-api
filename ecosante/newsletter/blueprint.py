@@ -109,7 +109,7 @@ def link_export(secret_slug):
         )
     newsletters = list(Newsletter.export(
         preferred_reco=request.args.get('preferred_reco'),
-        seed=request.args.get('seed'),
+        user_seed=request.args.get('seed'),
         remove_reco=request.args.getlist('remove_reco')
     ))
     form_recommandations = FormRecommandations()

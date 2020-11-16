@@ -66,7 +66,7 @@ class Newsletter(db.Model):
     }
 
     def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None):
-        recommandations = recommandations or Recommandation.shuffled(random_uuid=seed, preferred_reco=preferred_reco)
+        recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
         self.inscription_id = inscription.id
@@ -144,8 +144,8 @@ class Newsletter(db.Model):
             yield newsletter.csv_line()
 
     @classmethod
-    def export(cls, preferred_reco=None, seed=None, remove_reco=[]):
-        recommandations = Recommandation.shuffled(random_uuid=seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[]):
+        recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         insee_region = {i.ville_insee: i.region_name for i in Inscription.query.distinct(Inscription.ville_insee)}
         insee_forecast = bulk_forecast(insee_region)
         for inscription in Inscription.query.all():

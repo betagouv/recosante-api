@@ -63,7 +63,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         self,
         list(Newsletter.export(
             preferred_reco=preferred_reco,
-            seed=seed,
+            user_seed=seed,
             remove_reco=remove_reco
         )),
         2
