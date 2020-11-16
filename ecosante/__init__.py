@@ -1,7 +1,7 @@
 from flask import Flask, g
 import os
 from celery import Celery
-from .extensions import db, migrate, assets_env, celery
+from .extensions import db, migrate, assets_env, celery, sib
 from werkzeug.urls import url_encode
 import logging
 
@@ -47,6 +47,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     assets_env.init_app(app)
+    sib.configuration.api_key['api-key'] = os.getenv('SIB_APIKEY')
     celery = configure_celery(app)
 
     with app.app_context():

@@ -1,19 +1,19 @@
-from ecosante.extensions import celery
 from flask import current_app
 from datetime import datetime
 import csv
 import os
-import requests
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 from urllib.parse import quote
-from ecosante.newsletter.models import Newsletter
-from ecosante.extensions import db
+from ecosante.newsletter.models import Newsletter, NewsletterDB
+from ecosante.extensions import db, sib, celery
 
 def get_nl_csv(filepath):
     for delimiter in [',', ';']:
         with open(filepath) as f:
             reader = csv.DictReader(f, delimiter=delimiter)
             if 'MAIL' in reader.fieldnames:
-                return [Newsletter.from_csv_line(l) for l in reader]
+                return [NewsletterDB(Newsletter.from_csv_line(l)) for l in reader]
     raise ValueError("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`")
 
 @celery.task(bind=True)
@@ -59,24 +59,27 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
             "details": "Constitution de la liste"
         }
     )
-    result = import_(
-        self,
-        list(Newsletter.export(
-            preferred_reco=preferred_reco,
-            user_seed=seed,
-            remove_reco=remove_reco
-        )),
-        2
+    newsletters = list(
+        map(
+            NewsletterDB,
+            Newsletter.export(
+                preferred_reco=preferred_reco,
+                user_seed=seed,
+                remove_reco=remove_reco
+            )
+        )
     )
-    headers = {
-        "accept": "application/json",
-        "api-key": os.getenv('SIB_APIKEY')
-    }
-    r = requests.post(
-        f'https://api.sendinblue.com/v3/emailCampaigns/{result["email_campaign_id"]}/sendNow',
-        headers=headers
+    db.session.commit()
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress" :0,
+            "details": "Construction des listes SIB d'envoi"
+        }
     )
-    r.raise_for_status()
+    result = import_(self, newsletters, 2)
+    send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
+    send_email_api.send_email_campaign_now(result["email_campaign_id"])
     self.update_state(
         state='PENDING',
         meta={
@@ -86,11 +89,8 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
             "sms_campaign_id": result['sms_campaign_id']
         }
     )
-    r = requests.post(
-        f'https://api.sendinblue.com/v3/smsCampaigns/{result["sms_campaign_id"]}/sendNow',
-        headers=headers
-    )
-    r.raise_for_status()
+    send_sms_api = sib_api_v3_sdk.SmsCampaignsApi(sib)
+    send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
     self.update_state(
         state='PENDING',
         meta={
@@ -107,25 +107,19 @@ def import_(task, newsletters, overhead=0):
     email_campaign_id = None,
     sms_campaign_id = None
     
-    headers = {
-        "accept": "application/json",
-        "api-key": os.getenv('SIB_APIKEY')
-    }
     lists = dict()
     now = datetime.now()
     total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
+    lists_api = sib_api_v3_sdk.ListsApi(sib)
     for format in ["sms", "mail"]:
-        r = requests.post(
-            "https://api.sendinblue.com/v3/contacts/lists",
-            headers=headers,
-            json={
-                "name": f'{now} - {format}',
-                "folderId": os.getenv('SIB_FOLDERID', 5)
-            }
+        r = lists_api.create_list(
+            sib_api_v3_sdk.CreateList(
+                name=f'{now} - {format}',
+                folder_id=os.getenv('SIB_FOLDERID', 5)
+            )
         )
-        r.raise_for_status()
-        lists[format] = r.json()['id']
+        lists[format] = r.id
         nb_requests += 1
         task.update_state(
             state='STARTED',
@@ -135,17 +129,13 @@ def import_(task, newsletters, overhead=0):
             }
         )
 
+    contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
-        mail = quote(nl.inscription.mail)
-        r = requests.put(
-            f'https://api.sendinblue.com/v3/contacts/{mail}',
-            headers=headers,
-            json={
-                "attributes": nl.attributes(),
-                "listIds":[lists[nl.inscription.diffusion]]
-            }
+        contact_api.update_contact(
+            nl.inscription.mail,
+            attributes=nl.attributes(),
+            list_ids=[lists[nl.inscription.diffusion]]
         )
-        r.raise_for_status()
         current_app.logger.info(f"Mise à jour de {mail}")
         nb_requests += 1
         task.update_state(
@@ -158,20 +148,24 @@ def import_(task, newsletters, overhead=0):
         db.session.add(nl)
     db.session.commit()
 
-    r = requests.post(
-        'https://api.sendinblue.com/v3/emailCampaigns',
-        headers=headers,
-        json={
-                "sender": {"name": "L'équipe Écosanté", "email": "ecosante@data.gouv.fr"},
-                "name": f'{now}',
-                "templateId": os.getenv('SIB_EMAIL_TEMPLATE_ID', 96),
-                "subject": "Vos recommandations Écosanté",
-                "replyTo": "ecosante@data.gouv.fr",
-                "recipients":{"listIds":[lists['mail']]},
-                "header": "Aujourd'hui, la qualité de l'air autour de chez vous est…"
-        })
-    r.raise_for_status()
-    email_campaign_id = r.json()['id']
+    email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
+    r = email_campaign_api.create_email_campaign(
+        sib_api_v3_sdk.CreateEmailCampaign(
+            sender = sib_api_v3_sdk.CreateEmailCampaignSender(
+                name="L'équipe Écosanté",
+                email="ecosante@data.gouv.fr"
+            ),
+            name = f'{now}',
+            templateId = os.getenv('SIB_EMAIL_TEMPLATE_ID', 96),
+            subject = "Vos recommandations Écosanté",
+            replyTo = "ecosante@data.gouv.fr",
+            recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
+                listIds=[lists['mail']]
+            ),
+            header="Aujourd'hui, la qualité de l'air autour de chez vous est…"
+        )
+    )
+    email_campaign_id = r.id
     nb_requests += 1
     task.update_state(
         state='STARTED',
@@ -182,23 +176,23 @@ def import_(task, newsletters, overhead=0):
         }
     )
 
-    r = requests.post(
-        'https://api.sendinblue.com/v3/smsCampaigns',
-        headers=headers,
-        json={
-            "name": f'{now}',
-            "sender": "Ecosante",
-            "content":
+    sms_campaign_api = sib_api_v3_sdk.SmsCampaignsApi(sib)
+    r = sms_campaign_api.create_sms_campaign(
+        sib_api_v3_sdk.CreateSmsCampaign(
+            name = f'{now}',
+            sender = "Ecosante",
+            content =
 """Aujourd'hui l'indice de la qualité de l'air à {VILLE} est {QUALITE_AIR}
 Plus d'information : {LIEN_AASQA}
 {RECOMMANDATION}
 STOP au [STOP_CODE]
 """,
-            "recipients": {"listIds": [lists['sms']]}
-        }
+            recipients = sib_api_v3_sdk.CreateSmsCampaignRecipient(
+                listIds = [lists['sms']]
+            )
+        )
     )
-    r.raise_for_status()
-    sms_campaign_id = r.json()['id']
+    sms_campaign_id = r.id
     nb_requests += 1
     task.update_state(
         state='STARTED',
