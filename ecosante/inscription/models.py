@@ -53,9 +53,10 @@ class Inscription(db.Model):
     fumeur = db.Column(db.Boolean)
 
     newsletters = db.relationship(
-        "ecosante.newsletter.models.Newsletter",
+        "ecosante.newsletter.models.NewsletterDB",
         backref="newsletter",
-        lazy="dynamic")
+        lazy="dynamic"
+    )
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.String())
@@ -158,24 +159,24 @@ class Inscription(db.Model):
         }
 
     def last_month_newsletters(self):
-        from ecosante.newsletter.models import Newsletter
+        from ecosante.newsletter.models import NewsletterDB
 
         last_month = date.today() - timedelta(days=30)
 
         query_sent_nl = db.session\
-            .query(func.max(Newsletter.id))\
+            .query(func.max(NewsletterDB.id))\
             .filter(
-                Newsletter.date>=last_month,
-                Newsletter.inscription_id==self.id
+                NewsletterDB.date>=last_month,
+                NewsletterDB.inscription_id==self.id
             )\
             .group_by(
-                Newsletter.date
+                NewsletterDB.date
             ).order_by(
-                Newsletter.date
+                NewsletterDB.date
             )
         return db.session\
-            .query(Newsletter)\
-            .filter(Newsletter.id.in_(query_sent_nl))\
+            .query(NewsletterDB)\
+            .filter(NewsletterDB.id.in_(query_sent_nl))\
             .all()
 
     def unsubscribe(self):

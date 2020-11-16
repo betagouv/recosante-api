@@ -13,7 +13,7 @@ from ecosante.extensions import db
 from indice_pollution import bulk_forecast, today, forecast as get_forecast
 
 @dataclass
-class Newsletter(db.Model):
+class Newsletter:
     qai: int
     forecast: dict
     date: datetime
@@ -23,18 +23,6 @@ class Newsletter(db.Model):
     avis: str
     short_id: str
 
-    id = db.Column(db.Integer, primary_key=True)
-    short_id = db.Column(
-        db.String(),
-        server_default=text("generate_random_id('public', 'newsletter', 'short_id', 8)")
-    )
-    inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'))
-    inscription = db.relationship("Inscription", backref="inscription")
-    recommandation_id = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
-    recommandation = db.relationship("Recommandation")
-    date = db.Column(db.Date())
-    appliquee = db.Column(db.Boolean())
-    avis = db.Column(db.String())
 
     QUALIFICATIF_TRES_BON = 'très bon'
     QUALIFICATIF_BON = 'bon'
@@ -69,7 +57,6 @@ class Newsletter(db.Model):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
-        self.inscription_id = inscription.id
         try:
             self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
         except KeyError as e:
@@ -90,7 +77,6 @@ class Newsletter(db.Model):
                 inscription,
                 self.qai
             )
-        self.recommandation_id = self.recommandation.id
 
     @classmethod
     def from_inscription_id(cls, inscription_id):
@@ -190,3 +176,28 @@ class Newsletter(db.Model):
             'VILLE': self.inscription.ville_name,
             'BACKGROUND_COLOR': self.background
         }
+
+class NewsletterDB(db.Model, Newsletter):
+    __tablename__ = "newsletter"
+    id = db.Column(db.Integer, primary_key=True)
+    short_id = db.Column(
+        db.String(),
+        server_default=text("generate_random_id('public', 'newsletter', 'short_id', 8)")
+    )
+    inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'))
+    inscription = db.relationship("Inscription", backref="inscription")
+    recommandation_id = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation = db.relationship("Recommandation")
+    date = db.Column(db.Date())
+    qai = db.Column(db.Integer())
+    appliquee = db.Column(db.Boolean())
+    avis = db.Column(db.String())
+
+
+    def __init__(self, newsletter):
+        self.inscription = newsletter.inscription
+        self.inscription_id = newsletter.inscription.id
+        self.recommandation = newsletter.recommandation
+        self.recommandation_id = newsletter.recommandation.id
+        self.date = newsletter.date
+        self.qai = newsletter.qai

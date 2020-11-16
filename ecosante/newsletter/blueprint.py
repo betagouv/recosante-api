@@ -30,6 +30,7 @@ from .forms import (
 )
 from .models import (
     Newsletter,
+    NewsletterDB,
     Recommandation
 )
 from .tasks import import_in_sb, delete_file, delete_file_error, import_and_send
@@ -199,7 +200,7 @@ def send(secret_slug):
 
 @bp.route('<short_id>/avis', methods=['GET', 'POST'])
 def avis(short_id):
-    nl = db.session.query(Newsletter).filter_by(short_id=short_id).first()
+    nl = db.session.query(NewsletterDB).filter_by(short_id=short_id).first()
     if not nl:
         abort(404)
     nl.appliquee = request.args.get('avis') == 'oui'
