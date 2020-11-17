@@ -89,7 +89,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
             "sms_campaign_id": result['sms_campaign_id']
         }
     )
-    send_sms_api = sib_api_v3_sdk.SmsCampaignsApi(sib)
+    send_sms_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
     send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
     self.update_state(
         state='PENDING',
@@ -178,7 +178,7 @@ def import_(task, newsletters, overhead=0):
         }
     )
 
-    sms_campaign_api = sib_api_v3_sdk.SmsCampaignsApi(sib)
+    sms_campaign_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
     r = sms_campaign_api.create_sms_campaign(
         sib_api_v3_sdk.CreateSmsCampaign(
             name = f'{now}',
