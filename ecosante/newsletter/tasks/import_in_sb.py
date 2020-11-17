@@ -189,7 +189,7 @@ Plus d'information : {LIEN_AASQA}
 {RECOMMANDATION}
 STOP au [STOP_CODE]
 """,
-            recipients = sib_api_v3_sdk.CreateSmsCampaignRecipient(
+            recipients = sib_api_v3_sdk.CreateSmsCampaignRecipients(
                 list_ids = [lists['sms']]
             )
         )
