@@ -1,0 +1,47 @@
+{% extends 'base_form.html'%}
+
+{% block block_form %}
+{% scss "recommandations/css/list.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
+
+<div class="section">
+    <div class="container">
+        <form method="post">
+        {{ form.hidden_tag() }}
+        {{ render_field(form.search) }}
+        {{ render_field(form.categories)}}
+        <input type="submit" value="Rechercher">
+        </form>
+        <ul>
+        {% for recommandation in recommandations %}
+            <li>
+                <details>
+                    <summary> {{ recommandation.recommandation }}</summary>
+                    <p> {{ recommandation.precisions}} </p>
+                </details>
+                <p>
+                {% if recommandation.qa_mauvaise %}☁{% endif %}
+                {% if recommandation.menage %}🧹{% endif %}
+                {% if recommandation.bricolage %}🔨{% endif %}
+                {% if recommandation.chauffage_a_bois %}🔥 {% endif %}
+                {% if recommandation.jardinage %}🌳{% endif %}
+                {% if recommandation.velo_trott_skate %}🚴{% endif %}
+                {% if recommandation.transport_en_commun %}🚇{% endif %}
+                {% if recommandation.voiture %}🚗{% endif %}
+                {% if recommandation.activite_physique %}🏋️‍♂️{% endif %}
+                {% if recommandation.allergies %}🤧{% endif %}
+                {% if recommandation.enfants %}🧒{% endif %}
+                {% if recommandation.personnes_sensibles %}🤓{% endif %}
+                {% if recommandation.automne %}🍂{% endif %}
+                {% if recommandation.hiver %}☃{% endif %}
+                </p>
+                <a href="{{ url_for("recommandations.edit", secret_slug=secret_slug, id=recommandation.id) }}">Éditer</a>
+            </li>
+        {% endfor %}
+
+        </ul>
+    </div>
+</div>
+
+{% endblock block_form %}

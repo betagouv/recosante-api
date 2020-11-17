@@ -1,0 +1,20 @@
+ul {
+    list-style: none;
+    li {
+        display: flex;
+        flex-direction: row;
+        details {
+            flex: 1;
+        }
+        a {
+            flex: 0 0 50px;
+        }
+    }
+}
+
+form {
+    div {
+        display: flex;
+        flex-direction: row;
+    }
+}

@@ -1,6 +1,6 @@
 from dataclasses import Field
 from ecosante.recommandations.models import Recommandation
-from ecosante.recommandations.forms import Form as FormRecommandation
+from ecosante.recommandations.forms import FormEdit as FormRecommandation
 from ecosante.utils.form import BaseForm
 from wtforms import FormField, FieldList
 
