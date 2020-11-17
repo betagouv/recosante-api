@@ -3,10 +3,11 @@ from flask import (
     abort,
     request,
     url_for,
-    redirect
+    redirect,
+    flash
 )
 from .models import Recommandation, db
-from .forms import FormEdit, FormSearch
+from .forms import FormAdd, FormEdit, FormSearch
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from sqlalchemy import or_
@@ -15,6 +16,23 @@ bp = Blueprint(
     "recommandations",
     __name__,
 )
+
+@bp.route('<secret_slug>/add', methods=['GET', 'POST'])
+@admin_capability_url
+def add(secret_slug):
+    form = FormAdd()
+    if request.method == "POST":
+        recommandation = Recommandation()
+        form.populate_obj(recommandation)
+        db.session.add(recommandation)
+        db.session.commit()
+        flash("Recommandation ajoutée")
+        return redirect(url_for("recommandations.list", secret_slug=secret_slug))
+    return render_template(
+        "edit.html",
+        form=form,
+        action="Ajouter"
+    )
 
 @bp.route('<secret_slug>/edit/<id>', methods=['GET', 'POST'])
 @admin_capability_url
@@ -27,9 +45,27 @@ def edit(secret_slug, id):
         form.populate_obj(recommandation)
         db.session.add(recommandation)
         db.session.commit()
-        return redirect(url_for("inscription.export", secret_slug=secret_slug))
-    return render_template("edit.html", form=form)
+        return redirect(url_for("recommandations.list", secret_slug=secret_slug))
+    return render_template(
+        "edit.html",
+        form=form,
+        action="Éditer"
+    )
 
+@bp.route('<secret_slug>/remove/<id>', methods=["GET", "POST"])
+def remove(secret_slug, id):
+    recommandation = Recommandation.query.get(id)
+    if request.method == "POST":
+        db.session.delete(recommandation)
+        db.session.commit()
+        flash("Recommandation supprimée")
+        return redirect(url_for("recommandations.list", secret_slug=secret_slug))
+    return render_template(
+        "remove.html",
+        secret_slug=secret_slug,
+        id=id,
+        recommandation=recommandation
+    )
 
 @bp.route('<secret_slug>/', methods=["GET", "POST"])
 def list(secret_slug):

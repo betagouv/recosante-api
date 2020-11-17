@@ -1,7 +1,7 @@
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField
 from wtforms import TextAreaField, HiddenField
 
-class FormEdit(BaseForm):
+class FormAdd(BaseForm):
     recommandabilite = RadioField(
         "Recommandabilité",
         choices=[
@@ -38,4 +38,6 @@ class FormEdit(BaseForm):
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
     objectif = TextAreaField("Objectif")
+
+class FormEdit(FormAdd):
     id = HiddenField("id")

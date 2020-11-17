@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section">
+    <div class="container">
+        <form method="post" class="form">
+        <button class="button" type="submit">Confirmer la suppression</button>
+        </form>
+        <h5>{{ recommandation.recommandation }}</h5>
+        <p>{{ recommandation.precisions }}</p>
+        <form method="post">
+        <button class="button" type="submit">Confirmer la suppression</button>
+        </form>
+    </div>
+</section>
+
+
+{% endblock content %}

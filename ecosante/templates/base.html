@@ -36,7 +36,13 @@
 
 
     <main role="main">
-      
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="notification">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 {% block content %}
 {% endblock content %}
 

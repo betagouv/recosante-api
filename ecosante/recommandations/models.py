@@ -9,7 +9,7 @@ class CustomBoolean(types.TypeDecorator):
     impl = db.Boolean
 
     def process_bind_param(self, value, dialect):
-        return value is True or 'x' in value.lower() or 't' in value.lower()
+        return value is not None and (value is True or 'x' in value.lower() or 't' in value.lower())
 
 class Recommandation(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -7,6 +7,7 @@
 
 <div class="section">
     <div class="container">
+        <a href="{{ url_for("recommandations.add", secret_slug=secret_slug)}}">Ajouter une recommandation</a>
         <form method="post">
         {{ form.hidden_tag() }}
         {{ render_field(form.search) }}
@@ -37,6 +38,7 @@
                 {% if recommandation.hiver %}☃{% endif %}
                 </p>
                 <a href="{{ url_for("recommandations.edit", secret_slug=secret_slug, id=recommandation.id) }}">Éditer</a>
+                <a href="{{ url_for("recommandations.remove", secret_slug=secret_slug, id=recommandation.id) }}">Supprimer</a>
             </li>
         {% endfor %}
 

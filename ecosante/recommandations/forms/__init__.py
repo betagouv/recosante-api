@@ -1,2 +1,2 @@
-from .edit import FormEdit
-from .search import FormSearch
+from .edit import FormEdit, FormAdd #noqa
+from .search import FormSearch #noqa
