@@ -26,9 +26,9 @@
             <a href="{{ nl.forecast['metadata']['region']['website'] }}">Plus d'informations</a>
             <div class="panel-grey">
                 <h3>Recommandation</h3>
-                <h6>{{ nl.recommandation.recommandation }}</h6>
+                <h6>{{ nl.recommandation.recommandation | safe }}</h6>
                 <p>
-                    {{ nl.recommandation.precisions }}
+                    {{ nl.recommandation.precisions | safe }}
                 </p>
             </div>
             </div>
