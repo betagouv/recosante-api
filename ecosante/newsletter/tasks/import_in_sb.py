@@ -162,7 +162,7 @@ def import_(task, newsletters, overhead=0):
             subject = "Vos recommandations Écosanté",
             replyTo = "ecosante@data.gouv.fr",
             recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
-                listIds=[lists['mail']]
+                list_ids=[lists['mail']]
             ),
             header="Aujourd'hui, la qualité de l'air autour de chez vous est…"
         )
@@ -190,7 +190,7 @@ Plus d'information : {LIEN_AASQA}
 STOP au [STOP_CODE]
 """,
             recipients = sib_api_v3_sdk.CreateSmsCampaignRecipient(
-                listIds = [lists['sms']]
+                list_ids = [lists['sms']]
             )
         )
     )
