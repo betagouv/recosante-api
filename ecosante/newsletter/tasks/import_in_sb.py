@@ -4,7 +4,7 @@ import csv
 import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-from urllib.parse import quote, urlencode
+from urllib.parse import quote_plus
 from ecosante.newsletter.models import Newsletter, NewsletterDB
 from ecosante.extensions import db, sib, celery
 
@@ -132,7 +132,7 @@ def import_(task, newsletters, overhead=0):
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
         contact_api.update_contact(
-            urlencode(nl.inscription.mail),
+            quote_plus(nl.inscription.mail),
             sib_api_v3_sdk.UpdateContact(
                 attributes=nl.attributes(),
                 list_ids=[lists[nl.inscription.diffusion]]
