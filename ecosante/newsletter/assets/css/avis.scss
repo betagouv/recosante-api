@@ -1,0 +1,32 @@
+button.tres_bon, .button.tres_bon:hover {
+    background-color: #37c55f;
+}
+button.bon, button.bon:hover {
+    background-color: #8fda2c;
+}
+button.moyen, button.moyen:hover {
+    background-color: #f9e000;
+}
+button.mediocre, button.mediocre:hover {
+    background-color: #ffaa27;
+}
+button.mauvais, button.mauvais:hover {
+    background-color: #ff090d;
+}
+button.tres_mauvais, button.tres_mauvais:hover {
+    background-color: #800103;
+}
+button.button {
+    margin: 0;
+}
+
+div.panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+div.panel-grey {
+    @extend .panel;
+    background-color: var(--theme-background-grey)
+}

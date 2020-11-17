@@ -19,10 +19,6 @@ class Newsletter:
     date: datetime
     inscription: Inscription
     recommandation: Recommandation
-    appliquee: bool
-    avis: str
-    short_id: str
-
 
     QUALIFICATIF_TRES_BON = 'très bon'
     QUALIFICATIF_BON = 'bon'
@@ -166,17 +162,6 @@ class Newsletter:
             self.recommandation.id
         ])
 
-    def attributes(self):
-        return {
-            'FORMAT': self.inscription.diffusion,
-            'QUALITE_AIR': self.qualif,
-            'LIEN_AASQA': self.forecast['metadata']['region']['website'],
-            'RECOMMANDATION': self.recommandation.format(self.inscription),
-            'PRECISIONS': self.recommandation.precisions,
-            'VILLE': self.inscription.ville_name,
-            'BACKGROUND_COLOR': self.background
-        }
-
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
     id = db.Column(db.Integer, primary_key=True)
@@ -193,7 +178,6 @@ class NewsletterDB(db.Model, Newsletter):
     appliquee = db.Column(db.Boolean())
     avis = db.Column(db.String())
 
-
     def __init__(self, newsletter):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
@@ -201,4 +185,19 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_id = newsletter.recommandation.id
         self.date = newsletter.date
         self.qai = newsletter.qai
-        self.forecast = newsletter.forecast
+
+    @property
+    def forecast(self):
+        return get_forecast(self.inscription.ville_insee, self.date, True)
+
+    def attributes(self):
+        return {
+            'FORMAT': self.inscription.diffusion,
+            'QUALITE_AIR': self.qualif,
+            'LIEN_AASQA': self.forecast['metadata']['region']['website'],
+            'RECOMMANDATION': self.recommandation.format(self.inscription),
+            'PRECISIONS': self.recommandation.precisions,
+            'VILLE': self.inscription.ville_name,
+            'BACKGROUND_COLOR': self.background,
+            'SHORT_ID': self.short_id
+        }

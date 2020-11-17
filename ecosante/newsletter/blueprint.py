@@ -207,6 +207,8 @@ def avis(short_id):
     form = FormAvis(request.form, obj=nl)
     if request.method=='POST' and form.validate_on_submit():
         form.populate_obj(nl)
+        db.session.add(nl)
+        db.session.commit()
         return redirect(
             url_for('newsletter.avis_enregistre', short_id=short_id)
         )
@@ -216,7 +218,8 @@ def avis(short_id):
     return render_template(
         'avis.html',
         nl=nl,
-        form=form
+        form=form,
+        date_="Aujourd'hui" if nl.date == date.today() else nl.date.strftime("Le %d %m")
     )
 
 @bp.route('<short_id>/avis/enregistre')
