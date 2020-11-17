@@ -201,3 +201,4 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_id = newsletter.recommandation.id
         self.date = newsletter.date
         self.qai = newsletter.qai
+        self.forecast = newsletter.forecast
