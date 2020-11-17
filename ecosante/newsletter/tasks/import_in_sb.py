@@ -69,7 +69,6 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
             )
         )
     )
-    db.session.commit()
     self.update_state(
         state='PENDING',
         meta={
@@ -101,6 +100,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         }
     )
     result['progress'] = 100
+    db.session.commit()
     return result
 
 def import_(task, newsletters, overhead=0):
