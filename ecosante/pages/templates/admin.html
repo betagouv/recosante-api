@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section">
+    <div class="container">
+        <div class="tiles">
+            <h1>Pages</h1>
+            <div class="grid">
+                <a href="{{ url_for("recommandations.list", secret_slug=secret_slug)}}">
+                    <div class="tile">
+                        <h2>📑</h2>
+                        <h3>Recommandations</h3>
+                    </div>
+                </a>
+                <a href="{{ url_for("newsletter.export", secret_slug=secret_slug)}}">
+                    <div class="tile">
+                        <h2>📧</h2>
+                        <h3>Envoi de newsletters</h3>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}
