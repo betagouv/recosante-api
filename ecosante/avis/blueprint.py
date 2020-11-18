@@ -50,3 +50,10 @@ def csv(secret_slug):
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
+@bp.route('<secret_slug>/list')
+@admin_capability_url
+def liste(secret_slug):
+    avis = Avis.query.all()
+    form = Form()
+    return render_template("liste.html", secret_slug=secret_slug, avis=avis, form=form)

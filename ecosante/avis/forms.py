@@ -19,7 +19,7 @@ class Form(BaseForm):
         ],
         widget=widgets.ListWidget()
     )
-    satisfaction_nombre_recommandations = OuiNonField(
+    satisfaction_nombre_recommandation = OuiNonField(
         'Etes-vous satisfait.e du nombre de recommandations proposé dans chaque newsletter ?',
         choices=[
             (True, "Oui, une recommandation me suffit"),
