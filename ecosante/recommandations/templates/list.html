@@ -39,6 +39,7 @@
                 </p>
                 <a href="{{ url_for("recommandations.edit", secret_slug=secret_slug, id=recommandation.id) }}">Éditer</a>
                 <a href="{{ url_for("recommandations.remove", secret_slug=secret_slug, id=recommandation.id) }}">Supprimer</a>
+                <a href="{{ url_for("recommandations.details", secret_slug=secret_slug, id=recommandation.id) }}">Avis</a>
             </li>
         {% endfor %}
 

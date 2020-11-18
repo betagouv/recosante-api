@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section">
+    <div class="container">
+    {% if newsletters %}
+    {% set nb_avis_positifs = newsletters|selectattr("appliquee")|select("equalto", "oui")|count %}
+    {% set nb_avis = newsletters|count %}
+    {% set percent_avis_positifs = nb_avis_positifs/nb_avis %}
+    <h3>{{ "$%.2f"|format(percent_avis_positifs|float) }}% de personnes disent appliquer qu’ils vont appliquer cette recommandation</h3>
+    <h4>Commentaires sur les avis négatifs</h4>
+    <ul>
+    {% for nl in newsletters if nl.avis %}
+        <li>{{ nl.avis }}</li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    Pas encore d'avis
+    {% endif %}
+    </div>
+</section>
+
+{% endblock content %}

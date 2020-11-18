@@ -18,4 +18,3 @@ def donnees_personnelles():
 @admin_capability_url
 def admin(secret_slug):
     return render_template("admin.html", secret_slug=secret_slug)
-

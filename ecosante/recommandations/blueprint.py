@@ -1,3 +1,4 @@
+from ecosante.pages.blueprint import admin
 from flask import (
     render_template,
     abort,
@@ -7,6 +8,7 @@ from flask import (
     flash
 )
 from .models import Recommandation, db
+from ecosante.newsletter.models import NewsletterDB
 from .forms import FormAdd, FormEdit, FormSearch
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
@@ -53,6 +55,7 @@ def edit(secret_slug, id):
     )
 
 @bp.route('<secret_slug>/remove/<id>', methods=["GET", "POST"])
+@admin_capability_url
 def remove(secret_slug, id):
     recommandation = Recommandation.query.get(id)
     if request.method == "POST":
@@ -68,6 +71,7 @@ def remove(secret_slug, id):
     )
 
 @bp.route('<secret_slug>/', methods=["GET", "POST"])
+@admin_capability_url
 def list(secret_slug):
     form = FormSearch()
     query = Recommandation.query
@@ -90,5 +94,25 @@ def list(secret_slug):
         "list.html",
         recommandations=query.all(),
         form=form,
+        secret_slug=secret_slug
+    )
+
+@bp.route('/<secret_slug>/<id>/details')
+@admin_capability_url
+def details(secret_slug, id):
+    recommandation = Recommandation.query.get(id)
+    if not recommandation:
+        return abort(404)
+
+    newsletters = NewsletterDB.query\
+        .filter_by(recommandation_id=id)\
+        .filter(NewsletterDB.appliquee.isnot(None))\
+        .order_by(NewsletterDB.date.desc())\
+        .all()
+
+    return render_template(
+        "details.html",
+        recommandation=recommandation,
+        newsletters=newsletters,
         secret_slug=secret_slug
     )
