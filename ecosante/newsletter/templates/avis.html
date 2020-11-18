@@ -21,10 +21,7 @@
                 </div>
             </form>
             {% endif %}
-            <h1>{{ date_ }} la qualité de l'air à {{ nl.inscription.ville_name }} {{ 'est' if date_ == "Aujourd'hui" else 'était' }}</h1>
-            <h1><button class="button {{ nl.qualif }}">{{ nl.qualif | capitalize }}</button></h1>
-            <a href="{{ nl.forecast['metadata']['region']['website'] }}">Plus d'informations</a>
-            <div class="panel-grey">
+            <div class="panel-grey recommandation">
                 <h3>Recommandation</h3>
                 <h6>{{ nl.recommandation.recommandation | safe }}</h6>
                 <p>

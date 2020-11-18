@@ -219,7 +219,6 @@ def avis(short_id):
         'avis.html',
         nl=nl,
         form=form,
-        date_="Aujourd'hui" if nl.date == date.today() else nl.date.strftime("Le %d %m")
     )
 
 @bp.route('<short_id>/avis/enregistre')

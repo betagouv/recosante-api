@@ -30,3 +30,7 @@ div.panel-grey {
     @extend .panel;
     background-color: var(--theme-background-grey)
 }
+
+.recommandation > h6 {
+    padding: 0 2em;
+}
