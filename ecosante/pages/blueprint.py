@@ -30,4 +30,4 @@ def admin():
             NewsletterDB.avis.isnot(None),
             NewsletterDB.date==date.today())\
         .count()
-    return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui)
+    return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
