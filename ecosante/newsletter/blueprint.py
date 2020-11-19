@@ -224,3 +224,11 @@ def avis(short_id):
 @bp.route('<short_id>/avis/enregistre')
 def avis_enregistre(short_id):
     return render_template('avis_enregistre.html')
+
+@bp.route('<secret_slug>/avis/')
+def liste_avis(secret_slug):
+    newsletters = NewsletterDB.query\
+        .filter(NewsletterDB.avis.isnot(None))\
+        .order_by(NewsletterDB.date.desc())\
+        .all()
+    return render_template('liste_avis.html', newsletters=newsletters, secret_slug=secret_slug)

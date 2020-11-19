@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="main">
+            <h1>Avis suite à une réponse «non» à la question «Allez-vous appliquer cette recommandation»</h1>
+            {% for nl in newsletters %}
+            <div class="panel">
+                <div class="panel__header">
+                    <h6>Recommandation</h6>
+                    <p>{{ nl.recommandation.recommandation }}</p>
+                    <a href="{{ url_for("recommandations.details", secret_slug=secret_slug, id=nl.recommandation.id)}}">Voir la recommandation</a>
+                </div>
+                <div>
+                    <h6>Avis</h6>
+                    <small class="panel__header-extra">Déposé le {{ nl.date }}</small>
+                    {{ nl.avis }}
+                </div>
+            </div>
+            {% else %}
+            Pas encore d'avis déposé
+            {% endfor %}
+        </div>        
+    </div>
+</section>
+{% endblock content %}

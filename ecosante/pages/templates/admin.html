@@ -2,35 +2,32 @@
 
 {% block content %}
 
-<section class="section">
+<section class="section section-grey">
     <div class="container">
         <div class="tiles">
             <h1>Pages</h1>
             <div class="grid">
-                <a href="{{ url_for("recommandations.list", secret_slug=secret_slug)}}">
-                    <div class="tile">
-                        <h2>📑</h2>
-                        <h3>Recommandations</h3>
-                    </div>
+                <a class="tile" href="{{ url_for("recommandations.list", secret_slug=secret_slug)}}">
+                    <h2>📑</h2>
+                    <h3 class="text-center">Recommandations</h3>
                 </a>
-                <a href="{{ url_for("newsletter.export", secret_slug=secret_slug)}}">
-                    <div class="tile">
-                        <h2>📧</h2>
-                        <h3>Envoi de newsletters</h3>
-                    </div>
+                <a class="tile" href="{{ url_for("newsletter.liste_avis", secret_slug=secret_slug)}}">
+                    <h2>📑</h2>
+                    <h3 class="text-center">Avis</h3>
                 </a>
-                <a href="{{ url_for("avis.index", secret_slug=secret_slug) }}">
-                    <div class="tile">
-                        <h2>❣️</h2>
-                        <h3>Questionnaire de satisfaction</h3>
-                    </div>
+                <a class="tile" href="{{ url_for("newsletter.export", secret_slug=secret_slug)}}">
+                    <h2>📧</h2>
+                    <h3 class="text-center">Envoi de newsletters</h3>
                 </a>
-                <a href="{{ url_for("avis.liste", secret_slug=secret_slug) }}">
-                    <div class="tile">
-                        <h2>🆒️</h2>
-                        <h3>Page recueil d’avis</h3>
-                    </div>
+                <a class="tile" href="{{ url_for("avis.index", secret_slug=secret_slug) }}">
+                    <h2>❣️</h2>
+                    <h3 class="text-center">Questionnaire de satisfaction</h3>
                 </a>
+                <a class="tile" href="{{ url_for("avis.liste", secret_slug=secret_slug) }}">
+                    <h2>🆒️</h2>
+                    <h3 class="text-center">Page liste des questionnaires de satisfaction</h3>
+                </a>
+
             </div>
         </div>
     </div>
