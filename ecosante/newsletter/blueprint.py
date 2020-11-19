@@ -18,7 +18,7 @@ from werkzeug.urls import url_encode
 from indice_pollution.regions.solvers import region
 from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
-from ecosante.utils.decorators import admin_capability_url
+from ecosante.utils.decorators import admin_capability_url, task_status_capability_url
 from ecosante.utils import Blueprint
 from ecosante.extensions import celery
 from .forms import (
@@ -38,8 +38,9 @@ from .tasks import import_in_sb, delete_file, delete_file_error, import_and_send
 bp = Blueprint("newsletter", __name__)
 
 @bp.route('<secret_slug>/csv')
+@bp.route('csv')
 @admin_capability_url
-def csv_(secret_slug):
+def csv_():
     return Response(
         stream_with_context(
             Newsletter.generate_csv(
@@ -55,8 +56,9 @@ def csv_(secret_slug):
     )
 
 @bp.route('<secret_slug>/edit_indices', methods=['POST'])
+@bp.route('edit_indices', methods=['POST'])
 @admin_capability_url
-def edit_indices(secret_slug):
+def edit_indices():
     form_indices = FormEditIndices()
     if form_indices.validate_on_submit():
         for form_indice in form_indices.indices.entries:
@@ -72,15 +74,15 @@ def edit_indices(secret_slug):
     return redirect(
         url_for(
             "newsletter.link_export",
-            secret_slug=secret_slug,
             **request.args
         )
     )
 
 
 @bp.route('<secret_slug>/edit_recommandations', methods=['POST'])
+@bp.route('edit_recommandations', methods=['POST'])
 @admin_capability_url
-def edit_recommandations(secret_slug):
+def edit_recommandations():
     form_recommandations = FormRecommandations(request.form)
     if form_recommandations.validate_on_submit():
         for form_recommandation in form_recommandations.recommandations.entries:
@@ -92,19 +94,18 @@ def edit_recommandations(secret_slug):
     return redirect(
         url_for(
             "newsletter.link_export",
-            secret_slug=secret_slug,
         ) + "?" + url_encode(request.args)
     )
 
 @bp.route('<secret_slug>/link_export')
+@bp.route('link_export')
 @admin_capability_url
-def link_export(secret_slug):
+def link_export():
     if not request.args.get('seed'):
         return redirect(
             url_for(
                 "newsletter.link_export",
                 seed=str(uuid4()),
-                secret_slug=secret_slug,
                 **request.args
             )
         )
@@ -127,14 +128,14 @@ def link_export(secret_slug):
         form_field.indice.description = f' Région: <a target="_blank" href="{region(region_name=inscription.region_name).website}">{inscription.region_name}</a>'
     return render_template(
         'link_export.html',
-        secret_slug=secret_slug,
         form_recommandations=form_recommandations,
         form_indices=form_indices,
     )
     
 @bp.route('<secret_slug>/export', methods=['GET', 'POST'])
+@bp.route('/export', methods=['GET', 'POST'])
 @admin_capability_url
-def export(secret_slug):
+def export():
     form = FormExport()
     form.recommandations.choices=[
         (
@@ -143,21 +144,20 @@ def export(secret_slug):
         )
         for r in Recommandation.query.all()
     ]
-    form.recommandations.widget.secret_slug = secret_slug
     if request.method == 'POST':
         return redirect(
             url_for(
                 "newsletter.link_export",
-                secret_slug=secret_slug,
                 preferred_reco=form.recommandations.data,
             )
         )
 
-    return render_template('export.html', form=form, secret_slug=secret_slug)
+    return render_template('export.html', form=form)
 
 @bp.route('<secret_slug>/import', methods=['GET', 'POST'])
+@bp.route('import', methods=['GET', 'POST'])
 @admin_capability_url
-def import_(secret_slug):
+def import_():
     form = FormImport()
     task_id = None
     if request.method == 'POST' and form.validate_on_submit():
@@ -177,7 +177,7 @@ def import_(secret_slug):
     )
 
 @bp.route('<secret_slug>/task_status/<task_id>')
-@admin_capability_url
+@task_status_capability_url
 def task_status(secret_slug, task_id):
     task = celery.AsyncResult(task_id)
     return {
@@ -186,8 +186,9 @@ def task_status(secret_slug, task_id):
     }
 
 @bp.route('<secret_slug>/send')
+@bp.route('/send')
 @admin_capability_url
-def send(secret_slug):
+def send():
     task = import_and_send.delay(
         request.args.get('seed'),
         request.args.get('preferred_reco'),
@@ -226,9 +227,11 @@ def avis_enregistre(short_id):
     return render_template('avis_enregistre.html')
 
 @bp.route('<secret_slug>/avis/')
-def liste_avis(secret_slug):
+@bp.route('/avis/')
+@admin_capability_url
+def liste_avis():
     newsletters = NewsletterDB.query\
         .filter(NewsletterDB.avis.isnot(None))\
         .order_by(NewsletterDB.date.desc())\
         .all()
-    return render_template('liste_avis.html', newsletters=newsletters, secret_slug=secret_slug)
+    return render_template('liste_avis.html', newsletters=newsletters)

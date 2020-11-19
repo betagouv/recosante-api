@@ -16,7 +16,7 @@ class ListEditWidget(widgets.ListWidget):
         for l in soup.find_all('li'):
             id_ = l.input.attrs['value']
             link = soup.new_tag('a')
-            link.attrs['href'] = url_for("recommandations.edit", secret_slug=self.secret_slug, id=id_)
+            link.attrs['href'] = url_for("recommandations.edit", id=id_)
             link.string = 'Éditer'
             l.label.insert_after(link)
 

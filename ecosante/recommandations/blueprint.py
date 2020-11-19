@@ -20,8 +20,9 @@ bp = Blueprint(
 )
 
 @bp.route('<secret_slug>/add', methods=['GET', 'POST'])
+@bp.route('add', methods=['GET', 'POST'])
 @admin_capability_url
-def add(secret_slug):
+def add():
     form = FormAdd()
     if request.method == "POST":
         recommandation = Recommandation()
@@ -29,7 +30,7 @@ def add(secret_slug):
         db.session.add(recommandation)
         db.session.commit()
         flash("Recommandation ajoutée")
-        return redirect(url_for("recommandations.list", secret_slug=secret_slug))
+        return redirect(url_for("recommandations.list"))
     return render_template(
         "edit.html",
         form=form,
@@ -37,8 +38,9 @@ def add(secret_slug):
     )
 
 @bp.route('<secret_slug>/edit/<id>', methods=['GET', 'POST'])
+@bp.route('edit/<id>', methods=['GET', 'POST'])
 @admin_capability_url
-def edit(secret_slug, id):
+def edit(id):
     recommandation = Recommandation.query.get(id)
     if not recommandation:
         abort(404)
@@ -47,7 +49,7 @@ def edit(secret_slug, id):
         form.populate_obj(recommandation)
         db.session.add(recommandation)
         db.session.commit()
-        return redirect(url_for("recommandations.list", secret_slug=secret_slug))
+        return redirect(url_for("recommandations.list"))
     return render_template(
         "edit.html",
         form=form,
@@ -55,24 +57,25 @@ def edit(secret_slug, id):
     )
 
 @bp.route('<secret_slug>/remove/<id>', methods=["GET", "POST"])
+@bp.route('remove/<id>', methods=["GET", "POST"])
 @admin_capability_url
-def remove(secret_slug, id):
+def remove(id):
     recommandation = Recommandation.query.get(id)
     if request.method == "POST":
         db.session.delete(recommandation)
         db.session.commit()
         flash("Recommandation supprimée")
-        return redirect(url_for("recommandations.list", secret_slug=secret_slug))
+        return redirect(url_for("recommandations.list"))
     return render_template(
         "remove.html",
-        secret_slug=secret_slug,
         id=id,
         recommandation=recommandation
     )
 
 @bp.route('<secret_slug>/', methods=["GET", "POST"])
+@bp.route('/', methods=["GET", "POST"])
 @admin_capability_url
-def list(secret_slug):
+def list():
     form = FormSearch()
     query = Recommandation.query
     filters = []
@@ -94,12 +97,12 @@ def list(secret_slug):
         "list.html",
         recommandations=query.all(),
         form=form,
-        secret_slug=secret_slug
     )
 
 @bp.route('/<secret_slug>/<id>/details')
+@bp.route('/<id>/details')
 @admin_capability_url
-def details(secret_slug, id):
+def details(id):
     recommandation = Recommandation.query.get(id)
     if not recommandation:
         return abort(404)
@@ -114,5 +117,4 @@ def details(secret_slug, id):
         "details.html",
         recommandation=recommandation,
         newsletters=newsletters,
-        secret_slug=secret_slug
     )

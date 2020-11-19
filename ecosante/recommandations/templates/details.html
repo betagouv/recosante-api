@@ -17,7 +17,7 @@
         <div>
             {{ recommandation.recommandation_format_SMS}}
         </div>
-        <a class="button" href="{{ url_for("recommandations.edit", secret_slug=secret_slug, id=recommandation.id) }}">Éditer</a>
+        <a class="button" href="{{ url_for("recommandations.edit", id=recommandation.id) }}">Éditer</a>
     </article>
     {% if newsletters %}
     {% set nb_avis_positifs = newsletters|selectattr("appliquee")|select("equalto", "oui")|list|count %}

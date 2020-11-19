@@ -38,8 +38,9 @@ def ajoute():
     return render_template('ajoute.html')
 
 @bp.route('<secret_slug>/csv')
+@bp.route('csv')
 @admin_capability_url
-def csv(secret_slug):
+def csv():
     filename = f"export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
     return Response(
         stream_with_context(
@@ -52,8 +53,9 @@ def csv(secret_slug):
     )
 
 @bp.route('<secret_slug>/list')
+@bp.route('list')
 @admin_capability_url
-def liste(secret_slug):
+def liste():
     avis = Avis.query.all()
     form = Form()
-    return render_template("liste.html", secret_slug=secret_slug, avis=avis, form=form)
+    return render_template("liste.html", avis=avis, form=form)

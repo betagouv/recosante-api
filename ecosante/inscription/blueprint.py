@@ -61,18 +61,21 @@ def geojson():
     return jsonify(Inscription.export_geojson())
 
 @bp.route('<secret_slug>/export', methods=['GET', 'POST'])
+@bp.route('export', methods=['GET', 'POST'])
 @admin_capability_url
-def export(secret_slug):
-    return redirect(url_for("newsletter.export", secret_slug=secret_slug))
+def export():
+    return redirect(url_for("newsletter.export"))
 
 @bp.route('<secret_slug>/import', methods=['GET', 'POST'])
+@bp.route('import', methods=['GET', 'POST'])
 @admin_capability_url
-def import_(secret_slug):
-    return redirect(url_for("newsletter.import_", secret_slug=secret_slug))
+def import_():
+    return redirect(url_for("newsletter.import_"))
 
 @bp.route('<secret_slug>/user_unsubscription', methods=['POST'])
+@bp.route('user_unsubscription', methods=['POST'])
 @webhook_capability_url
-def user_unsubscription(secret_slug):
+def user_unsubscription():
     mail = request.json['email']
     user = Inscription.query.filter_by(mail=mail).first()
     if not user:

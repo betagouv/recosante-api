@@ -14,7 +14,7 @@ Rechercher : <input type="text" id="search">
     {{ form.hidden_tag() }}
     <div class="form__group">
         <button class="button" type="submit" id="submit">Obtenir un export</button>
-        <a href="{{url_for("inscription.import_", secret_slug=secret_slug)}}">Importer une liste dans sendinblue</a>
+        <a href="{{url_for("inscription.import_")}}">Importer une liste dans sendinblue</a>
     </div>
     {{ render_field(form.recommandations) }}
     <div class="form__group">
