@@ -34,4 +34,4 @@ def capability_url(env_key, redirect_to_slash, f):
 
 admin_capability_url = partial(capability_url, 'CAPABILITY_ADMIN_TOKEN', True)
 task_status_capability_url = partial(capability_url, 'CAPABILITY_ADMIN_TOKEN', False)
-webhook_capability_url = partial(capability_url, 'CAPABILITY_WEBHOOK_TOKEN', True)
+webhook_capability_url = partial(capability_url, 'CAPABILITY_WEBHOOK_TOKEN', False)

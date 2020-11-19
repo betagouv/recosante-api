@@ -74,9 +74,8 @@ def import_():
     return redirect(url_for("newsletter.import_"))
 
 @bp.route('<secret_slug>/user_unsubscription', methods=['POST'])
-@bp.route('user_unsubscription', methods=['POST'])
 @webhook_capability_url
-def user_unsubscription():
+def user_unsubscription(secret_slug):
     current_app.logger.error(f"user_unsubscription: {request.json}")
     mail = request.json['email']
     user = Inscription.query.filter_by(mail=mail).first()
