@@ -14,6 +14,7 @@
                 <a class="tile" href="{{ url_for("newsletter.liste_avis", secret_slug=secret_slug)}}">
                     <h2>📑</h2>
                     <h3 class="text-center">Avis</h3>
+                    {{ count_avis }} hier
                 </a>
                 <a class="tile" href="{{ url_for("newsletter.export", secret_slug=secret_slug)}}">
                     <h2>📧</h2>
