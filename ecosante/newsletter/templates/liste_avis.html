@@ -8,14 +8,16 @@
             {% for nl in newsletters %}
             <div class="panel">
                 <div class="panel__header">
-                    <h6>Recommandation</h6>
-                    <p>{{ nl.recommandation.recommandation }}</p>
-                    <a href="{{ url_for("recommandations.details", id=nl.recommandation.id)}}">Voir la recommandation</a>
+                    <h3>Avis</h3>
+                    <small class="panel__header-extra">Déposé le {{ nl.date }}</small>
+                    <p>
+                        {{ nl.avis }}
+                    </p>
                 </div>
                 <div>
-                    <h6>Avis</h6>
-                    <small class="panel__header-extra">Déposé le {{ nl.date }}</small>
-                    {{ nl.avis }}
+                    <h3>Recommandation</h3>
+                    <p>{{ nl.recommandation.recommandation }}</p>
+                    <a href="{{ url_for("recommandations.details", id=nl.recommandation.id)}}">Voir la recommandation</a>
                 </div>
             </div>
             {% else %}
