@@ -14,7 +14,8 @@
                 <a class="tile" href="{{ url_for("newsletter.liste_avis")}}">
                     <h2>📑</h2>
                     <h3 class="text-center">Avis</h3>
-                    {{ count_avis }} hier
+                    {{ count_avis_aujourdui }} aujourd'hui
+                    {{ count_avis_hier }} hier
                 </a>
                 <a class="tile" href="{{ url_for("newsletter.export")}}">
                     <h2>📧</h2>

@@ -20,9 +20,14 @@ def donnees_personnelles():
 @bp.route('/admin/')
 @admin_capability_url
 def admin():
-    count_avis = NewsletterDB.query\
+    count_avis_hier = NewsletterDB.query\
         .filter(
             NewsletterDB.avis.isnot(None),
             NewsletterDB.date==date.today() - timedelta(days=1))\
         .count()
-    return render_template("admin.html", count_avis=count_avis)
+    count_avis_aujourdhui = NewsletterDB.query\
+        .filter(
+            NewsletterDB.avis.isnot(None),
+            NewsletterDB.date==date.today())\
+        .count()
+    return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui)
