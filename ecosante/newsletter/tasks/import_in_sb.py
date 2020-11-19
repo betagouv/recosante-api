@@ -158,7 +158,7 @@ def import_(task, newsletters, overhead=0):
                 email="ecosante@data.gouv.fr"
             ),
             name = f'{now}',
-            template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 96),
+            template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 226),
             subject = "Vos recommandations Écosanté",
             reply_to = "ecosante@data.gouv.fr",
             recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
