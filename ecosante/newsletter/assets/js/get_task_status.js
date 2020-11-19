@@ -9,10 +9,10 @@ function update_task_status() {
                     progress.innerHTML =parseFloat(json['progress']).toFixed(2) + '%'
                     progress_details.innerHTML = json['details']
                     if ("sms_campaign_id" in json) {
-                        progress_details.innerHTML += `<h2>Envoyer la campagne SMS en cliquant <a href="https://my.sendinblue.com/camp/sms/${json['sms_campaign_id']}/setup">ici</a></h2>`
+                        progress_details.innerHTML += `<h2>Vérifiez la campagne SMS en cliquant <a href="https://my.sendinblue.com/camp/sms/${json['sms_campaign_id']}/setup">ici</a></h2>`
                     }
                     if ("email_campaign_id" in json) {
-                        progress_details.innerHTML += `<h2>Envoyer la campagne email en cliquant <a href="https://my.sendinblue.com/camp/classic/${json['email_campaign_id']}/setup">ici</a></h2>`
+                        progress_details.innerHTML += `<h2>Vérifiez la campagne email en cliquant <a href="https://my.sendinblue.com/camp/classic/${json['email_campaign_id']}/setup">ici</a></h2>`
                     }
                     if (json['state'] == 'STARTED' || json['state'] == 'PENDING') {
                         setTimeout(update_task_status, 500)
