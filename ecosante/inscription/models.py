@@ -172,7 +172,7 @@ class Inscription(db.Model):
             .group_by(
                 NewsletterDB.date
             ).order_by(
-                NewsletterDB.date
+                NewsletterDB.date.desc()
             )
         return db.session\
             .query(NewsletterDB)\

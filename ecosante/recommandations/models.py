@@ -97,16 +97,23 @@ class Recommandation(db.Model):
     @classmethod
     def get_revelant(cls, recommandations, inscription, qai):
         copy_recommandations = []
+        same_category_recommandations = []
+        last_month_newsletters = inscription.last_month_newsletters()
         recent_recommandation_ids = [
             nl.recommandation_id
-            for nl in inscription.last_month_newsletters()
+            for nl in last_month_newsletters
         ]
         recent_recommandations = []
+        last_category = "" if not last_month_newsletters else last_month_newsletters[0].recommandation.categorie
         for recommandation in recommandations:
             if not recommandation.id in recent_recommandation_ids:
-                copy_recommandations.append(recommandation)
+                if recommandation.categorie == last_category:
+                    same_category_recommandations.append(recommandation)
+                else:
+                    copy_recommandations.append(recommandation)
             else:
                 recent_recommandations.append(recommandation)
+        copy_recommandations.extend(same_category_recommandations)
         copy_recommandations.extend(recent_recommandations)
 
         return next(filter(lambda r: r.is_relevant(inscription, qai), copy_recommandations))
