@@ -1,4 +1,5 @@
 from flask import (
+    current_app,
     render_template,
     request,
     redirect,
@@ -76,6 +77,7 @@ def import_():
 @bp.route('user_unsubscription', methods=['POST'])
 @webhook_capability_url
 def user_unsubscription():
+    current_app.logger.error(f"user_unsubscription: {request.json}")
     mail = request.json['email']
     user = Inscription.query.filter_by(mail=mail).first()
     if not user:
