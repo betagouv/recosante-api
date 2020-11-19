@@ -56,6 +56,24 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         state='PENDING',
         meta={
             "progress": 0,
+            "details": "Suppression des anciennes listes"
+        }
+    )
+    list_ids_to_delete = get_lists_ids_to_delete()
+    contacts_api = sib_api_v3_sdk.ContactsApi(sib)
+    for i, list_id in enumerate(list_ids_to_delete, 1):
+        contacts_api.delete_list(list_id)
+        self.update_state(
+            state='PENDING',
+            meta={
+                "progress": 0,
+                "details": f"Suppression des anciennes listes ({i}/{len(list_ids_to_delete)})"
+            }
+        )
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress": 0,
             "details": "Constitution de la liste"
         }
     )
@@ -212,3 +230,17 @@ STOP au [STOP_CODE]
         "email_campaign_id": email_campaign_id,
         "sms_campaign_id": sms_campaign_id
     }
+
+
+def get_lists_ids_to_delete():
+    api_instance = sib_api_v3_sdk.ContactsApi(sib)
+    offset = 10
+    api_response = api_instance.get_lists(limit=10, offset=offset)
+    ids = []
+    while True:
+        ids = ids + [r['id'] for r in api_response.lists]
+        if not api_response.lists:
+            break
+        offset += 10
+        api_response = api_instance.get_lists(limit=10, offset=offset)
+    return ids
