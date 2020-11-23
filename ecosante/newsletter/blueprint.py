@@ -5,7 +5,8 @@ from flask import (
     request,
     redirect,
     url_for,
-    stream_with_context
+    stream_with_context,
+    session
 )
 from flask.wrappers import Response
 from datetime import date, datetime
@@ -185,6 +186,15 @@ def task_status(secret_slug, task_id):
         **(task.info or {"progress": 0, "details": ""})
     }
 
+@bp.route('<secret_slug>/task_status_display/<task_id>')
+@bp.route('/task_status_display/<task_id>')
+@admin_capability_url
+def task_status_display(task_id):
+    return render_template(
+        "task_status_display.html",
+        task_status_url=url_for("newsletter.task_status", task_id=task_id, secret_slug=session.get("secret_slug"))
+    )
+
 @bp.route('<secret_slug>/send')
 @bp.route('/send')
 @admin_capability_url
@@ -194,9 +204,11 @@ def send():
         request.args.get('preferred_reco'),
         request.args.getlist('remove_reco')
     )
-    return render_template(
-        "send.html",
-        task_id=task.id
+    return redirect(
+        url_for(
+            "newsletter.task_status_display",
+            task_id=task.id, secret_slug=session.get("secret_slug")
+        )
     )
 
 @bp.route('<short_id>/avis', methods=['GET', 'POST'])

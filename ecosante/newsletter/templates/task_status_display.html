@@ -5,12 +5,16 @@
 <section class="section">
 <h1>Import dans send in blue</h1>
 <div class="container">
-<div id="progress"></div>
+
+<div id="progress">
+    <progress max="100"></progress>
+    <span id="progress_display"></span>
+</div>
 <div id="progress_details"></div>
 </div>
 </section>
 
-<script type="application/json" id="task_id">{"task_id": "{{ task_id }}" }</script>
+<script type="application/json" id="task_status_url">{"task_status_url": "{{ task_status_url }}" }</script>
 {% rollupjs "newsletter/js/get_task_status.js" %}
 <script type="application/javascript" src="{{ ASSET_URL }}"></script>
 {% endassets %}
