@@ -3,18 +3,19 @@
 
 <h1>Export</h1>
 
-
 <a href="{{url_for("inscription.import_")}}">Importer une liste dans sendinblue</a>
 <br>
 <a href="{{url_for("newsletter.link_export") }}">Obtenir un autre export</a>
 <br>
-<a href="{{url_for("newsletter.send")}}" class="button">Envoyer la newsletter avec ces recommandations</a>
+<a href="{{url_for("newsletter.csv_", **request.args.to_dict(flat=False))}}">Télécharger le csv</a>
+<br>
+<a href="{{url_for("newsletter.send", **request.args.to_dict(flat=False))}}" class="button">Envoyer la newsletter avec ces recommandations</a>
 
 <section class="section">
     <div class="container">
         {% if form_indices.indices %}
             <div class="panel">
-            <form method="POST" action="{{ url_for("newsletter.edit_indices", **request.args)}}">
+            <form method="POST" action="{{ url_for("newsletter.edit_indices", **request.args.to_dict(flat=False))}}">
                 {{ form_indices.hidden_tag() }}
                 {% for form_indice in form_indices.indices.entries %}
                 {{ form_indice.hidden_tag() }}
@@ -28,7 +29,7 @@
             </div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for("newsletter.edit_recommandations")}}?{{ url_encode(request.args) }}">
+        <form method="POST" action="{{ url_for("newsletter.edit_recommandations", **request.args.to_dict(flat=False))}}">
         {{ form_recommandations.hidden_tag() }}
         {% for form_recommandation in form_recommandations.recommandations.entries %}
             <div class="panel">
@@ -41,8 +42,7 @@
                         {% set new_args = request.args.copy() %}
                         {% set reco_value = form_recommandation.__getitem__("id").data %}
                         {% set never_used = new_args.add("remove_reco",  reco_value) %}
-                        {% set qs = url_encode(new_args) %}
-                        <a href="{{ url_for("newsletter.link_export") }}?{{ qs }}" class="button warning">Ne pas utiliser</a>
+                        <a href="{{ url_for("newsletter.link_export", **new_args.to_dict(flat=False)) }}" class="button warning">Ne pas utiliser</a>
                     </div>
             </div>
         {% endfor %}
