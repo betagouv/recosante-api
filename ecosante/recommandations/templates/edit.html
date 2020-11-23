@@ -6,29 +6,9 @@
         <button class="button" type="submit" id="submit">{{ action }}</button>
     </div>
     {{ form.hidden_tag() }}
-    {{ render_field(form.recommandabilite) }}
-    {{ render_field(form.recommandation) }}
-    {{ render_field(form.precisions) }}
-    {{ render_field(form.recommandation_format_SMS) }}
-    {{ render_field(form.qa_mauvaise) }}
-    {{ render_field(form.menage) }}
-    {{ render_field(form.bricolage) }}
-    {{ render_field(form.chauffage_a_bois) }}
-    {{ render_field(form.jardinage) }}
-    {{ render_field(form.balcon_terasse) }}
-    {{ render_field(form.velo_trott_skate) }}
-    {{ render_field(form.transport_en_commun) }}
-    {{ render_field(form.voiture) }}
-    {{ render_field(form.activite_physique) }}
-    {{ render_field(form.allergies) }}
-    {{ render_field(form.enfants) }}
-    {{ render_field(form.personnes_sensibles) }}
-    {{ render_field(form.niveau_difficulte) }}
-    {{ render_field(form.autres_conditions) }}
-    {{ render_field(form.sources) }}
-    {{ render_field(form.categorie) }}
-    {{ render_field(form.objectif) }}
-
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    {{ render_field(field)}}
+    {% endfor %}
     <div class="form__group">
         <button class="button" type="submit" id="submit">{{ action }}</button>
     </div>

@@ -9,7 +9,11 @@ class CustomBoolean(types.TypeDecorator):
     impl = db.Boolean
 
     def process_bind_param(self, value, dialect):
-        return value is not None and (value is True or 'x' in value.lower() or 't' in value.lower())
+        if value is None:
+            return False
+        if type(value) is bool:
+            return value
+        return 'x' in value.lower() or 't' in value.lower()
 
 class Recommandation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,7 +21,9 @@ class Recommandation(db.Model):
     recommandation = db.Column(db.String)
     precisions = db.Column(db.String)
     recommandation_format_SMS = db.Column(db.String)
-    qa_mauvaise = db.Column(CustomBoolean)
+    qa_mauvaise = db.Column(CustomBoolean, nullable=True)
+    qa_moyenne = db.Column(CustomBoolean, nullable=True)
+    qa_bonne = db.Column(CustomBoolean, nullable=True)
     menage = db.Column(CustomBoolean)
     bricolage = db.Column(CustomBoolean)
     chauffage_a_bois = db.Column(CustomBoolean)
@@ -35,8 +41,9 @@ class Recommandation(db.Model):
     sources = db.Column(db.String)
     categorie = db.Column(db.String)
     objectif = db.Column(db.String)
-    automne = db.Column(CustomBoolean)
-    hiver = db.Column(CustomBoolean)
+    automne = db.Column(CustomBoolean, nullable=True)
+    hiver = db.Column(CustomBoolean, nullable=True)
+    ete = db.Column(CustomBoolean, nullable=True)
 
     @property
     def velo(self):
@@ -62,6 +69,42 @@ class Recommandation(db.Model):
     def fumeur(self, value):
         if value:
             self.categorie = (self.categorie or "") + " tabagisme"
+
+    @property
+    def qa(self):
+        if self.qa_bonne:
+            return "bonne"
+        elif self.qa_moyenne:
+            return "moyenne"
+        elif self.qa_mauvaise:
+            return "mauvaise"
+        return ""
+
+    @qa.setter
+    def qa(self, value):
+        if not value:
+            return
+        for v in ['bonne', 'moyenne', 'mauvaise']:
+            setattr(self, f'qa_{v}', v == value)
+
+    @property
+    def saison(self):
+        if self.automne:
+            return "automne"
+        if self.hiver:
+            return "hiver"
+        if self.ete:
+            return "été"
+        return ""
+
+    @saison.setter
+    def saison(self, value):
+        if not value:
+            return
+        for v in ['automne', 'hiver']:
+            setattr(self, v, v == value)
+        setattr(self, "ete", value == "été")
+
 
     def is_relevant(self, inscription, qai):
         for critere in ["menage", "bricolage", "jardinage", "velo",

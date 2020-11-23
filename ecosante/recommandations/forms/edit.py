@@ -1,5 +1,6 @@
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField
-from wtforms import TextAreaField, HiddenField
+from wtforms import TextAreaField, HiddenField, SelectField
+
 
 class FormAdd(BaseForm):
     recommandabilite = RadioField(
@@ -13,7 +14,22 @@ class FormAdd(BaseForm):
     recommandation = TextAreaField('Recommandation')
     precisions = TextAreaField('Précisions')
     recommandation_format_SMS = TextAreaField('Recommandation format SMS')
-    qa_mauvaise = OuiNonField("Qualité de l'air mauvaise")
+    qa = SelectField("Montrer en cas de qualité de l’air",
+        choices=[
+            ('', ''),
+            ('bonne', 'Bonne'),
+            ('moyenne', 'Moyenne'),
+            ('mauvaise', 'Mauvaise'),
+        ]
+    )
+    saison = SelectField("Montrer en",
+        choices=[
+            ('', ''),
+            ('Été', 'été'),
+            ('Automne', 'automne'),
+            ('Hiver', 'hiver')
+        ]
+    )
     menage = OuiNonField("Ménage")
     bricolage = OuiNonField("Bricolage")
     chauffage_a_bois = OuiNonField("Chauffage à bois")
@@ -38,6 +54,7 @@ class FormAdd(BaseForm):
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
     objectif = TextAreaField("Objectif")
+
 
 class FormEdit(FormAdd):
     id = HiddenField("id")
