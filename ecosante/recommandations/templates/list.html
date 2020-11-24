@@ -8,7 +8,7 @@
 <div class="section">
     <div class="container">
         <a href="{{ url_for("recommandations.add")}}">Ajouter une recommandation</a>
-        <form>
+        <form class="search">
         {{ render_field(form.search) }}
         {{ render_field(form.categories)}}
         <input type="submit" value="Rechercher">

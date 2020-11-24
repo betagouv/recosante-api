@@ -22,3 +22,23 @@ form {
 abbr {
     text-decoration: none;
 }
+
+.search {
+    label[for="categories"] {
+        margin-bottom: 1em;
+    }
+    .label-inline {
+        font-size: 2em;
+    }
+    input[type="checkbox"] {
+        display: none;
+    }
+
+    :not(:checked) + label {
+        opacity: 0.33;
+    }
+
+    :checked + label {
+        opacity: 1;
+    }
+}
