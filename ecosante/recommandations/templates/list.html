@@ -8,8 +8,7 @@
 <div class="section">
     <div class="container">
         <a href="{{ url_for("recommandations.add")}}">Ajouter une recommandation</a>
-        <form method="post">
-        {{ form.hidden_tag() }}
+        <form>
         {{ render_field(form.search) }}
         {{ render_field(form.categories)}}
         <input type="submit" value="Rechercher">
@@ -26,9 +25,9 @@
                 <abbr title="{{ f[2] }}">{{ f[1] }}</span>
                 {% endfor %}
                 </p>
-                <a href="{{ url_for("recommandations.edit", id=recommandation.id) }}">Éditer</a>
-                <a href="{{ url_for("recommandations.remove", id=recommandation.id) }}">Supprimer</a>
-                <a href="{{ url_for("recommandations.details", id=recommandation.id) }}">Avis</a>
+                <a href="{{ url_for("recommandations.edit", id=recommandation.id, **request.args.to_dict(flat=False)) }}">Éditer</a>
+                <a href="{{ url_for("recommandations.remove", id=recommandation.id, **request.args.to_dict(flat=False)) }}">Supprimer</a>
+                <a href="{{ url_for("recommandations.details", id=recommandation.id, **request.args.to_dict(flat=False)) }}">Avis</a>
             </li>
         {% endfor %}
 

@@ -1,3 +1,4 @@
+from flask.globals import current_app
 from ecosante.pages.blueprint import admin
 from flask import (
     render_template,
@@ -49,7 +50,7 @@ def edit(id):
         form.populate_obj(recommandation)
         db.session.add(recommandation)
         db.session.commit()
-        return redirect(url_for("recommandations.list"))
+        return redirect(url_for("recommandations.list", **request.args.to_dict(flat=False)))
     return render_template(
         "edit.html",
         form=form,
@@ -76,23 +77,23 @@ def remove(id):
 @bp.route('/', methods=["GET", "POST"])
 @admin_capability_url
 def list():
-    form = FormSearch()
+    form = FormSearch(request.args)
     query = Recommandation.query
     filters = []
-    if form.validate_on_submit():
-        if form.search.data:
-            search = f"%{form.search.data}%"
-            query = query.filter(
-                or_(
-                        Recommandation.recommandation.ilike(search),
-                        Recommandation.precisions.ilike(search),
-                        Recommandation.recommandation_format_SMS.ilike(search)
-                )
+    current_app.logger.info(f"liste: {form.search.data}")
+    if form.search.data:
+        search = f"%{form.search.data}%"
+        query = query.filter(
+            or_(
+                    Recommandation.recommandation.ilike(search),
+                    Recommandation.precisions.ilike(search),
+                    Recommandation.recommandation_format_SMS.ilike(search)
             )
-        for categorie in form.categories.data:
-            query = query.filter(
-                getattr(Recommandation, categorie).is_(True)
-            )
+        )
+    for categorie in form.categories.data:
+        query = query.filter(
+            getattr(Recommandation, categorie).is_(True)
+        )
     return render_template(
         "list.html",
         recommandations=query.order_by(Recommandation.id).all(),
