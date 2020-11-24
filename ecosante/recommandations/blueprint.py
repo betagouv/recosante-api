@@ -41,7 +41,7 @@ def add():
 @bp.route('edit/<id>', methods=['GET', 'POST'])
 @admin_capability_url
 def edit(id):
-    recommandation = Recommandation.query.get(id)
+    recommandation = db.session.query(Recommandation).get(id)
     if not recommandation:
         abort(404)
     form = FormEdit(obj=recommandation)
@@ -95,7 +95,7 @@ def list():
             )
     return render_template(
         "list.html",
-        recommandations=query.all(),
+        recommandations=query.order_by(Recommandation.id).all(),
         form=form,
     )
 
