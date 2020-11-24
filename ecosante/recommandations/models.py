@@ -15,6 +15,24 @@ class CustomBoolean(types.TypeDecorator):
             return value
         return 'x' in value.lower() or 't' in value.lower()
 
+RECOMMANDATION_FILTERS = [
+    ("qa_mauvaise", "☁", "Qualité de l’air mauvaise"),
+    ("menage", "🧹", "Ménage"),
+    ("bricolage", "🔨", "Bricolage"),
+    ("chauffage_a_bois", "🔥", "Chauffage à bois"),
+    ("jardinage", "🌳", "Jardinage"),
+    ("velo_trott_skate", "🚴", "Vélo, trotinette, skateboard"),
+    ("transport_en_commun", "🚇", "Transport en commun"),
+    ("voiture", "🚗", "Voiture"),
+    ("activite_physique", "‍🏋", "Activité physique"),
+    ("allergies", "🤧", "Allergies aux pollens"),
+    ("enfants", "🧒", "Enfants"),
+    ("personnes_sensibles", "🤓", "Personnes sensibles"),
+    ("automne", "🍂", "Automne"),
+    ("hiver", "☃", "Hiver"),
+    ("ete", "🌞", "Été"),
+]
+
 class Recommandation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recommandabilite = db.Column(db.String)
@@ -125,6 +143,12 @@ class Recommandation(db.Model):
 
     def format(self, inscription):
         return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS
+
+    @property
+    def filtres(self):
+        for attr, emoji, description in RECOMMANDATION_FILTERS:
+            if getattr(self, attr):
+                yield (attr, emoji, description)
 
     @classmethod
     def shuffled(cls, user_seed=None, preferred_reco=None, remove_reco=[]):

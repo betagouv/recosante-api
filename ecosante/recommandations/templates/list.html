@@ -22,21 +22,9 @@
                     <p> {{ recommandation.precisions}} </p>
                 </details>
                 <p>
-                {% if recommandation.qa_mauvaise %}☁{% endif %}
-                {% if recommandation.menage %}🧹{% endif %}
-                {% if recommandation.bricolage %}🔨{% endif %}
-                {% if recommandation.chauffage_a_bois %}🔥 {% endif %}
-                {% if recommandation.jardinage %}🌳{% endif %}
-                {% if recommandation.velo_trott_skate %}🚴{% endif %}
-                {% if recommandation.transport_en_commun %}🚇{% endif %}
-                {% if recommandation.voiture %}🚗{% endif %}
-                {% if recommandation.activite_physique %}🏋️‍♂️{% endif %}
-                {% if recommandation.allergies %}🤧{% endif %}
-                {% if recommandation.enfants %}🧒{% endif %}
-                {% if recommandation.personnes_sensibles %}🤓{% endif %}
-                {% if recommandation.automne %}🍂{% endif %}
-                {% if recommandation.hiver %}☃{% endif %}
-                {% if recommandation.ete %}🌞{% endif %}
+                {% for f in recommandation.filtres %}
+                <abbr title="{{ f[2] }}">{{ f[1] }}</span>
+                {% endfor %}
                 </p>
                 <a href="{{ url_for("recommandations.edit", id=recommandation.id) }}">Éditer</a>
                 <a href="{{ url_for("recommandations.remove", id=recommandation.id) }}">Supprimer</a>
