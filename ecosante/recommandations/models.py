@@ -16,7 +16,9 @@ class CustomBoolean(types.TypeDecorator):
         return 'x' in value.lower() or 't' in value.lower()
 
 RECOMMANDATION_FILTERS = [
-    ("qa_mauvaise", "☁", "Qualité de l’air mauvaise"),
+    ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
+    ("qa_moyenne", "🤏", "Qualité de l’air moyenne"),
+    ("qa_bonne", "👍", "Qualité de l’air bonne"),
     ("menage", "🧹", "Ménage"),
     ("bricolage", "🔨", "Bricolage"),
     ("chauffage_a_bois", "🔥", "Chauffage à bois"),
@@ -31,6 +33,9 @@ RECOMMANDATION_FILTERS = [
     ("automne", "🍂", "Automne"),
     ("hiver", "☃", "Hiver"),
     ("ete", "🌞", "Été"),
+    ("particules_fines", "🌫️", "Pollution aux particules fines"),
+    ("ozone", "🧪", "Pollution à l’ozone")
+
 ]
 
 class Recommandation(db.Model):
@@ -62,6 +67,8 @@ class Recommandation(db.Model):
     automne = db.Column(CustomBoolean, nullable=True)
     hiver = db.Column(CustomBoolean, nullable=True)
     ete = db.Column(CustomBoolean, nullable=True)
+    ozone = db.Column(CustomBoolean, nullable=True)
+    particules_fines = db.Column(CustomBoolean, nullable=True)
 
     @property
     def velo(self):

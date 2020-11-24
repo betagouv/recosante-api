@@ -14,14 +14,6 @@ class FormAdd(BaseForm):
     recommandation = TextAreaField('Recommandation')
     precisions = TextAreaField('Précisions')
     recommandation_format_SMS = TextAreaField('Recommandation format SMS')
-    qa = SelectField("Montrer en cas de qualité de l’air",
-        choices=[
-            ('', ''),
-            ('bonne', 'Bonne'),
-            ('moyenne', 'Moyenne'),
-            ('mauvaise', 'Mauvaise'),
-        ]
-    )
     saison = SelectField("Montrer en",
         choices=[
             ('', ''),
@@ -30,6 +22,11 @@ class FormAdd(BaseForm):
             ('hiver', 'Hiver')
         ]
     )
+    qa_bonne = OuiNonField("Montrer en cas de qualité de l’air bonne ?")
+    qa_moyenne = OuiNonField("Montrer en cas de qualité de l’air moyenne ?")
+    qa_mauvaise = OuiNonField("Montrer en cas de qualité de l’air mauvaise ?")
+    ozone = OuiNonField("Montrer en cas de pic d’ozone ?")
+    particules_fines = OuiNonField("Montrer en cas de pollution aux particules fines ?")
     menage = OuiNonField("Ménage")
     bricolage = OuiNonField("Bricolage")
     chauffage_a_bois = OuiNonField("Chauffage à bois")
