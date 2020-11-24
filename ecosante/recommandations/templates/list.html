@@ -36,6 +36,7 @@
                 {% if recommandation.personnes_sensibles %}🤓{% endif %}
                 {% if recommandation.automne %}🍂{% endif %}
                 {% if recommandation.hiver %}☃{% endif %}
+                {% if recommandation.ete %}🌞{% endif %}
                 </p>
                 <a href="{{ url_for("recommandations.edit", id=recommandation.id) }}">Éditer</a>
                 <a href="{{ url_for("recommandations.remove", id=recommandation.id) }}">Supprimer</a>

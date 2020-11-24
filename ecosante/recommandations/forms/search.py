@@ -20,6 +20,7 @@ class FormSearch(BaseForm):
             ("enfants", "🧒"),
             ("personnes_sensibles", "🤓"),
             ("automne", "🍂"),
-            ("hiver", "☃")
+            ("hiver", "☃"),
+            ("ete", "🌞")
         ]
     )

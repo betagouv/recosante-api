@@ -25,9 +25,9 @@ class FormAdd(BaseForm):
     saison = SelectField("Montrer en",
         choices=[
             ('', ''),
-            ('Été', 'été'),
-            ('Automne', 'automne'),
-            ('Hiver', 'hiver')
+            ('ete', 'Été'),
+            ('automne', 'Automne'),
+            ('hiver', 'Hiver')
         ]
     )
     menage = OuiNonField("Ménage")

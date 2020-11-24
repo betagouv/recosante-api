@@ -101,9 +101,8 @@ class Recommandation(db.Model):
     def saison(self, value):
         if not value:
             return
-        for v in ['automne', 'hiver']:
+        for v in ['automne', 'hiver', 'ete']:
             setattr(self, v, v == value)
-        setattr(self, "ete", value == "été")
 
 
     def is_relevant(self, inscription, qai):
