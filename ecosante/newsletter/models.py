@@ -10,7 +10,7 @@ from ecosante.utils.funcs import (
     generate_line
 )
 from ecosante.extensions import db
-from indice_pollution import bulk_forecast, today, forecast as get_forecast
+from indice_pollution import bulk, today, forecast as get_forecast
 
 @dataclass
 class Newsletter:
@@ -129,9 +129,13 @@ class Newsletter:
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[]):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         insee_region = {i.ville_insee: i.region_name for i in Inscription.query.distinct(Inscription.ville_insee)}
-        insee_forecast = bulk_forecast(insee_region)
+        insee_forecast = bulk(insee_region)
         for inscription in Inscription.query.all():
-            newsletter = cls(inscription, recommandations=recommandations, forecast=insee_forecast[inscription.ville_insee])
+            newsletter = cls(
+                inscription,
+                recommandations=recommandations,
+                forecast=insee_forecast[inscription.ville_insee]["forecast"]
+            )
             if inscription.frequence == "pollution" and newsletter.qai and newsletter.qai < 8:
                 continue
             yield newsletter
@@ -199,5 +203,6 @@ class NewsletterDB(db.Model, Newsletter):
             'PRECISIONS': self.recommandation.precisions,
             'VILLE': self.inscription.ville_name,
             'BACKGROUND_COLOR': self.background,
-            'SHORT_ID': self.short_id
+            'SHORT_ID': self.short_id,
+            'SMS': self.inscription.telephone
         }
