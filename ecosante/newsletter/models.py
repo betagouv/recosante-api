@@ -205,6 +205,6 @@ class NewsletterDB(db.Model, Newsletter):
             'BACKGROUND_COLOR': self.background,
             'SHORT_ID': self.short_id,
         }
-        if self.inscription.telephone:
+        if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone
         return to_return
