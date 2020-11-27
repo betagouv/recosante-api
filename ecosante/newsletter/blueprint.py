@@ -126,7 +126,7 @@ def link_export():
     for inscription in [n.inscription for n in newsletters if n.qai is None]:
         form_field = form_indices.indices.append_entry({"insee": inscription.ville_insee})
         form_field.indice.label.text = f'Indice pour la ville de {inscription.ville_name}'
-        form_field.indice.description = f' Région: <a target="_blank" href="{region(region_name=inscription.region_name).website}">{inscription.region_name}</a>'
+        form_field.indice.description = f' Région: <a target="_blank" href="{region(region_name=inscription.region_name).Forecast.website}">{inscription.region_name}</a>'
     return render_template(
         'link_export.html',
         form_recommandations=form_recommandations,
