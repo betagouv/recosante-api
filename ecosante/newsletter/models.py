@@ -195,7 +195,7 @@ class NewsletterDB(db.Model, Newsletter):
         return get_forecast(self.inscription.ville_insee, self.date, True)
 
     def attributes(self):
-        return {
+        to_return = {
             'FORMAT': self.inscription.diffusion,
             'QUALITE_AIR': self.qualif,
             'LIEN_AASQA': self.forecast['metadata']['region']['website'],
@@ -204,5 +204,7 @@ class NewsletterDB(db.Model, Newsletter):
             'VILLE': self.inscription.ville_name,
             'BACKGROUND_COLOR': self.background,
             'SHORT_ID': self.short_id,
-            'SMS': self.inscription.telephone
         }
+        if self.inscription.telephone:
+            to_return['SMS'] = self.inscription.telephone
+        return to_return
