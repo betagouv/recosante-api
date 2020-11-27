@@ -149,13 +149,17 @@ def import_(task, newsletters, overhead=0):
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
-        contact_api.update_contact(
-            nl.inscription.mail,
-            sib_api_v3_sdk.UpdateContact(
-                attributes=nl.attributes(),
-                list_ids=[lists[nl.inscription.diffusion]]
+        try:
+            contact_api.update_contact(
+                nl.inscription.mail,
+                sib_api_v3_sdk.UpdateContact(
+                    attributes=nl.attributes(),
+                    list_ids=[lists[nl.inscription.diffusion]]
+                )
             )
-        )
+        except ApiException as e:
+            current_app.logger.error(f"Error updating {nl.inscription.mail}")
+            current_app.logger.error(e)
         current_app.logger.info(f"Mise à jour de {nl.inscription.mail}")
         nb_requests += 1
         task.update_state(
