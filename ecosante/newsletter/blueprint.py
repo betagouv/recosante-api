@@ -16,7 +16,7 @@ from time import time
 from uuid import uuid4
 
 from werkzeug.urls import url_encode
-from indice_pollution.regions.solvers import region
+from indice_pollution.regions.solvers import region as get_region
 from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
 from ecosante.utils.decorators import admin_capability_url, task_status_capability_url
@@ -123,10 +123,16 @@ def link_export():
         form_recommandations.recommandations.append_entry(recommandation)
 
     form_indices = FormEditIndices()
+    insees = set()
     for inscription in [n.inscription for n in newsletters if n.qai is None]:
+        region = get_region(region_name=inscription.region_name)
+        insee = inscription.ville_insee #region.get_close_insee(inscription.ville_insee)
+        if insee in insees:
+            continue
+        insees.add(insee)
         form_field = form_indices.indices.append_entry({"insee": inscription.ville_insee})
         form_field.indice.label.text = f'Indice pour la ville de {inscription.ville_name}'
-        form_field.indice.description = f' Région: <a target="_blank" href="{region(region_name=inscription.region_name).Forecast.website}">{inscription.region_name}</a>'
+        form_field.indice.description = f' Région: <a target="_blank" href="{region.Forecast.website}">{inscription.region_name}</a>'
     return render_template(
         'link_export.html',
         form_recommandations=form_recommandations,
