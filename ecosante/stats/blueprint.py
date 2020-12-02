@@ -1,11 +1,17 @@
-from flask import render_template
-from ecosante.inscription.models import Inscription, db
+from datetime import datetime
+from flask import current_app, render_template
+from ecosante.extensions import db, sib
+from ecosante.inscription.models import Inscription
 from ecosante.avis.models import Avis
 from ecosante.avis.forms import Form
 from ecosante.utils.blueprint import Blueprint
 from sqlalchemy import func
 from calendar import month_name, different_locale
 import json
+from dateutil.parser import parse, ParserError
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
+from datetime import datetime, timedelta
 
 def get_month_name(month_no, locale):
     with different_locale(locale):
@@ -37,6 +43,35 @@ def stats():
     nb_inscriptions = Inscription.query.count()
     nb_allergies = Inscription.query.filter_by(allergie_pollen=True).count()
     nb_pathologie_respiratoire = Inscription.query.filter_by(pathologie_respiratoire=True).count()
+
+    ouvertures = []
+    api_instance = sib_api_v3_sdk.EmailCampaignsApi(sib)
+    try:
+        api_response = api_instance.get_email_campaigns(
+            end_date=datetime.now(),
+            start_date=(datetime.now() - timedelta(weeks=4)),
+            status='sent'
+        )
+        print(api_response)
+        for campaign in api_response.campaigns:
+            try:
+                date_ = parse(campaign['name'])
+            except ParserError as e:
+                current_app.logger.error(e)
+                continue
+            stats = campaign['statistics']['globalStats']
+            ouvertures.append(
+                (
+                    date_,
+                    (stats['uniqueViews']/stats['delivered'])*100
+                )
+            )
+    except ApiException as e:
+        current_app.logger.error(e)
+    ouvertures.sort(key=lambda v: v[0])
+    ouvertures = [(datetime.strftime(v[0], "%d/%m/%Y"), v[1]) for v in ouvertures]
+    ouverture_veille = ouvertures[-1] if ouvertures else None
+
     return render_template(
         'stats.html', 
         actifs=Inscription.query.count(),
@@ -49,11 +84,13 @@ def stats():
             'Tous les jours': Inscription.query.filter_by(frequence='quotidien').count(),
             "Lorsque la qualité de l'air est mauvaise": Inscription.query.filter_by(frequence='pollution').count()
         }),
+        ouvertures=json.dumps(dict(ouvertures)),
+        ouverture_veille=ouverture_veille,
         nb_reponses=nb_reponses,
         nb_satisfaits=nb_satisfaits,
         nb_inscriptions=nb_inscriptions,
         nb_allergies=nb_allergies,
         nb_pathologie_respiratoire=nb_pathologie_respiratoire,
-        decouverte=json.dumps(decouverte)
+        decouverte=json.dumps(decouverte),
     )
 

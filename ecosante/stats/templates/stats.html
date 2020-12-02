@@ -41,6 +41,13 @@
             <h3>{{ "%.2f"|format((nb_satisfaits/nb_reponses)*100) }}% des utilisateurs ayant répondu au questionnaire de satisfaction recommanderaient la newsletter Ecosanté à leur proche.</h3>
             <canvas id="decouverte_chart"></canvas>
         </div>
+        {% if ouvertures %}
+        <div class="panel">
+            <h1>Ouverture des mails</h1>
+            <h2>{{ "%.2f"|format(ouverture_veille[1]) }}% taux d’ouverture des mails le {{ ouverture_veille[0] }} </h2>
+            <canvas id="ouvertures_chart"></canvas>
+        </div>
+        {% endif %}
     </div>
 </section>
 {% rollupjs "stats/js/stats.js" %}
@@ -50,4 +57,5 @@
 <script id="frequence" type="application/json">{{ frequence|safe}}</script>
 <script id="subscriptions" type="application/json">{{ subscriptions|safe}}</script>
 <script id="decouverte" type="application/json">{{ decouverte|safe}}</script>
+<script id="ouvertures" type="application/json">{{ ouvertures|safe}}</script>
 {% endblock content %}

@@ -73,4 +73,10 @@ document.addEventListener('DOMContentLoaded', e => {
         "Avis sur les recommandations reçues dans les bulletins d'information Ecosanté (sur la base des réponses au questionnaire de satisfaction)",
         "horizontalBar"
     )
+    new_bar_chart(
+        'ouvertures_chart',
+        'ouvertures',
+        'Taux d’ouvertures des mails',
+        'line'
+    )
 })
