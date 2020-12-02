@@ -52,7 +52,6 @@ def stats():
             start_date=(datetime.now() - timedelta(weeks=4)),
             status='sent'
         )
-        print(api_response)
         for campaign in api_response.campaigns:
             try:
                 date_ = parse(campaign['name'])
