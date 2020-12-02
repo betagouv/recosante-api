@@ -17,7 +17,6 @@ def get_month_name(month_no, locale):
     with different_locale(locale):
         return month_name[month_no]
 
-
 bp = Blueprint("stats", __name__)
 
 @bp.route('/')
