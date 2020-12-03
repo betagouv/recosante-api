@@ -129,7 +129,7 @@ class Newsletter:
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[]):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         insee_region = {i.ville_insee: i.region_name for i in Inscription.query.distinct(Inscription.ville_insee)}
-        insee_forecast = bulk(insee_region)
+        insee_forecast = bulk(insee_region, fetch_episodes=True)
         for inscription in Inscription.query.all():
             newsletter = cls(
                 inscription,
