@@ -16,7 +16,7 @@ const makeChartData = (data_id, style, label) => {
     }
 }
 
-const new_chart = (elem_id, data_id, title, type, style, label) => {
+const new_chart = (elem_id, data_id, title, type, style, label, other_options) => {
     const ChartData = makeChartData(data_id, style, label)
     var ctx_format = document.getElementById(elem_id).getContext('2d');
     window.charts.push(
@@ -24,13 +24,16 @@ const new_chart = (elem_id, data_id, title, type, style, label) => {
             type: type,
             data: ChartData,
             options: {
-                responsive: true,
-                title: {
-                    display: true,
-                    text: title,
-                    verticalAlign: "center",
-                    dockInsidePlotArea: true
-                }
+                ...{
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: title,
+                        verticalAlign: "center",
+                        dockInsidePlotArea: true
+                    }
+                },
+                ...other_options
             }
         })
     )
@@ -44,7 +47,7 @@ const new_doughnut = (elem_id, data_id, title) => {
     new_chart(elem_id, data_id, title, 'doughnut', {backgroundColor: backgroundColor}, 'data')
 }
 
-const new_bar_chart = (elem_id, data_id, title, type_) => {
+const new_bar_chart = (elem_id, data_id, title, type_, other_options) => {
     if (type_ === undefined) {
         type_ = 'bar'
     }
@@ -58,7 +61,8 @@ const new_bar_chart = (elem_id, data_id, title, type_) => {
             borderColor: '#ffa725',
             borderWidth: 1
         },
-        title
+        title,
+        other_options
     );
 }
 
@@ -77,6 +81,16 @@ document.addEventListener('DOMContentLoaded', e => {
         'ouvertures_chart',
         'ouvertures',
         'Taux d’ouvertures des mails',
-        'line'
+        'line',
+        {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }]
+            }
+        }
     )
 })
