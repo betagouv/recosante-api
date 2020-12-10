@@ -90,6 +90,8 @@ def list():
                     Recommandation.recommandation_format_SMS.ilike(search)
             )
         )
+    if form.recommandabilite.data:
+        query = query.filter(Recommandation.recommandabilite==form.recommandabilite.data)
     for categorie in form.categories.data:
         query = query.filter(
             getattr(Recommandation, categorie).is_(True)
