@@ -30,7 +30,7 @@ def configure_celery(flask_app):
     celery.Task = ContextTask
 
 
-def create_app():
+def create_app(testing=False):
     app = Flask(
         __name__,
         static_folder='assets',
@@ -43,6 +43,7 @@ def create_app():
     app.config['ASSETS_DEBUG'] = True
     app.config['CELERY_RESULT_BACKEND'] = 'db+' + app.config['SQLALCHEMY_DATABASE_URI']
     app.config['CELERY_BROKER_URL'] = 'sqla+' + app.config['SQLALCHEMY_DATABASE_URI']
+    app.config['TESTING'] = testing
 
     db.init_app(app)
     migrate.init_app(app, db)

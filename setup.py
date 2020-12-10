@@ -41,7 +41,12 @@ setup(
     install_requires=DEPENDENCIES,
     extras_require={"dev": ["honcho", "watchdog"]},
     setup_requires=['pytest-runner'],
-    tests_requires=['pytest'],
+    tests_require=[
+        'pytest',
+        'pytest-flask-sqlalchemy',
+        'pytest-postgresql',
+    ],
+    test_suite='pytest',
     cmdclass={
           'install': CustomPsycopg2Install,
     },

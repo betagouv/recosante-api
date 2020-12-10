@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_assets import Environment
 import sib_api_v3_sdk
+import sqlalchemy
 
 db = SQLAlchemy()
 migrate = Migrate()

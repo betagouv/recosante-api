@@ -129,18 +129,24 @@ class Recommandation(db.Model):
         for v in ['automne', 'hiver', 'ete']:
             setattr(self, v, v == value)
 
-
-    def is_relevant(self, inscription, qai):
+    def is_relevant(self, inscription, qa):
         for critere in ["menage", "bricolage", "jardinage", "velo",
                         "transport_en_commun", "voiture", "sport",
                         "allergie_pollen", "enfants", "fumeur"]:
             if not getattr(inscription, critere) and getattr(self, critere):
                 return False
-        #Quand la qualité de l'air est mauvaise
-        if qai and (qai < 8) and self.qa_mauvaise:
-            return False
-        #Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
-        #Pour déterminer la saison
+        if qa:
+            # Quand la qualité de l'air est bonne
+            if (not (qa <= 4)) and self.qa_bonne:
+                return False
+            # Quand la qualité de l'air est moyenne
+            elif not(4 < qa <= 7) and self.qa_moyenne:
+                return False
+            # Quand la qualité de l'air est mauvaise
+            elif not(7 < qa) and self.qa_mauvaise:
+                return False
+        # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
+        # Pour déterminer la saison
         season = (date.today().month%12 +3)//3
         if self.automne and season != 3:
             return False
