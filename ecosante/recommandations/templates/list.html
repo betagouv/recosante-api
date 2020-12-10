@@ -12,7 +12,10 @@
         {{ render_field(form.search) }}
         {{ render_field(form.categories)}}
         {{ render_field(form.recommandabilite)}}
-        <input type="submit" value="Rechercher">
+        <div class="input__group">
+            <input type="submit" value="Rechercher">
+            <a href="{{ url_for("recommandations.csv", **request.args.to_dict(flat=False)) }}" class="button">Export CSV</a>
+        </div>
         </form>
         <ul>
         {% for recommandation in recommandations %}

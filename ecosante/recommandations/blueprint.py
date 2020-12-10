@@ -1,4 +1,5 @@
 from flask.globals import current_app
+from flask.helpers import make_response
 from ecosante.pages.blueprint import admin
 from flask import (
     render_template,
@@ -6,13 +7,18 @@ from flask import (
     request,
     url_for,
     redirect,
-    flash
+    flash,
+    stream_with_context
 )
+from flask.wrappers import Response
+from datetime import datetime
+from itertools import chain
 from .models import Recommandation, db
 from ecosante.newsletter.models import NewsletterDB
 from .forms import FormAdd, FormEdit, FormSearch
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
+from ecosante.utils.funcs import generate_line
 from sqlalchemy import or_
 
 bp = Blueprint(
@@ -73,14 +79,9 @@ def remove(id):
         recommandation=recommandation
     )
 
-@bp.route('<secret_slug>/', methods=["GET", "POST"])
-@bp.route('/', methods=["GET", "POST"])
-@admin_capability_url
-def list():
-    form = FormSearch(request.args)
+
+def make_query(form):
     query = Recommandation.query
-    filters = []
-    current_app.logger.info(f"liste: {form.search.data}")
     if form.search.data:
         search = f"%{form.search.data}%"
         query = query.filter(
@@ -96,10 +97,41 @@ def list():
         query = query.filter(
             getattr(Recommandation, categorie).is_(True)
         )
+    return query.order_by(Recommandation.id)
+
+@bp.route('<secret_slug>/', methods=["GET", "POST"])
+@bp.route('/', methods=["GET", "POST"])
+@admin_capability_url
+def list_():
+    form = FormSearch(request.args)
+    query = make_query(form)
     return render_template(
         "list.html",
-        recommandations=query.order_by(Recommandation.id).all(),
+        recommandations=query.all(),
         form=form,
+    )
+
+@bp.route('<secret_slug>/csv', methods=["GET", "POST"])
+@bp.route('/csv', methods=["GET", "POST"])
+@admin_capability_url
+def csv():
+    form = FormSearch(request.args)
+    query = make_query(form)
+
+    return Response(
+        stream_with_context(
+            chain(
+                generate_line(Recommandation().to_dict().keys()),
+                map(
+                    lambda line: generate_line(line.to_dict().values()),
+                    query.all()
+                )
+            )
+        ),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=recommandations-export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
+        }
     )
 
 @bp.route('/<secret_slug>/<id>/details')

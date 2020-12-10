@@ -1,3 +1,4 @@
+from typing import SupportsRound
 from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types
@@ -200,3 +201,38 @@ class Recommandation(db.Model):
     @classmethod
     def get_one(cls, inscription, qai):
         return cls.get_revelant(cls.shuffled(), inscription, qai)
+
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "recommandabilite": self.recommandabilite,
+            "recommandation": self.recommandation,
+            "precisions": self.precisions,
+            "recommandation_format_SMS": self.recommandation_format_SMS,
+            "qa_mauvaise": self.qa_mauvaise,
+            "qa_moyenne": self.qa_moyenne,
+            "qa_bonne": self.qa_bonne,
+            "menage": self.menage,
+            "bricolage": self.bricolage,
+            "chauffage_a_bois": self.chauffage_a_bois,
+            "jardinage": self.jardinage,
+            "balcon_terasse": self.balcon_terasse,
+            "velo_trott_skate": self.velo_trott_skate,
+            "transport_en_commun": self.transport_en_commun,
+            "voiture": self.voiture,
+            "activite_physique": self.activite_physique,
+            "allergies": self.allergies,
+            "enfants": self.enfants,
+            "personnes_sensibles": self.personnes_sensibles,
+            "niveau_difficulte": self.niveau_difficulte,
+            "autres_conditions": self.autres_conditions,
+            "sources": self.sources,
+            "categorie": self.categorie,
+            "objectif": self.objectif,
+            "automne": self.automne,
+            "hiver": self.hiver,
+            "ete": self.ete,
+            "ozone": self.ozone,
+            "particules_fines": self.particules_fines
+        }
