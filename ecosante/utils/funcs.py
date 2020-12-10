@@ -2,6 +2,8 @@ import csv
 from io import StringIO
 
 def generate_line(line):
+    if not type(line) is list:
+        line = list(line)
     stringio = StringIO()
     writer = csv.writer(stringio)
     writer.writerow(line)
