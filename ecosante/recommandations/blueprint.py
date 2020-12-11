@@ -37,7 +37,7 @@ def add():
         db.session.add(recommandation)
         db.session.commit()
         flash("Recommandation ajoutée")
-        return redirect(url_for("recommandations.list"))
+        return redirect(url_for("recommandations.list_"))
     return render_template(
         "edit.html",
         form=form,
@@ -56,7 +56,7 @@ def edit(id):
         form.populate_obj(recommandation)
         db.session.add(recommandation)
         db.session.commit()
-        return redirect(url_for("recommandations.list", **request.args.to_dict(flat=False)))
+        return redirect(url_for("recommandations.list_", **request.args.to_dict(flat=False)))
     return render_template(
         "edit.html",
         form=form,
@@ -72,7 +72,7 @@ def remove(id):
         db.session.delete(recommandation)
         db.session.commit()
         flash("Recommandation supprimée")
-        return redirect(url_for("recommandations.list"))
+        return redirect(url_for("recommandations.list_"))
     return render_template(
         "remove.html",
         id=id,
