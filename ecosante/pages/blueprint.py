@@ -12,6 +12,10 @@ bp = Blueprint("pages", __name__, url_prefix='/')
 def index():
     return render_template("index.html")
 
+@bp.route('/changement-indice-atmo')
+def changement_atmo():
+    return render_template("changement-atmo.html")
+
 @bp.route('/donnees-personnelles')
 def donnees_personnelles():
     return render_template("donnees-personnelles.html")

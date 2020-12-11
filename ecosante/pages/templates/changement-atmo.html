@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% scss "pages/css/changement-atmo.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
+
+
+    <div class="hero" role="banner">
+        <div class="hero__container">
+            <h1>Évolution de l’indice de qualité de l’air :qu’est-ce qui change ?</h1>
+            <p>Pour vous informer de la qualité de l’air autour de chez vous, nous utilisons les données issues de l’indice national de qualité de l’air, également appelé indice ATMO. À compter du 1er janvier 2021, cet indice évolue. Nous vous expliquons pourquoi et comment !</p>
+        </div>
+    </div>
+    <main role="main">
+        <section class="section section-color">
+            <div class="container">
+                <h2>L’indice ATMO, qu’est-ce que c’est ?</h2>
+                <p>Diffusé par les associations agréées de surveillance de la qualité de l’air (AASQA), l’indice ATMO est un indicateur journalier de la qualité de l’air calculé pour chaque région à partir des concentrations dans l’air de polluants réglementés : le dioxyde de soufre (SO2), dioxyde d’azote (NO2), ozone (O3) et les particules fines (PM10 et PM2,5 dès 2021).</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+
+                <div class="row">
+                    <div>
+                        <h3>Pourquoi l’indice change ?</h3>
+                        <ul>
+                            <li>L’indice ATMO n’a pas évolué depuis sa création en 1994. </li>
+                            <li>Les évolutions technologiques permettent aujourd’hui de fournir une information plus complète et précise en termes d’espace et de temps. </li>
+                            <li>L’indice ATMO n’est pas cohérent avec l’indice européen.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Comment l’indice évolue ? </h3>
+                        <ul>
+                            <li>Le nouvel indice ATMO introduit un nouveau polluant réglementé : les PM2,5 (particules fines < 2,5 micromètres).</li>
+                            <li>Les dénominations des seuils de l’échelle changent : le niveau “Très bon” disparaît et le niveau “Extrêmement mauvais” apparaît.</li>
+                            <li>Les couleurs évoluent : l’échelle va désormais du bleu (bon) au magenta (extrêmement mauvais).</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <h3>Comment est calculé le nouvel indice ?</h3>
+                        <ul>
+                            <li>Le nouvel indice ATMO est calculé quotidiennement.</li>
+                            <li>Il est calculé à partir des concentrations de 5 polluants réglementés : les PM10 (particules fines < 10 micromètres), les PM2,5(particules fines < 2,5 micromètres), le dioxyde d’azote (NO2), l’ozone (O3) et le dioxyde de soufre (SO2).  </li>
+                            <li>L’indice correspond au plus dégradé des sous-indices calculés pour chacun de ces 5 polluants.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Pourquoi le nouvel indice augmente-t-il le nombre de jours avec une qualité de l’air mauvaise ?</h3>
+                        <ul>
+                            <li>Le nouvel indice est un nouveau thermomètre : il permet de mieux décrire la qualité de l’air. </li>
+                            <li>La qualité de l’air s’améliore depuis 20 ans ! C’est le changement de la méthode de calcul, l’intégration des PM2,5 et l’alignement sur les seuils européens qui augmentent le nombre de jours avec une qualité de l’air mauvaise.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+    
+{% endblock content %}

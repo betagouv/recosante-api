@@ -1,0 +1,22 @@
+
+@media (min-width: 565px) {
+    .row {
+        & > * {
+            width: 40%;
+        }
+        & > * + * {
+            margin-left: 5em;
+        }
+    }
+
+    .row + .row {
+        padding-top: 5em;
+    }
+
+    ul {
+        padding: 0;
+    }
+}
+ul {
+    list-style-type: "- ";
+}
