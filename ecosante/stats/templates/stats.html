@@ -19,8 +19,10 @@
                     <div id="carte"></div>
                 </div>
                 <div class="users-profile">
+                    {% if nb_inscriptions %}
                     <h3>{{ "%.2f"|format((nb_allergies/nb_inscriptions)*100) }}% des utilisateurs se déclarent allergiques au pollens</h3>
                     <h3>{{ "%.2f"|format((nb_pathologie_respiratoire/nb_inscriptions)*100) }}% des utilisateurs déclarent avoir une pathologie respiratoire</h3>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -38,7 +40,9 @@
         <div class="panel">
             <h1>Satisfaction des utilisateurs</h1>
             <h2>{{ nb_reponses }} réponses aux questionnaires</h2>
+            {% if nb_responses %}
             <h3>{{ "%.2f"|format((nb_satisfaits/nb_reponses)*100) }}% des utilisateurs ayant répondu au questionnaire de satisfaction recommanderaient la newsletter Ecosanté à leur proche.</h3>
+            {% endif %}
             <canvas id="decouverte_chart"></canvas>
         </div>
         {% if ouvertures %}
