@@ -49,9 +49,6 @@ ul{
 .recommz > li.recommandability-utilisable::before{
     background-color: hsl(108, 80%, 50%);
 }
-.recommz > li.recommandability-doute::before{
-    background-color: hsl(59, 80%, 50%);
-}
 .recommz > li.recommandability-non-utilisable::before{
     background-color: hsl(0, 80%, 50%);
 }

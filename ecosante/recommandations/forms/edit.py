@@ -6,7 +6,6 @@ class FormAdd(BaseForm):
     recommandabilite = RadioField(
         "Recommandabilité",
         choices=[
-            ('Doute', 'Doute'),
             ('Non-utilisable', 'Non-utilisable'),
             ('Utilisable', 'Utilisable')
         ]
