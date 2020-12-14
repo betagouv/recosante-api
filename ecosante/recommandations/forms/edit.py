@@ -39,14 +39,6 @@ class FormAdd(BaseForm):
     allergies = OuiNonField("Allergies")
     enfants = OuiNonField("Enfants")
     personnes_sensibles = OuiNonField("Personnes sensibles")
-    niveau_difficulte = RadioField(
-        "Niveau difficulté",
-        choices=[
-            ("Facile", "Facile"),
-            ("Intermédiaire", "Intermédiaire"),
-            ("Difficile", "Difficile")
-        ]
-    )
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")

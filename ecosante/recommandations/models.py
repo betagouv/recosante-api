@@ -60,7 +60,6 @@ class Recommandation(db.Model):
     allergies = db.Column(CustomBoolean)
     enfants = db.Column(CustomBoolean)
     personnes_sensibles = db.Column(CustomBoolean)
-    niveau_difficulte = db.Column(db.String)
     autres_conditions = db.Column(db.String)
     sources = db.Column(db.String)
     categorie = db.Column(db.String)
@@ -227,7 +226,6 @@ class Recommandation(db.Model):
             "allergies": self.allergies,
             "enfants": self.enfants,
             "personnes_sensibles": self.personnes_sensibles,
-            "niveau_difficulte": self.niveau_difficulte,
             "autres_conditions": self.autres_conditions,
             "sources": self.sources,
             "categorie": self.categorie,
