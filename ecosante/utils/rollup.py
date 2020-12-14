@@ -1,10 +1,41 @@
+from webassets.filter import FilterError
 from webassets.filter.sass import Sass
+from webassets.filter.node_sass import NodeSCSS
 from webassets.ext.jinja2 import AssetsExtension
 import os
+import subprocess
 from webassets.filter import (
     get_filter,
     register_filter
 )
+
+class YarnSCSS(NodeSCSS):
+    name = 'yarn-scss'
+    def __init__(self, *a, **kw):
+        super(YarnSCSS, self).__init__(*a, **kw)
+
+    def _apply_sass(self, _in, out, cd=None):
+        args = ['yarn', 'run', 'node-scss', 
+        '--output-style', 'expanded']
+
+        if (self.ctx.environment.debug if self.debug_info is None else self.debug_info):
+            args.append('--debug-info')
+
+        proc = subprocess.Popen(args,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                shell=(os.name == 'nt'))
+        stdout, stderr = proc.communicate(_in.read().encode('utf-8'))
+
+        if proc.returncode != 0:
+            raise FilterError(('sass: subprocess had error: stderr=%s, '+
+                                'stdout=%s, returncode=%s') % (
+                                            stderr, stdout, proc.returncode))
+        elif stderr:
+            print("node-sass filter has warnings:", stderr)
+
+        out.write(stdout.decode('utf-8'))
 
 
 class Rollup(Sass):
@@ -14,7 +45,7 @@ class Rollup(Sass):
         'load_paths': 'ROLLUP_LOAD_PATHS',
     }
     args = []
-    binary = "rollup"
+    binary = "yarn"
 
     def _apply_sass(self, _in, out, cd=None):
         orig_cwd = os.getcwd()
@@ -35,8 +66,11 @@ class RollupJS(Rollup):
     name='rollupjs'
     def __init__(self, *args, **kwargs):
         super(RollupJS, self).__init__(*args, **kwargs)
+        self.binary = RollupJS.binary
         self.args = [
             self.binary or 'rollup',
+            'run',
+            'rollup',
             '-f', 'iife',
             "-p", "'commonjs,postcss'",
             "-p", '"{{babel:{{babelHelpers:\'bundled\', exclude: \'node_modules/**\'}}}}"',
@@ -68,7 +102,7 @@ class SCSSExtension(AssetsExtension):
 
     def _render_assets(self, filter, output, dbg, depends, files, caller=None):
         return super(SCSSExtension, self)._render_assets(
-            "node-scss",
+            "yarn-scss",
             os.path.join("public", files[0]).replace(".scss", ".css"),
             dbg,
             depends,
@@ -79,5 +113,7 @@ class SCSSExtension(AssetsExtension):
 
 try:
     get_filter(RollupJS.name)
+    get_filter(YarnSCSS.name)
 except ValueError:
     register_filter(RollupJS)
+    register_filter(YarnSCSS)
