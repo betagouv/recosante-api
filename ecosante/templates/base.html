@@ -17,7 +17,10 @@
   <link href="{{ ASSET_URL }}" rel="stylesheet">
 {% endassets %}
   
-</head><body>  <header class="navbar">
+</head><body>
+
+<div class="notification full-width" role="alert">Écosanté est en phase de construction, nous informons pour l'instant sur la qualité de l'air.</div>
+  <header class="navbar">
     <div class="navbar__container">
       <a class="navbar__home" href="{{ url_for("pages.index") }}">
         <img class="navbar__logo" src="{{ url_for('static', filename='images/Republique_Francaise.png') }}"
