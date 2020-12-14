@@ -25,6 +25,8 @@ class FormAdd(BaseForm):
     qa_moyenne = OuiNonField("Montrer en cas de qualité de l’air moyenne ?")
     qa_mauvaise = OuiNonField("Montrer en cas de qualité de l’air mauvaise ?")
     ozone = OuiNonField("Montrer en cas de pic d’ozone ?")
+    dioxyde_azote = OuiNonField("Montrer en cas de pic de dioxyde d’azote ?")
+    dioxyde_soufre = OuiNonField("Montrer en cas de pic de dioxyde de soufre ?")
     particules_fines = OuiNonField("Montrer en cas de pollution aux particules fines ?")
     menage = OuiNonField("Ménage")
     bricolage = OuiNonField("Bricolage")

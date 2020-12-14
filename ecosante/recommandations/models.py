@@ -68,6 +68,8 @@ class Recommandation(db.Model):
     hiver = db.Column(CustomBoolean, nullable=True)
     ete = db.Column(CustomBoolean, nullable=True)
     ozone = db.Column(CustomBoolean, nullable=True)
+    dioxyde_azote = db.Column(CustomBoolean, nullable=True)
+    dioxyde_soufre = db.Column(CustomBoolean, nullable=True)
     particules_fines = db.Column(CustomBoolean, nullable=True)
 
     @property
