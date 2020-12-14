@@ -28,6 +28,7 @@ class FormAdd(BaseForm):
     dioxyde_azote = OuiNonField("Montrer en cas de pic de dioxyde d’azote ?")
     dioxyde_soufre = OuiNonField("Montrer en cas de pic de dioxyde de soufre ?")
     particules_fines = OuiNonField("Montrer en cas de pollution aux particules fines ?")
+    episode_pollution = OuiNonField("Montrer en cas de pic de pollution ?")
     menage = OuiNonField("Ménage")
     bricolage = OuiNonField("Bricolage")
     chauffage_a_bois = OuiNonField("Chauffage à bois")

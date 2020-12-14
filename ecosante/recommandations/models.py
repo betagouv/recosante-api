@@ -71,6 +71,7 @@ class Recommandation(db.Model):
     dioxyde_azote = db.Column(CustomBoolean, nullable=True)
     dioxyde_soufre = db.Column(CustomBoolean, nullable=True)
     particules_fines = db.Column(CustomBoolean, nullable=True)
+    episode_pollution = db.Column(CustomBoolean, nullable=True)
 
     @property
     def velo(self):
