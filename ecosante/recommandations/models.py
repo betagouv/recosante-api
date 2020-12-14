@@ -35,8 +35,10 @@ RECOMMANDATION_FILTERS = [
     ("hiver", "☃", "Hiver"),
     ("ete", "🌞", "Été"),
     ("particules_fines", "🌫️", "Pollution aux particules fines"),
-    ("ozone", "🧪", "Pollution à l’ozone")
-
+    ("ozone", "🧪", "Pollution à l’ozone"),
+    ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
+    ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
+    ("episode_pollution", "⚠️", "Épisode de pollution")
 ]
 
 class Recommandation(db.Model):
