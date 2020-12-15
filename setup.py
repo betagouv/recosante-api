@@ -39,13 +39,16 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=DEPENDENCIES,
-    extras_require={"dev": ["honcho", "watchdog"]},
+    extras_require={
+        "dev": ["honcho", "watchdog"],
+        "test": [
+            'pytest',
+            'pytest-alembic',
+            'pytest-flask-sqlalchemy',
+            'pytest-postgresql'
+        ]
+    },
     setup_requires=['pytest-runner'],
-    tests_require=[
-        'pytest',
-        'pytest-flask-sqlalchemy',
-        'pytest-postgresql',
-    ],
     test_suite='pytest',
     cmdclass={
           'install': CustomPsycopg2Install,

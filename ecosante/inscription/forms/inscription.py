@@ -47,7 +47,7 @@ class FormInscription(BaseForm):
         if form.ville_insee.data and form.ville_name.data:
             form.ville_choices.choices = [(form.ville_insee.data, form.ville_name.data)]
             form.ville_choices.data = form.ville_insee.data
-            return
+            return True
 
         if form.ville_choices.data:
             r = requests.get(f'https://geo.api.gouv.fr/communes/{form.ville_choices.data}',
@@ -60,7 +60,8 @@ class FormInscription(BaseForm):
                 form.ville_insee.data = r.json()['code']
                 form.ville_name.data = r.json()['nom']
                 form.ville_choices.choices = [(r.json()['code'], r.json()['nom'])]
-                return
+                form.ville_choices.data = form.ville_insee.data
+                return True
 
         r = requests.get("https://geo.api.gouv.fr/communes",params={
                 "nom": field.data,
@@ -75,7 +76,9 @@ class FormInscription(BaseForm):
         elif len(results) == 1 and results[0]['nom'].lower() == field.data.lower():
                 form.ville_insee.data = results[0]['code']
                 form.ville_name.data = results[0]['nom']
-                return
+                form.ville_choices.choices = [(results[0]['code'], results[0]['nom'])]
+                form.ville_choices.data = form.ville_insee.data
+                return True
         form.ville_choices.choices = [(v['code'], v['nom']) for v in results[:5]]
         raise ValidationError(
             f"Impossible de trouver une ville correspondant exactement à {field.data} veuillez faire un choix"

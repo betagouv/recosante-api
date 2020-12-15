@@ -1,7 +1,7 @@
 from ecosante.recommandations.models import Recommandation
 from ecosante.inscription.models import Inscription
 
-def help_activites(db_session, nom_activite):
+def help_activites(nom_activite):
     r = Recommandation(**{nom_activite: True})
     i = Inscription(activites=[nom_activite])
     assert r.is_relevant(i, 0)
@@ -10,7 +10,7 @@ def help_activites(db_session, nom_activite):
     i = Inscription(activites=[])
     assert not r.is_relevant(i, 0)
 
-def help_deplacement(db_session, nom_deplacement, nom_deplacement_inscription=None):
+def help_deplacement(nom_deplacement, nom_deplacement_inscription=None):
     r = Recommandation(**{nom_deplacement: True})
     i = Inscription(deplacement=[nom_deplacement_inscription or nom_deplacement])
     assert r.is_relevant(i, 0)
@@ -20,16 +20,16 @@ def help_deplacement(db_session, nom_deplacement, nom_deplacement_inscription=No
     assert not r.is_relevant(i, 0)
 
 def test_is_relevant_menage(db_session):
-    help_activites(db_session, 'menage')
+    help_activites('menage')
 
 def test_is_relevant_bricolage(db_session):
-    help_activites(db_session, 'bricolage')
+    help_activites('bricolage')
 
 def test_is_relevant_jardinage(db_session):
-    help_activites(db_session, 'jardinage')
+    help_activites('jardinage')
 
 def test_is_relevant_sport(db_session):
-    help_activites(db_session, 'sport')
+    help_activites('sport')
 
 def test_is_relevant_velo(db_session):
     r = Recommandation(velo_trott_skate=True)
@@ -41,19 +41,20 @@ def test_is_relevant_velo(db_session):
     assert not r.is_relevant(i, 0)
 
 def test_is_relevant_transport_en_commun(db_session):
-    help_deplacement(db_session, "transport_en_commun", "tec")
+    help_deplacement("transport_en_commun", "tec")
 
 def test_is_relevant_voiture(db_session):
-    help_deplacement(db_session, "voiture")
+    help_deplacement("voiture")
+
 
 def test_is_relevant_allergie(db_session):
-    r = Recommandation(allergies=True)
-    i = Inscription(allergie_pollen=True)
-    assert r.is_relevant(i, 0)
+   r = Recommandation(allergies=True)
+   i = Inscription(allergie_pollen=True)
+   assert r.is_relevant(i, 0)
 
-    r = Recommandation(allergies=True)
-    i = Inscription(allergie_pollen=False)
-    assert not r.is_relevant(i, 0)
+   r = Recommandation(allergies=True)
+   i = Inscription(allergie_pollen=False)
+   assert not r.is_relevant(i, 0)
 
 def test_is_relevant_enfants(db_session):
     r = Recommandation(enfants=True)
