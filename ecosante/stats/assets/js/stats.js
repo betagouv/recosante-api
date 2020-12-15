@@ -1,5 +1,5 @@
-import './../css/stats.css'
-import './stats_map'
+import './ecosante/stats/assets/css/stats.css'
+import './ecosante/stats/assets/js/stats_map'
 
 import Chart from 'chart.js';
 
