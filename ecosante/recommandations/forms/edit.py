@@ -1,4 +1,5 @@
-from ecosante.utils.form import RadioField, BaseForm, OuiNonField
+from jinja2.nodes import Mul
+from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
 from wtforms import TextAreaField, HiddenField, SelectField
 
 
@@ -21,13 +22,19 @@ class FormAdd(BaseForm):
             ('hiver', 'Hiver')
         ]
     )
-    qa_bonne = OuiNonField("Montrer en cas de qualité de l’air bonne ?")
-    qa_moyenne = OuiNonField("Montrer en cas de qualité de l’air moyenne ?")
-    qa_mauvaise = OuiNonField("Montrer en cas de qualité de l’air mauvaise ?")
-    ozone = OuiNonField("Montrer en cas de pic d’ozone ?")
-    dioxyde_azote = OuiNonField("Montrer en cas de pic de dioxyde d’azote ?")
-    dioxyde_soufre = OuiNonField("Montrer en cas de pic de dioxyde de soufre ?")
-    particules_fines = OuiNonField("Montrer en cas de pollution aux particules fines ?")
+    qa = MultiCheckboxField(
+        "Montrer en cas de qualité de l’air :",
+        choices=[('bonne', 'Bonne'), ('moyenne', 'Moyenne'), ('mauvaise', 'Mauvaise')]
+    )
+    polluants = MultiCheckboxField(
+        "Montrer en cas de pic de :",
+        choices=[
+            ('ozone', 'Ozone'),
+            ('dioxyde_azote', 'Doxyde d’azote'),
+            ('dioxyde_soufre', 'Dioxyde de soufre'),
+            ('particules_fines', 'Particules fines')
+        ]
+    )
     episode_pollution = OuiNonField("Montrer en cas de pic de pollution ?")
     menage = OuiNonField("Ménage")
     bricolage = OuiNonField("Bricolage")

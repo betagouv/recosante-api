@@ -100,22 +100,35 @@ class Recommandation(db.Model):
         if value:
             self.categorie = (self.categorie or "") + " tabagisme"
 
+    def _multi_getter(self, prefix, list_):
+        to_return = []
+        for v in list_:
+            if getattr(self, prefix + v):
+                to_return.append(v)
+        return to_return
+
+    def _multi_setter(self, prefix, list_, values):
+        if not values:
+            return
+        for v in list_:
+            setattr(self, prefix + v, v in values)
+
     @property
     def qa(self):
-        if self.qa_bonne:
-            return "bonne"
-        elif self.qa_moyenne:
-            return "moyenne"
-        elif self.qa_mauvaise:
-            return "mauvaise"
-        return ""
+        return self._multi_getter("qa_", ['bonne', 'moyenne', 'mauvaise'])
 
     @qa.setter
     def qa(self, value):
-        if not value:
-            return
-        for v in ['bonne', 'moyenne', 'mauvaise']:
-            setattr(self, f'qa_{v}', v == value)
+        self._multi_setter('qa_', ['bonne', 'moyenne', 'mauvaise'], value)
+
+    @property
+    def polluants(self):
+        return self._multi_getter("", ['ozone', 'dioxyde_azote', 'dioxyde_soufre', 'particules_fines'])
+
+    @polluants.setter
+    def polluants(self, value):
+        self._multi_setter("", ['ozone', 'dioxyde_azote', 'dioxyde_soufre', 'particules_fines'], value)
+
 
     @property
     def saison(self):
