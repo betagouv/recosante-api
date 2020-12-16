@@ -50,7 +50,7 @@ def personnalisation():
             (inscription.id,),
         )
         return redirect(url_for('inscription.reussie'))
-    return render_template(f'personnalisation.html', form=form)
+    return render_template('personnalisation.html', form=form)
 
 @bp.route('/reussie')
 def reussie():
