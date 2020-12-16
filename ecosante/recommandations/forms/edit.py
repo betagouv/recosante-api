@@ -35,6 +35,15 @@ class FormAdd(BaseForm):
             ('particules_fines', 'Particules fines')
         ]
     )
+    population = MultiCheckboxField(
+        "Montrer à :",
+        choices=[
+            ('allergies', 'Personnes allergiques'),
+            ('enfants', 'Enfants'),
+            ('personnes_sensibles', 'Personnes sensibles'),
+            ('population_generale', 'Population générale')
+        ]
+    )
     episode_pollution = OuiNonField("Montrer en cas de pic de pollution ?")
     menage = OuiNonField("Ménage")
     bricolage = OuiNonField("Bricolage")
@@ -45,9 +54,6 @@ class FormAdd(BaseForm):
     transport_en_commun = OuiNonField("Transport en commun ?")
     voiture = OuiNonField("Voiture")
     activite_physique = OuiNonField("Activité physique")
-    allergies = OuiNonField("Allergies")
-    enfants = OuiNonField("Enfants")
-    personnes_sensibles = OuiNonField("Personnes sensibles")
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")

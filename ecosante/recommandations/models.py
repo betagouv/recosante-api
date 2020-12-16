@@ -31,6 +31,7 @@ RECOMMANDATION_FILTERS = [
     ("allergies", "🤧", "Allergies aux pollens"),
     ("enfants", "🧒", "Enfants"),
     ("personnes_sensibles", "🤓", "Personnes sensibles"),
+    ("population_generale", "🌐", "Population générale"),
     ("automne", "🍂", "Automne"),
     ("hiver", "☃", "Hiver"),
     ("ete", "🌞", "Été"),
@@ -38,7 +39,7 @@ RECOMMANDATION_FILTERS = [
     ("ozone", "🧪", "Pollution à l’ozone"),
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
     ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
-    ("episode_pollution", "⚠️", "Épisode de pollution")
+    ("episode_pollution", "⚠️", "Épisode de pollution"),
 ]
 
 class Recommandation(db.Model):
@@ -62,6 +63,7 @@ class Recommandation(db.Model):
     allergies = db.Column(CustomBoolean)
     enfants = db.Column(CustomBoolean)
     personnes_sensibles = db.Column(CustomBoolean)
+    population_generale = db.Column(CustomBoolean)
     autres_conditions = db.Column(db.String)
     sources = db.Column(db.String)
     categorie = db.Column(db.String)
@@ -128,6 +130,14 @@ class Recommandation(db.Model):
     @polluants.setter
     def polluants(self, value):
         self._multi_setter("", ['ozone', 'dioxyde_azote', 'dioxyde_soufre', 'particules_fines'], value)
+
+    @property
+    def population(self):
+        return self._multi_getter("", ['allergies', 'enfants', 'personnes_sensibles', 'population_generale'])
+
+    @population.setter
+    def population(self, value):
+        return self._multi_setter("", ['allergies', 'enfants', 'personnes_sensibles', 'population_generale'], value)
 
 
     @property
