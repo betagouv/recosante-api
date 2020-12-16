@@ -4,7 +4,7 @@ from ecosante.extensions import db
 from flask import current_app
 from celery.schedules import crontab
 
-from .import_in_sb import import_in_sb, delete_file, delete_file_error, import_and_send #noqa
+from .import_in_sb import import_in_sb, delete_file, delete_file_error, import_and_send, import_send_and_report #noqa
 
 @celery.task()
 def save_indice():
@@ -17,4 +17,8 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(minute='0', hour='*/1'),
         save_indice.s()
+    )
+    sender.add_periodic_task(
+        crontab(hour='7', day_of_week='*/1'),
+        import_send_and_report.s()
     )

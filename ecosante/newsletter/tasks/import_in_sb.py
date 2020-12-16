@@ -1,5 +1,6 @@
 from flask import current_app
 from datetime import datetime
+from uuid import uuid4
 import csv
 import os
 import sib_api_v3_sdk
@@ -7,6 +8,7 @@ from sib_api_v3_sdk.rest import ApiException
 from urllib.parse import quote_plus
 from ecosante.newsletter.models import Newsletter, NewsletterDB
 from ecosante.extensions import db, sib, celery
+from ecosante.utils import send_log_mail
 
 def get_nl_csv(filepath):
     for delimiter in [',', ';']:
@@ -124,6 +126,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
 def import_(task, newsletters, overhead=0):
     email_campaign_id = None,
     sms_campaign_id = None
+    errors = []
     
     lists = dict()
     now = datetime.now()
@@ -149,18 +152,22 @@ def import_(task, newsletters, overhead=0):
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
-        try:
-            contact_api.update_contact(
-                nl.inscription.mail,
-                sib_api_v3_sdk.UpdateContact(
-                    attributes=nl.attributes(),
-                    list_ids=[lists[nl.inscription.diffusion]]
+        if nl.qai is None:
+            errors.append(f"Pas de qualité de l’air pour {nl.inscription.mail} ville : {nl.inscription.ville_entree} ")
+            current_app.logger.error(f"No qai for {nl.inscription.mail}")
+        else:
+            try:
+                contact_api.update_contact(
+                    nl.inscription.mail,
+                    sib_api_v3_sdk.UpdateContact(
+                        attributes=nl.attributes(),
+                        list_ids=[lists[nl.inscription.diffusion]]
+                    )
                 )
-            )
-        except ApiException as e:
-            current_app.logger.error(f"Error updating {nl.inscription.mail}")
-            current_app.logger.error(e)
-        current_app.logger.info(f"Mise à jour de {nl.inscription.mail}")
+            except ApiException as e:
+                current_app.logger.error(f"Error updating {nl.inscription.mail}")
+                current_app.logger.error(e)
+            current_app.logger.info(f"Mise à jour de {nl.inscription.mail}")
         nb_requests += 1
         task.update_state(
             state='STARTED',
@@ -235,6 +242,23 @@ STOP au [STOP_CODE]
         "sms_campaign_id": sms_campaign_id
     }
 
+
+@celery.task(bind=True)
+def import_send_and_report(self):
+    result = import_and_send(self, str(uuid4()), None, None)
+    body = """
+Bonjour,
+Il n’y a pas eu d’erreur lors de l’envoi de la newsletter
+Bonne journée !
+""" if not result.errors else f"""
+Bonjour,
+Il y a eu des erreurs lors de l’envoi de la newsletter :
+{result.errors.join('\n')}
+
+Bonne journée
+"""
+    send_log_mail("Rapport d’envoi de la newsletter", body)
+    return result
 
 def get_lists_ids_to_delete():
     api_instance = sib_api_v3_sdk.ContactsApi(sib)
