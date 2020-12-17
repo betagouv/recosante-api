@@ -19,6 +19,6 @@ def setup_periodic_tasks(sender, **kwargs):
         save_indice.s()
     )
     sender.add_periodic_task(
-        crontab(hour='7', day_of_week='*/1'),
+        crontab(minute='0', hour='7', day_of_week='*/1'),
         import_send_and_report.s()
     )
