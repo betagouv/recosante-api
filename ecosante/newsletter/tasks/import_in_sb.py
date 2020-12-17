@@ -245,7 +245,7 @@ STOP au [STOP_CODE]
 
 @celery.task(bind=True)
 def import_send_and_report(self):
-    result = import_and_send(self, str(uuid4()), None, None)
+    result = import_and_send(str(uuid4()), None, [])
     errors = result.errors.join('\n')
     body = """
 Bonjour,
