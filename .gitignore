@@ -4,6 +4,7 @@ _site
 .jekyll-metadata
 .env
 .eggs
+.vscode
 ecosante.egg-info
 *.pyc
 vendor
