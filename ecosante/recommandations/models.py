@@ -254,6 +254,7 @@ class Recommandation(db.Model):
             "allergies": self.allergies,
             "enfants": self.enfants,
             "personnes_sensibles": self.personnes_sensibles,
+            "population_generale": self.population_generale,
             "autres_conditions": self.autres_conditions,
             "sources": self.sources,
             "categorie": self.categorie,
@@ -262,5 +263,8 @@ class Recommandation(db.Model):
             "hiver": self.hiver,
             "ete": self.ete,
             "ozone": self.ozone,
-            "particules_fines": self.particules_fines
+            "dioxyde_azote": self.dioxyde_azote,
+            "dioxyde_soufre": self.dioxyde_soufre,
+            "particules_fines": self.particules_fines,
+            "episode_pollution": self.episode_pollution
         }
