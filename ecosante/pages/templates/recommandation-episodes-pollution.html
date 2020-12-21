@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% scss "pages/css/recommandation-episodes-pollution.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
+    <div class="hero" role="banner">
+        <div class="hero__container">
+            <h1>Recommandations sanitaires</h1>
+            <p>En cas d’épisode de pollution aux {{ polluants | join(",") | capitalize}} pour 
+                {% if population == "vulnerable" %}
+                pour les populations sensibles et vulnérables
+                {% else %}
+                pour la population générale
+                {% endif %}
+            </p>
+        </div>
+    </div>
+<div class="notification warning full-width">
+    Recommandations issues de <a href="https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000036735996/">l’arrêté du 13 mars 2018</a> relatif aux recommandations sanitaires en vue de prévenir les effets de la pollution de l'air sur la santé
+</div>
+
+    
+    <main role="main">
+        <section class="section">
+            <div class="container">
+                <div class="grid">
+                {% if population == "vulnerable" %}
+                    <div class="tile tile-colored"><h2>1</h2><p>Privilégier des sorties plus brèves et celles qui demandent le moins d'effort.</p></div>
+                    <div class="tile tile-colored"><h2>2</h2><p>En cas de gêne respiratoire ou cardiaque, prendre conseil auprès d'un professionnel de santé.</p></div>
+                    <div class="tile tile-colored"><h2>3</h2><p>Prendre conseil auprès de votre médecin pour savoir si votre traitement médical doit être adapté le cas échéant.</p></div>
+                {% if "pm10" in polluants %}
+                    <div class="tile tile-colored"><h2>4</h2><p>Éviter les zones à fort trafic routier, aux périodes de pointe.</p></div>
+                    <div class="tile tile-colored"><h2>5</h2><p>Privilégier les activités modérées.</p></div>
+                {% elif "o3" in polluants %}
+                    <div class="tile tile-colored"><h2>4</h2><p>Éviter les sorties durant l'après-midi lorsque l'ensoleillement est maximum</p></div>
+                    <div class="tile tile-colored"><h2>5</h2><p>Éviter les activités physiques et sportives intenses (dont les compétitions) en plein air ; celles peu intenses à l'intérieur peuvent être maintenues</p></div>
+                {% endif %}
+
+                {% elif population == "generale" %}
+                    <div class="tile tile-colored"><h2>1</h2><p>En cas de gêne respiratoire ou cardiaque, prendre conseil auprès d'un professionnel de santé.</p></div>
+                    <div class="tile tile-colored"><h2>2</h2><p>Privilégier des sorties plus brèves et celles qui demandent le moins d'effort</p></div>
+                {% if "pm10" in polluants %}
+                    <div class="tile tile-colored"><h2>3</h2><p>Réduire, voire reporter, les activités physiques et sportives intenses (dont les compétitions).</p></div>
+                {% elif "o3" in polluants %}
+                    <div class="tile tile-colored"><h2>3</h2><p>Les activités physiques et sportives intenses (dont les compétitions) à l'intérieur peuvent être maintenues.</p></div>
+                {% endif %}
+
+                {% endif %}
+                </ul>
+
+
+            </div>
+        </section>
+        {% if population == "vulnerable" %}
+        <section class="section section-grey">
+            <div class="container">
+                <h2>Qu’est-ce qu’une population vulnérable ?</h2>
+                <p>
+                    La population vulnérable comprend les femmes enceintes, nourrissons et jeunes enfants, personnes de plus de 65 ans, personnes souffrant de pathologies cardiovasculaires, insuffisants cardiaques ou respiratoires, personnes asthmatiques.
+                </p>
+                <h2>Qu’est-ce qu’une population sensible ?</h2>
+                <p>
+                La population sensible comprend les personnes se reconnaissant comme sensibles lors des pics de pollution et/ ou dont les symptômes apparaissent ou sont amplifiés lors des pics (par exemple : personnes diabétiques, personnes immunodéprimées, personnes souffrant d'affections neurologiques ou à risque cardiaque, respiratoire, infectieux).
+                </p>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+{% endblock content %}

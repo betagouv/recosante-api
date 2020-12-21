@@ -1,6 +1,8 @@
 from flask import (
-    render_template
+    render_template,
+    request
 )
+from werkzeug.utils import redirect
 from ecosante.utils import Blueprint
 from ecosante.utils.decorators import admin_capability_url
 from datetime import date, timedelta
@@ -35,3 +37,13 @@ def admin():
             NewsletterDB.date==date.today())\
         .count()
     return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
+
+@bp.route('/recommandation-episodes-pollution')
+def recommandation_episode_pollution():
+    return render_template(
+        "recommandation-episodes-pollution.html",
+        population=request.args.get('population'),
+        polluants=request.args.getlist('polluants')
+    )
+
+            
