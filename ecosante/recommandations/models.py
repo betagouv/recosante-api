@@ -164,13 +164,19 @@ class Recommandation(db.Model):
             if not getattr(inscription, critere) and getattr(self, critere):
                 return False
         if qa:
-            # Quand la qualité de l'air est bonne
+            # Si la qualité de l’air n’est pas bonne,
+            # et que la reco concerne la qualité de l’air bonne
+            # Alors on l’exclut
             if (not (qa <= 4)) and self.qa_bonne:
                 return False
-            # Quand la qualité de l'air est moyenne
+            # Si la qualité de l’air n’est pas moyenne
+            # et que la reco concerne la qualité de l’air moyenne
+            # Alors on l'exlut
             elif not(4 < qa <= 7) and self.qa_moyenne:
                 return False
-            # Quand la qualité de l'air est mauvaise
+            # Si la qualité de l’air n’est pas mauvaise
+            # et que la reco concerne la qualité de l’air mauvaise
+            # Alors on l'exlut
             elif not(7 < qa) and self.qa_mauvaise:
                 return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
