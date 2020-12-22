@@ -22,25 +22,19 @@ pytest_plugins = ['pytest-flask-sqlalchemy']
 def client(app):
     return app.test_client()
 
-@pytest.fixture(scope='session')
-def app():
-    _app = create_app(testing=True)
-    _app.config['WTF_CSRF_ENABLED'] = False
-    _app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONN
-    ctx = _app.app_context()
-    ctx.push()
-    yield _app
-    ctx.pop()
-
-
 @pytest.fixture(scope="session")
-def _db(app):
-    """
-    Returns session-wide initialised database.
-    """
+def app():
+    app = create_app()
+    app.config['WTF_CSRF_ENABLED'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONN
     with app.app_context():
-        db.drop_all()
+        db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
         with cf.ProcessPoolExecutor() as pool:
-            pool.submit(flask_migrate.upgrade())
-        db.create_all()
-        return db
+            pool.submit(flask_migrate.upgrade)
+        yield app
+        db.session.remove()  # looks like db.session.close() would work as well
+        db.drop_all()
+
+@pytest.fixture(scope='session')
+def _db(app):
+    return db

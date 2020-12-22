@@ -97,3 +97,26 @@ def test_is_qualite_bonne(db_session):
     assert r.is_relevant(i, 4)
     assert not r.is_relevant(i, 5)
     assert not r.is_relevant(i, 9)
+
+def test_is_qualite_bonne_moyenne(db_session):
+    r = Recommandation(qa_bonne=True, qa_moyenne=True)
+    i = Inscription()
+    assert r.is_relevant(i, 1)
+    assert r.is_relevant(i, 4)
+    assert r.is_relevant(i, 5)
+    assert not r.is_relevant(i, 9)
+
+def test_is_qualite_bonne_moyenne_mauvaise(db_session):
+    r = Recommandation(qa_bonne=True, qa_moyenne=True, qa_mauvaise=True)
+    i = Inscription()
+    assert r.is_relevant(i, 1)
+    assert r.is_relevant(i, 4)
+    assert r.is_relevant(i, 5)
+    assert r.is_relevant(i, 9)
+
+def test_is_qualite_moyenne_mauvaise(db_session):
+    r = Recommandation(qa_moyenne=True, qa_mauvaise=True)
+    i = Inscription()
+    assert not r.is_relevant(i, 1)
+    assert r.is_relevant(i, 5)
+    assert r.is_relevant(i, 9)

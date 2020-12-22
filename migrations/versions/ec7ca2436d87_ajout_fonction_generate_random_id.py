@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     op.execute("""
-CREATE FUNCTION get_random_string(
+CREATE OR REPLACE FUNCTION get_random_string(
         IN string_length integer,
         IN possible_chars TEXT DEFAULT '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
     ) RETURNS text

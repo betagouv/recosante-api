@@ -1,5 +1,4 @@
 from typing import SupportsRound
-from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types
 import uuid
@@ -157,6 +156,23 @@ class Recommandation(db.Model):
         for v in ['automne', 'hiver', 'ete']:
             setattr(self, v, v == value)
 
+    def is_revelant_qa(self, inscription, qa):
+        # Si la qualité de l’air est bonne
+        # que la reco concerne la qualité de l’air bonne
+        if qa <=4 and self.qa_bonne:
+            return True
+        # Si la qualité de l’air est moyenne
+        # que la reco concerne la qualité de l’air moyenne
+        elif 4 < qa <= 7 and self.qa_moyenne:
+            return True
+        # Si la qualité de l’air est mauvaise
+        # que la reco concerne la qualité de l’air mauvaise
+        elif 7 < qa and self.qa_mauvaise:
+            return True
+        # Sinon c’est pas bon
+        else:
+            return False
+
     def is_relevant(self, inscription, qa):
         for critere in ["menage", "bricolage", "jardinage", "velo",
                         "transport_en_commun", "voiture", "sport",
@@ -164,20 +180,7 @@ class Recommandation(db.Model):
             if not getattr(inscription, critere) and getattr(self, critere):
                 return False
         if qa:
-            # Si la qualité de l’air n’est pas bonne,
-            # et que la reco concerne la qualité de l’air bonne
-            # Alors on l’exclut
-            if (not (qa <= 4)) and self.qa_bonne:
-                return False
-            # Si la qualité de l’air n’est pas moyenne
-            # et que la reco concerne la qualité de l’air moyenne
-            # Alors on l'exlut
-            elif not(4 < qa <= 7) and self.qa_moyenne:
-                return False
-            # Si la qualité de l’air n’est pas mauvaise
-            # et que la reco concerne la qualité de l’air mauvaise
-            # Alors on l'exlut
-            elif not(7 < qa) and self.qa_mauvaise:
+            if not self.is_revelant_qa(inscription, qa):
                 return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
