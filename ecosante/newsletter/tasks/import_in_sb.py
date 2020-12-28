@@ -239,7 +239,8 @@ STOP au [STOP_CODE]
         "progress": (nb_requests/total_nb_requests)*100,
         "details": "Terminé",
         "email_campaign_id": email_campaign_id,
-        "sms_campaign_id": sms_campaign_id
+        "sms_campaign_id": sms_campaign_id,
+        "errors": errors
     }
 
 
