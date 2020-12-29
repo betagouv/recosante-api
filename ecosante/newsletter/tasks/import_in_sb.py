@@ -247,7 +247,7 @@ STOP au [STOP_CODE]
 @celery.task(bind=True)
 def import_send_and_report(self):
     result = import_and_send(str(uuid4()), None, [])
-    errors = result.errors.join('\n')
+    errors = result['errors'].join('\n')
     body = """
 Bonjour,
 Il n’y a pas eu d’erreur lors de l’envoi de la newsletter
