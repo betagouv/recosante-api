@@ -1,4 +1,6 @@
 from typing import SupportsRound
+
+from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types
 import uuid
@@ -156,31 +158,33 @@ class Recommandation(db.Model):
         for v in ['automne', 'hiver', 'ete']:
             setattr(self, v, v == value)
 
-    def is_revelant_qa(self, inscription, qa):
+    def is_revelant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne
-        if qa <=4 and self.qa_bonne:
+        # On garde "tres_bon" dans un souci de retro-compatibilité
+        if qualif in (['bon'] + ['tres_bon']) and self.qa_bonne:
             return True
         # Si la qualité de l’air est moyenne
         # que la reco concerne la qualité de l’air moyenne
-        elif 4 < qa <= 7 and self.qa_moyenne:
+        # On garde "mediocre" dans un souci de retro-compatibilité
+        elif qualif in (['moyen', 'degrade'] + ['mediocre']) and self.qa_moyenne:
             return True
         # Si la qualité de l’air est mauvaise
         # que la reco concerne la qualité de l’air mauvaise
-        elif 7 < qa and self.qa_mauvaise:
+        elif qualif in ['mauvais', 'tres_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
             return True
         # Sinon c’est pas bon
         else:
             return False
 
-    def is_relevant(self, inscription, qa):
+    def is_relevant(self, inscription, qualif):
         for critere in ["menage", "bricolage", "jardinage", "velo",
                         "transport_en_commun", "voiture", "sport",
                         "allergie_pollen", "enfants", "fumeur"]:
             if not getattr(inscription, critere) and getattr(self, critere):
                 return False
-        if qa:
-            if not self.is_revelant_qa(inscription, qa):
+        if qualif:
+            if not self.is_revelant_qualif(qualif):
                 return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
@@ -213,7 +217,7 @@ class Recommandation(db.Model):
         return recommandations
 
     @classmethod
-    def get_revelant(cls, recommandations, inscription, qai):
+    def get_revelant(cls, recommandations, inscription, qualif):
         copy_recommandations = []
         same_category_recommandations = []
         last_month_newsletters = inscription.last_month_newsletters()
@@ -234,7 +238,11 @@ class Recommandation(db.Model):
         copy_recommandations.extend(same_category_recommandations)
         copy_recommandations.extend(recent_recommandations)
 
-        return next(filter(lambda r: r.is_relevant(inscription, qai), copy_recommandations))
+        try:
+            return next(filter(lambda r: r.is_relevant(inscription, qualif), copy_recommandations))
+        except StopIteration as e:
+            current_app.logger.error(f"Unable to get recommandation for {inscription.mail} and '{qualif}'")
+            raise e
 
     @classmethod
     def get_one(cls, inscription, qai):

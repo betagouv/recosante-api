@@ -14,65 +14,41 @@ from indice_pollution import bulk, today, forecast as get_forecast
 
 @dataclass
 class Newsletter:
-    qai: int
-    forecast: dict
     date: datetime
-    inscription: Inscription
     recommandation: Recommandation
-
-    QUALIFICATIF_TRES_BON = 'très bon'
-    QUALIFICATIF_BON = 'bon'
-    QUALIFICATIF_MOYEN = 'moyen'
-    QUALIFICATIF_MÉDIOCRE = 'médiocre'
-    QUALIFICATIF_MAUVAIS = 'mauvais'
-    QUALIFICATIF_TRÈS_MAUVAIS = 'très mauvais'
-
-    INDICE_ATMO_TO_QUALIFICATIF = {
-        1: QUALIFICATIF_TRES_BON,
-        2: QUALIFICATIF_TRES_BON,
-        3: QUALIFICATIF_BON,
-        4: QUALIFICATIF_BON,
-        5: QUALIFICATIF_MOYEN,
-        6: QUALIFICATIF_MÉDIOCRE,
-        7: QUALIFICATIF_MÉDIOCRE,
-        8: QUALIFICATIF_MAUVAIS,
-        9: QUALIFICATIF_MAUVAIS,
-        10: QUALIFICATIF_TRÈS_MAUVAIS,
-    }
-
-    QUALIF_TO_BACKGROUND = {
-        QUALIFICATIF_TRES_BON: '#37C55F',
-        QUALIFICATIF_BON: '#8FDA2C',
-        QUALIFICATIF_MOYEN: '#F9E000',
-        QUALIFICATIF_MÉDIOCRE: '#FFAA27',
-        QUALIFICATIF_MAUVAIS: '#FF090D',
-        QUALIFICATIF_TRÈS_MAUVAIS: '#800103'
-    }
+    inscription: Inscription
+    forecast: dict
 
     def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
-        try:
-            self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
-        except KeyError as e:
-            current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
-            current_app.logger.error(e)
-            self.forecast = None
-        try:
-            self.qai = int(next(iter([v['indice'] for v in self.forecast['data'] if v['date'] == str(self.date)]), None))
-        except (TypeError, ValueError) as e:
-            current_app.logger.error(f'Unable to get qai for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
-            current_app.logger.error(e)
-            self.qai = None
+        self._forecast = None
+        if not 'label' in self.today_forecast:
+            current_app.logger.error(f'No label for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
+        if not 'couleur' in self.today_forecast:
+            current_app.logger.error(f'No couleur for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
 
         self.recommandation =\
              Recommandation.query.get(recommandation_id) or\
              Recommandation.get_revelant(
                 recommandations,
                 inscription,
-                self.qai
+                self.qualif
             )
+
+    @property
+    def forecast(self):
+        if not self._forecast:
+            self.init_forecast()
+        return self._forecast
+
+    def init_forecast(self, forecast=None):
+        try:
+            self._forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
+        except KeyError as e:
+            current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
+            current_app.logger.error(e)
 
     @classmethod
     def from_inscription_id(cls, inscription_id):
@@ -87,14 +63,26 @@ class Newsletter:
             recommandation_id=line['ID RECOMMANDATION']
         )
 
+    @property
+    def today_forecast(self):
+        try:
+            return next(iter([v for v in self.forecast['data'] if v['date'] == str(self.date)]), dict())
+        except (TypeError, ValueError, StopIteration) as e:
+            current_app.logger.error(f'Unable to get forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
+            current_app.logger.error(e)
+            return dict()
 
     @property
     def qualif(self):
-        return self.INDICE_ATMO_TO_QUALIFICATIF.get(self.qai)
+        return self.today_forecast.get('indice')
+
+    @property
+    def label(self):
+        return self.today_forecast.get('label')
     
     @property
-    def background(self):
-        return self.QUALIF_TO_BACKGROUND.get(self.qualif)
+    def couleur(self):
+        return self.today_forecast.get('couleur')
 
     @classmethod
     def generate_csv(cls, preferred_reco=None, seed=None, remove_reco=[]):
@@ -136,7 +124,7 @@ class Newsletter:
                 recommandations=recommandations,
                 forecast=insee_forecast[inscription.ville_insee]["forecast"]
             )
-            if inscription.frequence == "pollution" and newsletter.qai and newsletter.qai < 8:
+            if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
             yield newsletter
 
@@ -179,6 +167,7 @@ class NewsletterDB(db.Model, Newsletter):
     recommandation = db.relationship("Recommandation")
     date = db.Column(db.Date())
     qai = db.Column(db.Integer())
+    qualif = db.Column(db.String())
     appliquee = db.Column(db.Boolean())
     avis = db.Column(db.String())
 
@@ -188,21 +177,17 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation = newsletter.recommandation
         self.recommandation_id = newsletter.recommandation.id
         self.date = newsletter.date
-        self.qai = newsletter.qai
-
-    @property
-    def forecast(self):
-        return get_forecast(self.inscription.ville_insee, self.date, True)
+        self.qualif = newsletter.qualif
 
     def attributes(self):
         to_return = {
             'FORMAT': self.inscription.diffusion,
-            'QUALITE_AIR': self.qualif,
+            'QUALITE_AIR': self.label,
             'LIEN_AASQA': self.forecast['metadata']['region']['website'],
             'RECOMMANDATION': self.recommandation.format(self.inscription),
             'PRECISIONS': self.recommandation.precisions,
             'VILLE': self.inscription.ville_name,
-            'BACKGROUND_COLOR': self.background,
+            'BACKGROUND_COLOR': self.couleur,
             'SHORT_ID': self.short_id,
         }
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
