@@ -152,7 +152,7 @@ def import_(task, newsletters, overhead=0):
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
-        if nl.qai is None:
+        if nl.label is None:
             errors.append(f"Pas de qualité de l’air pour {nl.inscription.mail} ville : {nl.inscription.ville_entree} ")
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
         else:
