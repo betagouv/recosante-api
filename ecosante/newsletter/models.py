@@ -178,7 +178,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_id = newsletter.recommandation.id
         self.date = newsletter.date
         self.qualif = newsletter.qualif
-        self.forecast = newsletter.forecast
+        self._forecast = newsletter._forecast
 
     def attributes(self):
         to_return = {
