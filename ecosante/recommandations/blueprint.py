@@ -69,7 +69,7 @@ def edit(id):
 def remove(id):
     recommandation = Recommandation.query.get(id)
     if request.method == "POST":
-        db.session.delete(recommandation)
+        recommandation.delete()
         db.session.commit()
         flash("Recommandation supprimée")
         return redirect(url_for("recommandations.list_"))
@@ -81,7 +81,7 @@ def remove(id):
 
 
 def make_query(form):
-    query = Recommandation.query
+    query = Recommandation.active_query()
     if form.search.data:
         search = f"%{form.search.data}%"
         query = query.filter(
