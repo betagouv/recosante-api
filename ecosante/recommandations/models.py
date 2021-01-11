@@ -109,7 +109,7 @@ class Recommandation(db.Model):
         return to_return
 
     def _multi_setter(self, prefix, list_, values):
-        if not values:
+        if type(values) != list:
             return
         for v in list_:
             setattr(self, prefix + v, v in values)
