@@ -92,42 +92,17 @@ def test_is_qualite_extrement_mauvaise(db_session):
     assert r.is_relevant(i, "extrement_mauvais")
     assert not r.is_relevant(i, "bon")
 
-def test_is_qualite_moyenne(db_session):
-    r = Recommandation(qa_moyenne=True)
-    i = Inscription()
-    assert r.is_relevant(i, "moyen")
-    assert r.is_relevant(i, "degrade")
-    assert not r.is_relevant(i, "bon")
-    assert not r.is_relevant(i, "mauvais")
-    assert not r.is_relevant(i, "tres_mauvais")
-    assert not r.is_relevant(i, "extrement_mauvais")
-
 def test_is_qualite_bonne(db_session):
     r = Recommandation(qa_bonne=True)
     i = Inscription()
     assert r.is_relevant(i, "bon")
-    assert not r.is_relevant(i, "moyen")
+    assert r.is_relevant(i, "moyen")
     assert not r.is_relevant(i, "extrement_mauvais")
 
-def test_is_qualite_bonne_moyenne(db_session):
-    r = Recommandation(qa_bonne=True, qa_moyenne=True)
-    i = Inscription()
-    assert r.is_relevant(i, "bon")
-    assert r.is_relevant(i, "moyen")
-    assert r.is_relevant(i, "degrade")
-    assert not r.is_relevant(i, "mauvais")
-
-def test_is_qualite_bonne_moyenne_mauvaise(db_session):
-    r = Recommandation(qa_bonne=True, qa_moyenne=True, qa_mauvaise=True)
+def test_is_qualite_bonne_mauvaise(db_session):
+    r = Recommandation(qa_bonne=True, qa_mauvaise=True)
     i = Inscription()
     assert r.is_relevant(i, "bon")
     assert r.is_relevant(i, "moyen")
     assert r.is_relevant(i, "degrade")
     assert r.is_relevant(i, "extrement_mauvais")
-
-def test_is_qualite_moyenne_mauvaise(db_session):
-    r = Recommandation(qa_moyenne=True, qa_mauvaise=True)
-    i = Inscription()
-    assert not r.is_relevant(i, "bon")
-    assert r.is_relevant(i, "moyen")
-    assert r.is_relevant(i, "mauvais")

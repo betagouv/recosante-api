@@ -19,7 +19,6 @@ class CustomBoolean(types.TypeDecorator):
 
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
-    ("qa_moyenne", "🤏", "Qualité de l’air moyenne"),
     ("qa_bonne", "👍", "Qualité de l’air bonne"),
     ("menage", "🧹", "Ménage"),
     ("bricolage", "🔨", "Bricolage"),
@@ -50,7 +49,6 @@ class Recommandation(db.Model):
     precisions = db.Column(db.String)
     recommandation_format_SMS = db.Column(db.String)
     qa_mauvaise = db.Column(CustomBoolean, nullable=True)
-    qa_moyenne = db.Column(CustomBoolean, nullable=True)
     qa_bonne = db.Column(CustomBoolean, nullable=True)
     menage = db.Column(CustomBoolean)
     bricolage = db.Column(CustomBoolean)
@@ -118,11 +116,11 @@ class Recommandation(db.Model):
 
     @property
     def qa(self):
-        return self._multi_getter("qa_", ['bonne', 'moyenne', 'mauvaise'])
+        return self._multi_getter("qa_", ['bonne', 'mauvaise'])
 
     @qa.setter
     def qa(self, value):
-        self._multi_setter('qa_', ['bonne', 'moyenne', 'mauvaise'], value)
+        self._multi_setter('qa_', ['bonne', 'mauvaise'], value)
 
     @property
     def polluants(self):
@@ -161,17 +159,12 @@ class Recommandation(db.Model):
     def is_revelant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne
-        # On garde "tres_bon" dans un souci de retro-compatibilité
-        if qualif in (['bon'] + ['tres_bon']) and self.qa_bonne:
-            return True
-        # Si la qualité de l’air est moyenne
-        # que la reco concerne la qualité de l’air moyenne
-        # On garde "mediocre" dans un souci de retro-compatibilité
-        elif qualif in (['moyen', 'degrade'] + ['mediocre']) and self.qa_moyenne:
+        # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
+        if qualif in (['bon', 'moyen', 'degrade'] + ['tres_bon', 'mediocre']) and self.qa_bonne:
             return True
         # Si la qualité de l’air est mauvaise
         # que la reco concerne la qualité de l’air mauvaise
-        elif qualif in ['mauvais', 'tres_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
+        elif qualif in ['mauvais', 'tres_mauvais', 'très_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
             return True
         # Sinon c’est pas bon
         else:
@@ -257,7 +250,6 @@ class Recommandation(db.Model):
             "precisions": self.precisions,
             "recommandation_format_SMS": self.recommandation_format_SMS,
             "qa_mauvaise": self.qa_mauvaise,
-            "qa_moyenne": self.qa_moyenne,
             "qa_bonne": self.qa_bonne,
             "menage": self.menage,
             "bricolage": self.bricolage,
