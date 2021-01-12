@@ -251,7 +251,7 @@ class Recommandation(db.Model):
 
     @classmethod
     def utilisable_query(cls):
-        return cls.active_query().filter_by(recommandabilite="Utilisable").all()
+        return cls.active_query().filter_by(recommandabilite="Utilisable")
 
     def to_dict(self):
         return {
