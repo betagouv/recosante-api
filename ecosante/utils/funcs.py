@@ -13,3 +13,11 @@ def generate_line(line):
 
 def convert_boolean_to_oui_non(value):
     return "Oui" if value else "Non"
+
+def oxford_comma(items):
+    length = len(items)
+    if length == 1:
+        return items[0]
+    if length == 2:
+        return '{} et {}'.format(*items)
+    return '{}, et {}'.format(', '.join(items[:-1]), items[-1])

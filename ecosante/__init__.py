@@ -58,6 +58,7 @@ def create_app(testing=False):
         from .stats import blueprint as stats_bp
         from .newsletter import blueprint as newsletter_bp, tasks
         from .pages import blueprint as pages_bp
+        from .utils.funcs import oxford_comma
 
         app.register_blueprint(inscription_bp.bp)
         app.register_blueprint(stats_bp.bp)
@@ -69,6 +70,7 @@ def create_app(testing=False):
         app.jinja_env.add_extension("ecosante.utils.rollup.RollupJSExtension")
         app.jinja_env.add_extension("ecosante.utils.rollup.SCSSExtension")
         app.add_template_global(url_encode, name='url_encode')
+        app.add_template_filter(oxford_comma)
 
     @app.before_first_request
     def before_first_request():
