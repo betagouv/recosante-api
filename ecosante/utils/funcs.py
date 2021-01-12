@@ -16,8 +16,11 @@ def convert_boolean_to_oui_non(value):
 
 def oxford_comma(items):
     length = len(items)
-    if length == 1:
+    if length == 0:
+        return
+    elif length == 1:
         return items[0]
-    if length == 2:
+    elif length == 2:
         return '{} et {}'.format(*items)
-    return '{}, et {}'.format(', '.join(items[:-1]), items[-1])
+    else:
+        return '{}, et {}'.format(', '.join(items[:-1]), items[-1])
