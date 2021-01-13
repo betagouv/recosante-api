@@ -23,8 +23,8 @@ class FormAdd(BaseForm):
         ]
     )
     qa = MultiCheckboxField(
-        "Montrer en cas de qualité de l’air :",
-        choices=[('bonne', 'Bonne'), ('mauvaise', 'Mauvaise')]
+        "Montrer en cas d’indice ATMO :",
+        choices=[('bonne', 'bon à dégradé'), ('mauvais', 'mauvais à extrêment mauvais')]
     )
     polluants = MultiCheckboxField(
         "Montrer en cas de pic de :",
