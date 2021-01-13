@@ -32,9 +32,10 @@ RECOMMANDATION_FILTERS = [
     ("enfants", "🧒", "Enfants"),
     ("personnes_sensibles", "🤓", "Personnes sensibles"),
     ("population_generale", "🌐", "Population générale"),
-    ("automne", "🍂", "Automne"),
     ("hiver", "☃", "Hiver"),
+    ("printemps", "⚘", "Printemps"),
     ("ete", "🌞", "Été"),
+    ("automne", "🍂", "Automne"),
     ("particules_fines", "🌫️", "Pollution aux particules fines"),
     ("ozone", "🧪", "Pollution à l’ozone"),
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
@@ -69,6 +70,7 @@ class Recommandation(db.Model):
     objectif = db.Column(db.String)
     automne = db.Column(CustomBoolean, nullable=True)
     hiver = db.Column(CustomBoolean, nullable=True)
+    printemps = db.Column(CustomBoolean, nullable=True)
     ete = db.Column(CustomBoolean, nullable=True)
     ozone = db.Column(CustomBoolean, nullable=True)
     dioxyde_azote = db.Column(CustomBoolean, nullable=True)
@@ -147,13 +149,15 @@ class Recommandation(db.Model):
             return "hiver"
         if self.ete:
             return "été"
+        if self.printemps:
+            return "printemps"
         return ""
 
     @saison.setter
     def saison(self, value):
         if not value:
             return
-        for v in ['automne', 'hiver', 'ete']:
+        for v in ['automne', 'hiver', 'ete', 'printemps']:
             setattr(self, v, v == value)
 
     def is_revelant_qualif(self, qualif):
@@ -181,12 +185,14 @@ class Recommandation(db.Model):
                 return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
-        season = (date.today().month%12 +3)//3
-        if self.ete and season != 2:
+        season = date.today().month%12//3 + 1
+        if self.hiver and season != 1:
             return False
-        if self.automne and season != 3:
+        elif self.printemps and season != 2:
             return False
-        if self.hiver and season != 4:
+        elif self.ete and season != 3:
+            return False
+        elif self.automne and season != 4:
             return False
         return True
 
