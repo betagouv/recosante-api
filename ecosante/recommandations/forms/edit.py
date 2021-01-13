@@ -14,9 +14,8 @@ class FormAdd(BaseForm):
     recommandation = TextAreaField('Recommandation')
     precisions = TextAreaField('Précisions')
     recommandation_format_SMS = TextAreaField('Recommandation format SMS')
-    saison = SelectField("Montrer la recommandation durant la saison :",
+    saison = MultiCheckboxField("Montrer la recommandation que durant les saisons :",
         choices=[
-            ('', 'Toutes les saisons'),
             ('hiver', 'Hiver'),
             ('printemps', 'Printemps'),
             ('ete', 'Été'),

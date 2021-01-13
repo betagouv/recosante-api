@@ -143,22 +143,11 @@ class Recommandation(db.Model):
 
     @property
     def saison(self):
-        if self.automne:
-            return "automne"
-        if self.hiver:
-            return "hiver"
-        if self.ete:
-            return "été"
-        if self.printemps:
-            return "printemps"
-        return ""
+        return self._multi_getter("", ['hiver', 'printemps', 'ete', 'automne'])
 
     @saison.setter
     def saison(self, value):
-        if not value:
-            return
-        for v in ['automne', 'hiver', 'ete', 'printemps']:
-            setattr(self, v, v == value)
+        return self._multi_setter("", ['hiver', 'printemps', 'ete', 'automne'], value)
 
     def is_revelant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
