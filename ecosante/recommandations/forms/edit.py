@@ -45,15 +45,19 @@ class FormAdd(BaseForm):
         ]
     )
     episode_pollution = OuiNonField("Montrer en cas de pic de pollution ?")
-    menage = OuiNonField("Ménage")
-    bricolage = OuiNonField("Bricolage")
+    activites = MultiCheckboxField(
+        "Montrer pour les activités suivantes :",
+        choices=[
+            ('menage', 'Ménage'),
+            ('bricolage', 'Bricolage'),
+            ('jardinage', 'Jardinage'),
+            ('activite_physique', 'Activité physique')
+        ]
+    )
     chauffage_a_bois = OuiNonField("Chauffage à bois")
-    jardinage = OuiNonField("Jardinage")
-    balcon_terasse = OuiNonField("Balcon terrasse")
     velo_trott_skate = OuiNonField("Vélo / trottinette / skate")
     transport_en_commun = OuiNonField("Transport en commun ?")
     voiture = OuiNonField("Voiture")
-    activite_physique = OuiNonField("Activité physique")
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")

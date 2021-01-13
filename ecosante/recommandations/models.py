@@ -140,7 +140,6 @@ class Recommandation(db.Model):
     def population(self, value):
         return self._multi_setter("", ['allergies', 'enfants', 'personnes_sensibles', 'population_generale'], value)
 
-
     @property
     def saison(self):
         return self._multi_getter("", ['hiver', 'printemps', 'ete', 'automne'])
@@ -148,6 +147,14 @@ class Recommandation(db.Model):
     @saison.setter
     def saison(self, value):
         return self._multi_setter("", ['hiver', 'printemps', 'ete', 'automne'], value)
+
+    @property
+    def activites(self):
+        return self._multi_getter("", ['menage', 'bricolage', 'jardinage', 'activite_physique'])
+
+    @activites.setter
+    def activites(self, value):
+        return self._multi_setter("", ['menage', 'bricolage', 'jardinage', 'activite_physique'], value)
 
     def is_revelant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
@@ -157,7 +164,7 @@ class Recommandation(db.Model):
             return True
         # Si la qualité de l’air est mauvaise
         # que la reco concerne la qualité de l’air mauvaise
-        elif qualif in ['mauvais', 'tres_mauvais', 'très_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
+        elif qualif in ['mauvais', 'tres_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
             return True
         # Sinon c’est pas bon
         else:
