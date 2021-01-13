@@ -1,10 +1,10 @@
 from jinja2.nodes import Mul
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
-from wtforms import TextAreaField, HiddenField, SelectField
+from wtforms import TextAreaField, HiddenField, ValidationError
 
 
 class FormAdd(BaseForm):
-    recommandabilite = RadioField(
+    status = RadioField(
         "Statut",
         choices=[
             ('draft', 'Brouillon'),
@@ -62,6 +62,13 @@ class FormAdd(BaseForm):
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
     objectif = TextAreaField("Objectif")
+
+    def validate(self, extra_validators=[]):
+        rv = super().validate(extra_validators=extra_validators)
+        if not self.qa.data and not self.polluants.data:
+            rv = False
+            self.qa.errors = ["Vous devez remplir soit une qualité de l’air, soit un pic de pollution, sinon la recommandation n’est jamais envoyée"]
+        return rv
 
 
 class FormEdit(FormAdd):

@@ -1,6 +1,11 @@
 {% extends "base_form.html" %}
 
 {% block block_form %}
+{% if form.qa.errors %}
+<div class="notification error">
+    {{ form.qa.errors[0] }}
+</div>
+{% endif %}
 <form method="POST">
     <div class="form__group">
         <button class="button" type="submit" id="submit">{{ action }}</button>

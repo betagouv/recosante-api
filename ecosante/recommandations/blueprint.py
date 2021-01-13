@@ -52,7 +52,7 @@ def edit(id):
     if not recommandation:
         abort(404)
     form = FormEdit(obj=recommandation)
-    if request.method == "POST":
+    if request.method == "POST" and form.validate():
         form.populate_obj(recommandation)
         db.session.add(recommandation)
         db.session.commit()
