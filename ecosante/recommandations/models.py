@@ -44,7 +44,7 @@ RECOMMANDATION_FILTERS = [
 
 class Recommandation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    recommandabilite = db.Column(db.String)
+    status = db.Column(db.String)
     recommandation = db.Column(db.String)
     precisions = db.Column(db.String)
     recommandation_format_SMS = db.Column(db.String)
@@ -75,7 +75,6 @@ class Recommandation(db.Model):
     dioxyde_soufre = db.Column(CustomBoolean, nullable=True)
     particules_fines = db.Column(CustomBoolean, nullable=True)
     episode_pollution = db.Column(CustomBoolean, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
 
     @property
     def velo(self):
@@ -202,7 +201,7 @@ class Recommandation(db.Model):
 
     @classmethod
     def shuffled(cls, user_seed=None, preferred_reco=None, remove_reco=[]):
-        recommandations = cls.utilisable_query().all()
+        recommandations = cls.published_query().all()
         user_seed = 1/(uuid.UUID(user_seed, version=4).int) if user_seed else random.random()
         random.Random(user_seed).shuffle(recommandations)
         recommandations = list(filter(lambda r: str(r.id) not in set(remove_reco), recommandations))
@@ -243,15 +242,11 @@ class Recommandation(db.Model):
         return cls.get_revelant(cls.shuffled(), inscription, qai)
 
     def delete(self):
-        self.is_active = False
+        self.status = "deleted"
 
     @classmethod
-    def active_query(cls):
-        return cls.query.filter_by(is_active=True).order_by(cls.id)
-
-    @classmethod
-    def utilisable_query(cls):
-        return cls.active_query().filter_by(recommandabilite="Utilisable")
+    def published_query(cls):
+        return cls.query.filter_by(status="published").order_by(cls.id)
 
     def to_dict(self):
         return {

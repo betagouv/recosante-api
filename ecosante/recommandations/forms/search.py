@@ -13,7 +13,12 @@ class FormSearch(BaseForm):
             for filter in RECOMMANDATION_FILTERS
         ]
     )
-    recommandabilite = SelectField(
-        "Recommandabilité",
-        choices=['', 'Utilisable', 'Non-utilisable']
+    status = SelectField(
+        "Statut",
+        choices=[
+            ('published', 'Publiée'),
+            ('draft', 'Brouillon'),
+            ('', 'Toutes les recommandations')
+        ],
+        default='published'
     )

@@ -81,7 +81,7 @@ def remove(id):
 
 
 def make_query(form):
-    query = Recommandation.active_query()
+    query = Recommandation.query
     if form.search.data:
         search = f"%{form.search.data}%"
         query = query.filter(
@@ -91,8 +91,10 @@ def make_query(form):
                     Recommandation.recommandation_format_SMS.ilike(search)
             )
         )
-    if form.recommandabilite.data:
-        query = query.filter(Recommandation.recommandabilite==form.recommandabilite.data)
+    if form.status.data:
+        query = query.filter(Recommandation.status==form.status.data)
+    else:
+        query = query.filter(Recommandation.status!='deleted')
     for categorie in form.categories.data:
         query = query.filter(
             getattr(Recommandation, categorie).is_(True)
@@ -108,6 +110,7 @@ def list_():
     return render_template(
         "list.html",
         recommandations=query.all(),
+        count=query.count(),
         form=form,
     )
 

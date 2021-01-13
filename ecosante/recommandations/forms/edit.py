@@ -5,10 +5,10 @@ from wtforms import TextAreaField, HiddenField, SelectField
 
 class FormAdd(BaseForm):
     recommandabilite = RadioField(
-        "Recommandabilité",
+        "Statut",
         choices=[
-            ('Non-utilisable', 'Non-utilisable'),
-            ('Utilisable', 'Utilisable')
+            ('draft', 'Brouillon'),
+            ('published', 'Publiée')
         ]
     )
     recommandation = TextAreaField('Recommandation')
