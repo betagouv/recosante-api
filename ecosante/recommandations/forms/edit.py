@@ -55,7 +55,7 @@ class FormAdd(BaseForm):
         ]
     )
     chauffage_a_bois = OuiNonField("Chauffage à bois")
-    velo_trott_skate = OuiNonField("Vélo / trottinette / skate")
+    velo_trott_skate = OuiNonField("Vélo")
     transport_en_commun = OuiNonField("Transport en commun ?")
     voiture = OuiNonField("Voiture")
     autres_conditions = TextAreaField("Autres conditions")
