@@ -27,12 +27,13 @@ class FormAdd(BaseForm):
         choices=[('bonne', 'bon à dégradé'), ('mauvais', 'mauvais à extrêment mauvais')]
     )
     polluants = MultiCheckboxField(
-        "Montrer en cas de pic de :",
+        "Montrer en cas d’épisode de pollution :",
+        description="seuil «information ou recommandation» ou «alerte»",
         choices=[
-            ('ozone', 'Ozone'),
-            ('dioxyde_azote', 'Doxyde d’azote'),
-            ('dioxyde_soufre', 'Dioxyde de soufre'),
-            ('particules_fines', 'Particules fines')
+            ('ozone', 'à l’ozone'),
+            ('dioxyde_azote', 'au dioxyde d’azote'),
+            ('dioxyde_soufre', 'au dioxyde de soufre'),
+            ('particules_fines', 'aux particules fines')
         ]
     )
     population = MultiCheckboxField(
