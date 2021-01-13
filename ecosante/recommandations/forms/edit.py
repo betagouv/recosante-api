@@ -37,15 +37,14 @@ class FormAdd(BaseForm):
         ]
     )
     population = MultiCheckboxField(
-        "Montrer à :",
+        "Montrer aux populations suivantes :",
         choices=[
             ('allergies', 'Personnes allergiques'),
             ('enfants', 'Enfants'),
-            ('personnes_sensibles', 'Personnes sensibles'),
+            ('personnes_sensibles', 'Personnes à pathologie respiratoire'),
             ('population_generale', 'Population générale')
         ]
     )
-    episode_pollution = OuiNonField("Montrer en cas de pic de pollution ?")
     activites = MultiCheckboxField(
         "Montrer pour les activités suivantes :",
         choices=[
