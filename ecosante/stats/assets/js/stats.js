@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', e => {
     new_bar_chart(
         'ouvertures_chart',
         'ouvertures',
-        'Taux d’ouvertures des mails',
+        'Taux d’ouverture des mails',
         'line',
         {
             scales: {
