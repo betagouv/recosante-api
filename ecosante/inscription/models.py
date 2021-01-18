@@ -191,7 +191,7 @@ class Inscription(db.Model):
         self.deactivation_date = date.today()
         db.session.add(self)
         db.session.commit()
-        send_unsubscribe_error.apply_async(
+        send_unsubscribe.apply_async(
             (self.mail,),
-            send_unsubscribe_error.s()
+            link_error=send_unsubscribe_error.s()
         )

@@ -236,6 +236,7 @@ def import_(task, newsletters, overhead=0):
         }
     )
 
+    polluants = ""
     sms_campaign_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
     r = sms_campaign_api.create_sms_campaign(
         sib_api_v3_sdk.CreateSmsCampaign(
@@ -246,6 +247,9 @@ def import_(task, newsletters, overhead=0):
 Plus d'information : {LIEN_AASQA}
 {RECOMMANDATION}
 STOP au [STOP_CODE]
+""" if not polluants else """Indice qualité de l’air à {VILLE} : {QUALITE_AIR}
+Épisode de pollution {POLLUANT}
+Recommandations sanitaires : lien
 """,
             recipients = sib_api_v3_sdk.CreateSmsCampaignRecipients(
                 list_ids = [lists['sms']]

@@ -9,11 +9,11 @@
 {% block pre_form %}
 {% endblock %}
 
-<section class="section{% if self.pre_form() %} section-grey {% endif %}">
+<section class="section{% if self.pre_form() %} section-grey {% endif %}" id="questionnaire">
     <div class="container">
         {% if form.errors %}
         <div class="notification error">
-        Vous avez fait des erreurs lorsque vous avez rempli le formulaire, veuillez les corriger    
+        Vous avez fait des erreurs lorsque vous avez rempli le formulaire, veuillez les corriger
         </div>
         {% endif %}
 
@@ -22,6 +22,9 @@
 
     </div>
 </section>
+
+{% block post_form %}
+{% endblock post_form %}
 
 <section class="section" id="donnees-personnelles">
       <div class="container">

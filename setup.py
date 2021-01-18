@@ -11,9 +11,10 @@ DEPENDENCIES = [
     'Flask-Migrate',
     'Flask-SQLAlchemy',
     'Flask-WTF',
-    'indice_pollution==0.6.5',
+    'indice_pollution==0.6.6',
     'sib-api-v3-sdk',
     'requests',
+    'icalevents'
 ]
 
 class CustomPsycopg2Install(install):

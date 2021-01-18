@@ -31,10 +31,10 @@ class FormInscription(BaseForm):
     frequence = RadioField(
         'À quelle fréquence souhaitez-vous recevoir les informations ?',
         [validators.InputRequired()],
-        description="En selectionnant «lorsque la qualité de l'air est mauvaise» il est possible que vous ne receviez peu ou pas d'alerte Ecosanté. C'est une bonne nouvelle, cela signifie que la qualité de l'air n'est pas mauvaise dans votre région.",
+        description="En selectionnant «lorsque la qualité de l'air est mauvaise», vous recevrez Écosanté en cas d’épisode de pollution ou lorsque l’indide de qualité de l’air est mauvais.",
         choices=[
             ('quotidien',  'Tous les jours'),
-            ('pollution',  "Lorsque la qualité de l'air est mauvaise")
+            ('pollution',  'Lorsque la qualité de l’air est mauvaise')
         ]
     )
     rgpd = BooleanField(
