@@ -28,7 +28,6 @@ RECOMMANDATION_FILTERS = [
     ("transport_en_commun", "🚇", "Transport en commun"),
     ("voiture", "🚗", "Voiture"),
     ("activite_physique", "‍🏋", "Activité physique"),
-    ("allergies", "🤧", "Allergies aux pollens"),
     ("enfants", "🧒", "Enfants"),
     ("personnes_sensibles", "🤓", "Personnes sensibles"),
     ("population_generale", "🌐", "Population générale"),
@@ -41,6 +40,7 @@ RECOMMANDATION_FILTERS = [
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
     ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
     ("episode_pollution", "⚠️", "Épisode de pollution"),
+    ("raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
 
 class Recommandation(db.Model):
@@ -77,6 +77,7 @@ class Recommandation(db.Model):
     dioxyde_soufre = db.Column(CustomBoolean, nullable=True)
     particules_fines = db.Column(CustomBoolean, nullable=True)
     episode_pollution = db.Column(CustomBoolean, nullable=True)
+    raep = db.Column(CustomBoolean, nullable=True)
 
     @property
     def velo(self):

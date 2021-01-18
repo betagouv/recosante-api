@@ -36,6 +36,7 @@ class FormAdd(BaseForm):
             ('particules_fines', 'aux particules fines')
         ]
     )
+    raep = OuiNonField("Montrer en cas de RAEP > 0")
     population = MultiCheckboxField(
         "Montrer aux populations suivantes :",
         choices=[
