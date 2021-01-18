@@ -4,7 +4,8 @@ from flask import (
     redirect,
     session,
     url_for,
-    jsonify
+    jsonify,
+    stream_with_context,
 )
 from .models import Inscription, db
 from .forms import FormInscription, FormPersonnalisation
@@ -14,7 +15,8 @@ from ecosante.utils.decorators import (
 )
 from ecosante.utils import Blueprint
 from ecosante.extensions import celery
-from flask_assets import Bundle
+from flask.wrappers import Response
+from datetime import datetime
 
 bp = Blueprint("inscription", __name__)
 
@@ -56,22 +58,6 @@ def personnalisation():
 def reussie():
     return render_template('reussi.html')
 
-@bp.route('/geojson')
-def geojson():
-    return jsonify(Inscription.export_geojson())
-
-@bp.route('<secret_slug>/export', methods=['GET', 'POST'])
-@bp.route('export', methods=['GET', 'POST'])
-@admin_capability_url
-def export():
-    return redirect(url_for("newsletter.export"))
-
-@bp.route('<secret_slug>/import', methods=['GET', 'POST'])
-@bp.route('import', methods=['GET', 'POST'])
-@admin_capability_url
-def import_():
-    return redirect(url_for("newsletter.import_"))
-
 @bp.route('<secret_slug>/user_unsubscription', methods=['POST'])
 @webhook_capability_url
 def user_unsubscription(secret_slug):
@@ -82,3 +68,25 @@ def user_unsubscription(secret_slug):
     else:
         user.unsubscribe()
     return jsonify(request.json)
+
+@bp.route('<secret_slug>/export')
+@bp.route('/export')
+@admin_capability_url
+def export():
+    return Response(
+        stream_with_context(Inscription.generate_csv()),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=export-{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"
+        }
+    )
+
+@bp.route('<secret_slug>/liste')
+@bp.route('/liste')
+@admin_capability_url
+def liste():
+    inscriptions = Inscription.active_query().all()
+    return render_template(
+        'liste.html',
+        inscriptions=inscriptions
+    )

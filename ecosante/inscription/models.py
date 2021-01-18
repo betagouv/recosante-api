@@ -1,4 +1,8 @@
 from ecosante.extensions import db
+from ecosante.utils.funcs import (
+    convert_boolean_to_oui_non,
+    generate_line
+)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import func
 from datetime import (
@@ -147,20 +151,6 @@ class Inscription(db.Model):
     def is_active(self):
         return not self.deactivation_date
 
-    @classmethod
-    def export_geojson(cls):
-        return {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "properties": [],
-                    "geometry": i.ville_centre
-                }
-                for i in cls.query.all()
-            ]
-        }
-
     def last_month_newsletters(self):
         from ecosante.newsletter.models import NewsletterDB
 
@@ -195,3 +185,36 @@ class Inscription(db.Model):
             (self.mail,),
             link_error=send_unsubscribe_error.s()
         )
+
+    @classmethod
+    def generate_csv(cls):
+        yield generate_line([
+            'ville',
+            'deplacement',
+            'activites',
+            'pathologie_respiratoire',
+            'allergie_pollen',
+            'fumeur',
+            'enfants',
+            'diffusion',
+            'telephone',
+            'mail',
+            'frequence'
+        ])
+        for inscription in cls.active_query().all():
+            yield inscription.csv_line()
+    
+    def csv_line(self):
+        return generate_line([
+            self.ville_name, 
+            self.deplacement,
+            self.activites,
+            self.pathologie_respiratoire,
+            self.allergie_pollen,
+            self.fumeur,
+            self.enfants,
+            self.diffusion,
+            self.telephone,
+            self.mail,
+            self.frequence
+        ])
