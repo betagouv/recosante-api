@@ -1,7 +1,4 @@
-from ecosante.extensions import (
-    celery,
-    db
-)
+from ecosante.extensions import db
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import func
 from datetime import (
@@ -12,6 +9,7 @@ from dataclasses import dataclass
 from typing import List
 import requests
 import json
+from datetime import date
 
 @dataclass
 class Inscription(db.Model):
@@ -51,6 +49,8 @@ class Inscription(db.Model):
     pathologie_respiratoire = db.Column(db.Boolean)
     allergie_pollen = db.Column(db.Boolean)
     fumeur = db.Column(db.Boolean)
+    #Misc
+    deactivation_date = db.Column(db.Date)
 
     newsletters = db.relationship(
         "ecosante.newsletter.models.NewsletterDB",
@@ -143,6 +143,9 @@ class Inscription(db.Model):
     def region_name(self):
         return self.cache_api_commune.get('region', {}).get('nom')
 
+    @property
+    def is_active(self):
+        return not self.deactivation_date
 
     @classmethod
     def export_geojson(cls):
@@ -179,11 +182,16 @@ class Inscription(db.Model):
             .filter(NewsletterDB.id.in_(query_sent_nl))\
             .all()
 
+    @classmethod
+    def active_query(cls):
+        return db.session.query(cls).filter(Inscription.deactivation_date==None)
+
     def unsubscribe(self):
-        celery.send_task(
-            "ecosante.inscription.tasks.send_unsubscribe.send_unsubscribe",
-            (self.mail,),
-            link_error="ecosante.inscription.tasks.send_unsubscribe.send_unsubscribe_error"
-        )
-        db.session.delete(self)
+        from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
+        self.deactivation_date = date.today()
+        db.session.add(self)
         db.session.commit()
+        send_unsubscribe_error.apply_async(
+            (self.mail,),
+            send_unsubscribe_error.s()
+        )

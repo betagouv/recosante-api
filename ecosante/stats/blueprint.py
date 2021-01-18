@@ -25,7 +25,7 @@ def stats():
     subscriptions = {
         f"{get_month_name(v[0].month, 'fr_FR.utf8')} {v[0].year}": v[1]
         for v in
-        db.session.query(g, func.count(Inscription.id)).group_by(g).order_by(g).all()
+        db.session.query(g, func.count(Inscription.id)).group_by(g).filter(Inscription.deactivation_date == None).order_by(g).all()
     }
     decouverte_labels = {v[0]: v[1] for v in Form.decouverte.kwargs["choices"]}
     decouverte_unnest_query = db.session.query(func.unnest(Avis.decouverte).label('d')).subquery()
@@ -39,9 +39,9 @@ def stats():
     nb_reponses = Avis.query.count()
     nb_satisfaits = Avis.query.filter(Avis.recommandabilite > 8).count()
 
-    nb_inscriptions = Inscription.query.count()
-    nb_allergies = Inscription.query.filter_by(allergie_pollen=True).count()
-    nb_pathologie_respiratoire = Inscription.query.filter_by(pathologie_respiratoire=True).count()
+    nb_inscriptions = Inscription.active_query().count()
+    nb_allergies = Inscription.active_query().filter_by(allergie_pollen=True).count()
+    nb_pathologie_respiratoire = Inscription.active_query().filter_by(pathologie_respiratoire=True).count()
 
     ouvertures = []
     api_instance = sib_api_v3_sdk.EmailCampaignsApi(sib)
@@ -72,15 +72,15 @@ def stats():
 
     return render_template(
         'stats.html', 
-        actifs=Inscription.query.count(),
+        actifs=Inscription.active_query().count(),
         subscriptions=json.dumps(subscriptions),
         media=json.dumps({
-            "SMS": Inscription.query.filter_by(diffusion='sms').count(),
-            "Mail": Inscription.query.filter_by(diffusion='mail').count()
+            "SMS": Inscription.active_query().filter_by(diffusion='sms').count(),
+            "Mail": Inscription.active_query().filter_by(diffusion='mail').count()
         }),
         frequence=json.dumps({
-            'Tous les jours': Inscription.query.filter_by(frequence='quotidien').count(),
-            "Lorsque la qualité de l'air est mauvaise": Inscription.query.filter_by(frequence='pollution').count()
+            'Tous les jours': Inscription.active_query().filter_by(frequence='quotidien').count(),
+            "Lorsque la qualité de l'air est mauvaise": Inscription.active_query().filter_by(frequence='pollution').count()
         }),
         ouvertures=json.dumps(dict(ouvertures)),
         ouverture_veille=ouverture_veille,

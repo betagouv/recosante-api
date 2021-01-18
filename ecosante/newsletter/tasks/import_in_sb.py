@@ -6,7 +6,7 @@ import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from urllib.parse import quote_plus
-from ecosante.newsletter.models import Newsletter, NewsletterDB
+from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
 from ecosante.extensions import db, sib, celery
 from ecosante.utils import send_log_mail
 
@@ -29,6 +29,27 @@ def delete_file_error(self, exc, traceback, filepath):
     current_app.logger.error('Task {0} raised exception: {1!r}\n{2!r}'.format(
           self.id, exc, traceback))
 
+def get_all_contacts(limit=100):
+    contacts_api = sib_api_v3_sdk.ContactsApi(sib)
+    contacts = []
+    offset = 0
+    while True:
+        result = contacts_api.get_contacts(limit=100, offset=offset)
+        contacts += result.contacts
+        if len(result.contacts) < limit:
+            break
+        offset += limit
+    return contacts
+
+def get_blacklisted_contacts():
+    return [c for c in get_all_contacts() if c['emailBlacklisted'] or c['smsBlacklisted']]
+
+def deactivate_contacts():
+    for contact in get_blacklisted_contacts():
+        db_contact = Inscription.active_query().filter(Inscription.mail==contact['email']).first()
+        if not db_contact or not db_contact.is_active:
+            continue
+        db_contact.unsubscribe()
 
 @celery.task(bind=True)
 def import_in_sb(self, filepath):
@@ -54,6 +75,14 @@ def import_in_sb(self, filepath):
 
 @celery.task(bind=True)
 def import_and_send(self, seed, preferred_reco, remove_reco):
+    self.update_state(
+        state='PENDING',
+        meta={
+            "progress": 0,
+            "details": "Prise en compte de la désincription des membres"
+        }
+    )
+    deactivate_contacts()
     self.update_state(
         state='PENDING',
         meta={
