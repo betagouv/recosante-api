@@ -15,6 +15,8 @@ def convert_boolean_to_oui_non(value):
     return "Oui" if value else "Non"
 
 def oxford_comma(items):
+    if not items:
+        return
     length = len(items)
     if length == 0:
         return
@@ -24,3 +26,6 @@ def oxford_comma(items):
         return '{} et {}'.format(*items)
     else:
         return '{}, et {}'.format(', '.join(items[:-1]), items[-1])
+
+def display_check(check):
+    return "✅" if check else "❌"
