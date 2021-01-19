@@ -169,11 +169,11 @@ class Recommandation(db.Model):
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne
         # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
-        if qualif in (['bon', 'moyen', 'degrade'] + ['tres_bon', 'mediocre']) and self.qa_bonne:
+        if qualif in (['bon', 'moyen'] + ['tres_bon', 'mediocre']) and self.qa_bonne:
             return True
         # Si la qualité de l’air est mauvaise
         # que la reco concerne la qualité de l’air mauvaise
-        elif qualif in ['mauvais', 'tres_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
+        elif qualif in ['degrade', 'mauvais', 'tres_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
             return True
         # Sinon c’est pas bon
         else:
