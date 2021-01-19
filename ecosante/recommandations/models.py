@@ -157,6 +157,14 @@ class Recommandation(db.Model):
     def activites(self, value):
         return self._multi_setter("", ['menage', 'bricolage', 'jardinage', 'activite_physique'], value)
 
+    @property
+    def deplacement(self):
+        return self._multi_getter("", ['velo_trott_skate', 'transport_en_commun', 'voiture'])
+
+    @deplacement.setter
+    def deplacement(self, value):
+        return self._multi_setter("", ['velo_trott_skate', 'transport_en_commun', 'voiture'], value)
+
     def is_revelant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne

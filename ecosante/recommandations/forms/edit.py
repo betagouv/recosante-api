@@ -1,6 +1,6 @@
 from jinja2.nodes import Mul
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
-from wtforms import TextAreaField, HiddenField, ValidationError
+from wtforms import TextAreaField, HiddenField, validators
 
 
 class FormAdd(BaseForm):
@@ -36,7 +36,7 @@ class FormAdd(BaseForm):
             ('particules_fines', 'aux particules fines')
         ]
     )
-    raep = OuiNonField("Montrer en cas de RAEP > 0")
+    raep = OuiNonField("Montrer en cas de RAEP > 0", validators=[validators.Optional(),])
     population = MultiCheckboxField(
         "Montrer aux populations suivantes :",
         choices=[
@@ -55,10 +55,15 @@ class FormAdd(BaseForm):
             ('activite_physique', 'Activité physique')
         ]
     )
+    deplacement = MultiCheckboxField(
+        "Montrer pour les modes de déplacement suivants :",
+        choices=[
+            ("velo_trott_skate", "Vélo"),
+            ("transport_en_commun", "Transport en commun"),
+            ("voiture", "Voiture")
+        ]
+    )
     chauffage_a_bois = OuiNonField("Chauffage à bois")
-    velo_trott_skate = OuiNonField("Vélo")
-    transport_en_commun = OuiNonField("Transport en commun ?")
-    voiture = OuiNonField("Voiture")
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
