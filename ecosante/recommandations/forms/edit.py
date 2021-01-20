@@ -71,7 +71,7 @@ class FormAdd(BaseForm):
 
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)
-        if not self.qa.data and not self.polluants.data:
+        if not self.qa.data and not self.polluants.data and not self.raep.data:
             rv = False
             self.qa.errors = ["Vous devez remplir soit une qualité de l’air, soit un pic de pollution, sinon la recommandation n’est jamais envoyée"]
         return rv
