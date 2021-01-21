@@ -124,7 +124,7 @@ class Newsletter:
                 recommandations=recommandations,
                 forecast=insee_forecast[inscription.ville_insee]["forecast"]
             )
-            if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
+            if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
             yield newsletter
 
