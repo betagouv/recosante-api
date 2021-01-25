@@ -23,7 +23,12 @@ class Newsletter:
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
-        self._forecast = None
+        try:
+            self.forecast = get_forecast(self.inscription.ville_insee, self.date, True)
+        except KeyError as e:
+            current_app.logger.error(f'Unable to find region for {self.inscription.ville_name} ({self.inscription.ville_insee})')
+            current_app.logger.error(e)
+            self.forecast = dict()
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
@@ -36,19 +41,6 @@ class Newsletter:
                 inscription,
                 self.qualif
             )
-
-    @property
-    def forecast(self):
-        if not self._forecast:
-            self.init_forecast()
-        return self._forecast
-
-    def init_forecast(self, forecast=None):
-        try:
-            self._forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
-        except KeyError as e:
-            current_app.logger.error(f'Unable to find region for {inscription.ville_name} ({inscription.ville_insee})')
-            current_app.logger.error(e)
 
     @classmethod
     def from_inscription_id(cls, inscription_id):
@@ -65,10 +57,11 @@ class Newsletter:
 
     @property
     def today_forecast(self):
+        data = self.forecast['data']
         try:
-            return next(iter([v for v in self.forecast['data'] if v['date'] == str(self.date)]), dict())
+            return next(iter([v for v in data if v['date'] == str(self.date)]), dict())
         except (TypeError, ValueError, StopIteration) as e:
-            current_app.logger.error(f'Unable to get forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
+            current_app.logger.error(f'Unable to get forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
             current_app.logger.error(e)
             return dict()
 
