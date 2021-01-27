@@ -1,16 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime
 from sqlalchemy import text
+from sqlalchemy.dialects import postgresql
 from ecosante.inscription.blueprint import inscription
 from flask import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 from ecosante.utils.funcs import (
     convert_boolean_to_oui_non,
-    generate_line
+    generate_line,
+    oxford_comma
 )
 from ecosante.extensions import db
-from indice_pollution import bulk, today, forecast as get_forecast
+from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes
 
 @dataclass
 class Newsletter:
@@ -18,29 +20,57 @@ class Newsletter:
     recommandation: Recommandation
     inscription: Inscription
     forecast: dict
+    episodes: dict
+    episodes: list
 
-    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None):
+    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
         try:
-            self.forecast = get_forecast(self.inscription.ville_insee, self.date, True)
+            self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
         except KeyError as e:
             current_app.logger.error(f'Unable to find region for {self.inscription.ville_name} ({self.inscription.ville_insee})')
             current_app.logger.error(e)
             self.forecast = dict()
+        try:
+            self.episodes = episodes or get_episodes(self.inscription.ville_insee, self.date)
+        except KeyError as e:
+            current_app.logger.error(f'Unable to find region for {self.inscription.ville_name} ({self.inscription.ville_insee})')
+            current_app.logger.error(e)
+            self.episodes = dict()
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
             current_app.logger.error(f'No couleur for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
+        self.polluants = [
+            {
+                '1': 'dioxyde_soufre',
+                '5': 'particules_fines',
+                '7': 'ozone',
+                '8': 'dioxyde_azote',
+            }.get(str(e['code_pol']), f'erreur: {e["code_pol"]}')
+            for e in self.episodes['data']
+            if e['etat'] != 'PAS DE DEPASSEMENT'
+        ]
 
         self.recommandation =\
              Recommandation.query.get(recommandation_id) or\
-             Recommandation.get_revelant(
+             Recommandation.get_relevant(
                 recommandations,
                 inscription,
-                self.qualif
+                self.qualif,
+                self.polluants
             )
+
+    def formatted_polluants(self):
+        label_to_formatted_text ={
+            'dioxyde_soufre': 'au dioxyde de soufre',
+            'particules_fines': 'aux particules fines',
+            'ozone': 'à l’ozone',
+            'dioxyde_azote': 'au dioxyde d’azote'
+        }
+        return oxford_comma([label_to_formatted_text.get(pol) for pol in self.polluants])
 
     @classmethod
     def from_inscription_id(cls, inscription_id):
@@ -66,6 +96,16 @@ class Newsletter:
             return dict()
 
     @property
+    def today_episodes(self):
+        data = self.episodes['data']
+        try:
+            return [v for v in data if v['date'] == str(self.date)]
+        except (TypeError, ValueError, StopIteration) as e:
+            current_app.logger.error(f'Unable to get episodes for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
+            current_app.logger.error(e)
+            return dict()
+
+    @property
     def qualif(self):
         return self.today_forecast.get('indice')
 
@@ -76,6 +116,14 @@ class Newsletter:
     @property
     def couleur(self):
         return self.today_forecast.get('couleur')
+
+    @property
+    def get_episodes_depassements(self):
+        return [e for e in self.today_episodes if e['etat'] != 'PAS DE DEPASSEMENT']
+
+    @property
+    def has_depassement(self):
+        return len(self.get_depassement) > 0
 
     @classmethod
     def generate_csv(cls, preferred_reco=None, seed=None, remove_reco=[]):
@@ -109,13 +157,17 @@ class Newsletter:
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[]):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        insee_region = {i.ville_insee: i.region_name for i in Inscription.active_query().distinct(Inscription.ville_insee)}
+        inscriptions = Inscription.active_query().distinct(Inscription.ville_insee)
+        insee_region = {i.ville_insee: i.region_name for i in inscriptions}
         insee_forecast = bulk(insee_region, fetch_episodes=True)
         for inscription in Inscription.active_query().all():
+            if inscription.ville_insee not in insee_forecast:
+                continue
             newsletter = cls(
                 inscription,
                 recommandations=recommandations,
-                forecast=insee_forecast[inscription.ville_insee]["forecast"]
+                forecast=insee_forecast[inscription.ville_insee]["forecast"],
+                episodes=insee_forecast[inscription.ville_insee]["episode"]
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
@@ -163,6 +215,7 @@ class NewsletterDB(db.Model, Newsletter):
     qualif = db.Column(db.String())
     appliquee = db.Column(db.Boolean())
     avis = db.Column(db.String())
+    polluants = db.Column(postgresql.ARRAY(db.String()))
 
     def __init__(self, newsletter):
         self.inscription = newsletter.inscription
@@ -171,7 +224,9 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_id = newsletter.recommandation.id
         self.date = newsletter.date
         self.qualif = newsletter.qualif
-        self._forecast = newsletter._forecast
+        self.forecast = newsletter.forecast
+        self.episodes = newsletter.episodes
+        self.polluants = newsletter.polluants
 
     def attributes(self):
         to_return = {
@@ -183,6 +238,7 @@ class NewsletterDB(db.Model, Newsletter):
             'VILLE': self.inscription.ville_name,
             'BACKGROUND_COLOR': self.couleur,
             'SHORT_ID': self.short_id,
+            'POLLUANTS': self.formatted_polluants()
         }
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone

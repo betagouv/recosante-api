@@ -165,7 +165,7 @@ class Recommandation(db.Model):
     def deplacement(self, value):
         return self._multi_setter("", ['velo_trott_skate', 'transport_en_commun', 'voiture'], value)
 
-    def is_revelant_qualif(self, qualif):
+    def is_relevant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne
         # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
@@ -179,14 +179,19 @@ class Recommandation(db.Model):
         else:
             return False
 
-    def is_relevant(self, inscription, qualif):
+    def is_relevant(self, inscription, qualif, polluants):
+        if polluants:
+            for polluant in polluants:
+                if getattr(self, polluant):
+                    return True
+            return False
         for critere in ["menage", "bricolage", "jardinage", "velo",
                         "transport_en_commun", "voiture", "sport",
                         "allergie_pollen", "enfants", "fumeur"]:
             if not getattr(inscription, critere) and getattr(self, critere):
                 return False
         if qualif:
-            if not self.is_revelant_qualif(qualif):
+            if not self.is_relevant_qualif(qualif):
                 return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
@@ -221,7 +226,7 @@ class Recommandation(db.Model):
         return recommandations
 
     @classmethod
-    def get_revelant(cls, recommandations, inscription, qualif):
+    def get_relevant(cls, recommandations, inscription, qualif, polluants):
         copy_recommandations = []
         same_category_recommandations = []
         last_month_newsletters = inscription.last_month_newsletters()
@@ -243,14 +248,14 @@ class Recommandation(db.Model):
         copy_recommandations.extend(recent_recommandations)
 
         try:
-            return next(filter(lambda r: r.is_relevant(inscription, qualif), copy_recommandations))
+            return next(filter(lambda r: r.is_relevant(inscription, qualif, polluants), copy_recommandations))
         except StopIteration as e:
             current_app.logger.error(f"Unable to get recommandation for {inscription.mail} and '{qualif}'")
             raise e
 
     @classmethod
-    def get_one(cls, inscription, qai):
-        return cls.get_revelant(cls.shuffled(), inscription, qai)
+    def get_one(cls, inscription, qai, polluants):
+        return cls.get_relevant(cls.shuffled(), inscription, qai, polluants)
 
     def delete(self):
         self.status = "deleted"
