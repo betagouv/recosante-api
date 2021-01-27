@@ -15,6 +15,7 @@ def convert_boolean_to_oui_non(value):
     return "Oui" if value else "Non"
 
 def oxford_comma(items):
+    items = list(items)
     if not items:
         return
     length = len(items)
