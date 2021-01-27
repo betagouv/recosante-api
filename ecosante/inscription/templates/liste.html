@@ -17,6 +17,7 @@
                     <th>Pathologie respiratoire</th>
                     <th>Allergie pollen</th>
                     <th>Fumeur</th>
+                    <th>Inscription</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,6 +32,7 @@
                     <td>{{ inscription.patdologie_respiratoire | display_check }}</td>
                     <td>{{ inscription.allergie_pollen | display_check }}</td>
                     <td>{{ inscription.fumeur | display_check }}</td>
+                    <td>{{ inscription.date_inscription }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
