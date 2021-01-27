@@ -109,7 +109,7 @@ class Inscription(db.Model):
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport", "allergie_pollen", "enfants", "fumeur"]
+            "voiture", "sport", "enfants", "fumeur"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 

@@ -40,9 +40,8 @@ class FormAdd(BaseForm):
     population = MultiCheckboxField(
         "Montrer aux populations suivantes :",
         choices=[
-            ('allergies', 'Personnes allergiques'),
             ('enfants', 'Enfants'),
-            ('personnes_sensibles', 'Personnes à pathologie respiratoire'),
+            ('personnes_sensibles', 'personnes sensibles/vulnérables à la QA'),
             ('population_generale', 'Population générale')
         ]
     )

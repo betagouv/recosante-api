@@ -59,7 +59,6 @@ class Recommandation(db.Model):
     transport_en_commun = db.Column(CustomBoolean)
     voiture = db.Column(CustomBoolean)
     activite_physique = db.Column(CustomBoolean)
-    allergies = db.Column(CustomBoolean)
     enfants = db.Column(CustomBoolean)
     personnes_sensibles = db.Column(CustomBoolean)
     population_generale = db.Column(CustomBoolean)
@@ -89,10 +88,6 @@ class Recommandation(db.Model):
     @sport.setter
     def sport(self, value):
         self.activite_physique = value
-
-    @property
-    def allergie_pollen(self):
-        return self.allergies
 
     @property
     def fumeur(self):
@@ -134,11 +129,11 @@ class Recommandation(db.Model):
 
     @property
     def population(self):
-        return self._multi_getter("", ['allergies', 'enfants', 'personnes_sensibles', 'population_generale'])
+        return self._multi_getter("", ['enfants', 'personnes_sensibles', 'population_generale'])
 
     @population.setter
     def population(self, value):
-        return self._multi_setter("", ['allergies', 'enfants', 'personnes_sensibles', 'population_generale'], value)
+        return self._multi_setter("", ['enfants', 'personnes_sensibles', 'population_generale'], value)
 
     @property
     def saison(self):
@@ -181,11 +176,13 @@ class Recommandation(db.Model):
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport", "allergie_pollen", "enfants", "fumeur"]
+            "voiture", "sport", "enfants", "fumeur"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
     def is_relevant(self, inscription, qualif, polluants):
+        if self.raep:
+            return False
         if polluants:
             for polluant in polluants:
                 if getattr(self, polluant):
@@ -285,7 +282,6 @@ class Recommandation(db.Model):
             "transport_en_commun": self.transport_en_commun,
             "voiture": self.voiture,
             "activite_physique": self.activite_physique,
-            "allergies": self.allergies,
             "enfants": self.enfants,
             "personnes_sensibles": self.personnes_sensibles,
             "population_generale": self.population_generale,
