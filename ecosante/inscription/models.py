@@ -107,6 +107,13 @@ class Inscription(db.Model):
         return self.activites and activite in self.activites
 
     @property
+    def criteres(self):
+        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
+            "voiture", "sport", "allergie_pollen", "enfants", "fumeur"]
+        return set([critere for critere in liste_criteres
+                if getattr(self, critere)])
+
+    @property
     def bricolage(self):
         return self.has_activite("bricolage")
 

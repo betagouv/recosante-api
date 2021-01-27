@@ -138,3 +138,15 @@ def test_is_relevant_dioxyde_soufre(db_session):
     assert r.is_relevant(i, "moyen", ["ozone", "dioxyde_soufre"])
     assert not r.is_relevant(i, "degrade", [])
     assert not r.is_relevant(i, "bon", ["ozone"])
+
+def test_qualite_air_bonne_menage_bricolage(db_session):
+    r = Recommandation(menage=True, bricolage=True, qa_bonne=True)
+
+    i = Inscription(activites=["menage"])
+    assert r.is_relevant(i, "bon", [])
+
+    i = Inscription(activites=["bricolage"])
+    assert r.is_relevant(i, "bon", [])
+
+    i = Inscription(activites=["bricolage", "menage"])
+    assert r.is_relevant(i, "bon", [])

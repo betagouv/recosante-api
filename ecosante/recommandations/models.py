@@ -1,5 +1,4 @@
-from typing import SupportsRound
-
+from itertools import compress
 from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types
@@ -179,17 +178,21 @@ class Recommandation(db.Model):
         else:
             return False
 
+    @property
+    def criteres(self):
+        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
+            "voiture", "sport", "allergie_pollen", "enfants", "fumeur"]
+        return set([critere for critere in liste_criteres
+                if getattr(self, critere)])
+
     def is_relevant(self, inscription, qualif, polluants):
         if polluants:
             for polluant in polluants:
                 if getattr(self, polluant):
                     return True
             return False
-        for critere in ["menage", "bricolage", "jardinage", "velo",
-                        "transport_en_commun", "voiture", "sport",
-                        "allergie_pollen", "enfants", "fumeur"]:
-            if not getattr(inscription, critere) and getattr(self, critere):
-                return False
+        if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
+            return False
         if qualif:
             if not self.is_relevant_qualif(qualif):
                 return False
