@@ -46,16 +46,6 @@ def test_is_relevant_transport_en_commun(db_session):
 def test_is_relevant_voiture(db_session):
     help_deplacement("voiture")
 
-
-def test_is_relevant_allergie(db_session):
-   r = Recommandation(allergies=True)
-   i = Inscription(allergie_pollen=True)
-   assert r.is_relevant(i, None, [])
-
-   r = Recommandation(allergies=True)
-   i = Inscription(allergie_pollen=False)
-   assert not r.is_relevant(i, None, [])
-
 def test_is_relevant_enfants(db_session):
     r = Recommandation(enfants=True)
     i = Inscription(enfants=True)

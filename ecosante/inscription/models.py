@@ -109,7 +109,7 @@ class Inscription(db.Model):
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport", "enfants", "fumeur"]
+            "voiture", "sport", "fumeur"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
@@ -128,6 +128,10 @@ class Inscription(db.Model):
     @property
     def sport(self):
         return self.has_activite("sport")
+
+    @property
+    def personne_sensible(self):
+        return self.enfants or self.pathologie_respiratoire or self.allergie_pollen
 
     @property
     def cache_api_commune(self):

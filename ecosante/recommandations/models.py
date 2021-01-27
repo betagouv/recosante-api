@@ -176,19 +176,18 @@ class Recommandation(db.Model):
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport", "enfants", "fumeur"]
+            "voiture", "sport", "fumeur"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
     def is_relevant(self, inscription, qualif, polluants):
+        # Environnement
         if self.raep:
             return False
         if polluants:
             for polluant in polluants:
                 if getattr(self, polluant):
                     return True
-            return False
-        if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
             return False
         if qualif:
             if not self.is_relevant_qualif(qualif):
@@ -203,6 +202,15 @@ class Recommandation(db.Model):
         elif self.ete and season != 3:
             return False
         elif self.automne and season != 4:
+            return False
+        #Inscription
+        if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
+            return False
+        if self.personnes_sensibles and not inscription.personne_sensible:
+            return False
+        if self.population_generale and inscription.personne_sensible:
+            return False
+        if self.enfants and not inscription.enfants:
             return False
         return True
 
