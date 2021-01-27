@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import uuid4
 import csv
 import os
+from flask_migrate import current
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from urllib.parse import quote_plus
@@ -126,28 +127,29 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         }
     )
     result = import_(self, newsletters, 2)
-    send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
-    send_email_api.send_email_campaign_now(result["email_campaign_id"])
-    self.update_state(
-        state='PENDING',
-        meta={
-            "progress": 99,
-            "details": "Envoi de la liste email",
-            "email_campaign_id": result['email_campaign_id'],
-            "sms_campaign_id": result['sms_campaign_id']
-        }
-    )
-    send_sms_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
-    send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
-    self.update_state(
-        state='PENDING',
-        meta={
-            "progress": 100,
-            "details": "Envoi de la liste email",
-            "email_campaign_id": result['email_campaign_id'],
-            "sms_campaign_id": result['sms_campaign_id']
-        }
-    )
+    if current_app.config['ENV'] == 'production':
+        send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
+        send_email_api.send_email_campaign_now(result["email_campaign_id"])
+        self.update_state(
+            state='PENDING',
+            meta={
+                "progress": 99,
+                "details": "Envoi de la liste email",
+                "email_campaign_id": result['email_campaign_id'],
+                "sms_campaign_id": result['sms_campaign_id']
+            }
+        )
+        send_sms_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
+        send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
+        self.update_state(
+            state='PENDING',
+            meta={
+                "progress": 100,
+                "details": "Envoi de la liste email",
+                "email_campaign_id": result['email_campaign_id'],
+                "sms_campaign_id": result['sms_campaign_id']
+            }
+        )
     result['progress'] = 100
     db.session.commit()
     return result
@@ -186,13 +188,14 @@ def import_(task, newsletters, overhead=0):
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
         else:
             try:
-                contact_api.update_contact(
-                    nl.inscription.mail,
-                    sib_api_v3_sdk.UpdateContact(
-                        attributes=nl.attributes(),
-                        list_ids=[lists[nl.inscription.diffusion]]
+                if current_app.config['ENV'] == 'production':
+                    contact_api.update_contact(
+                        nl.inscription.mail,
+                        sib_api_v3_sdk.UpdateContact(
+                            attributes=nl.attributes(),
+                            list_ids=[lists[nl.inscription.diffusion]]
+                        )
                     )
-                )
             except ApiException as e:
                 current_app.logger.error(f"Error updating {nl.inscription.mail}")
                 current_app.logger.error(e)
@@ -209,23 +212,26 @@ def import_(task, newsletters, overhead=0):
     db.session.commit()
 
     email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
-    r = email_campaign_api.create_email_campaign(
-        sib_api_v3_sdk.CreateEmailCampaign(
-            sender = sib_api_v3_sdk.CreateEmailCampaignSender(
-                name="L'équipe Écosanté",
-                email="ecosante@data.gouv.fr"
-            ),
-            name = f'{now}',
-            template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 226),
-            subject = "Vos recommandations Écosanté",
-            reply_to = "ecosante@data.gouv.fr",
-            recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
-                list_ids=[lists['mail']]
-            ),
-            header="Aujourd'hui, la qualité de l'air autour de chez vous est…"
+    if current_app.config['ENV'] == 'production':
+        r = email_campaign_api.create_email_campaign(
+            sib_api_v3_sdk.CreateEmailCampaign(
+                sender = sib_api_v3_sdk.CreateEmailCampaignSender(
+                    name="L'équipe Écosanté",
+                    email="ecosante@data.gouv.fr"
+                ),
+                name = f'{now}',
+                template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 226),
+                subject = "Vos recommandations Écosanté",
+                reply_to = "ecosante@data.gouv.fr",
+                recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
+                    list_ids=[lists['mail']]
+                ),
+                header="Aujourd'hui, la qualité de l'air autour de chez vous est…"
+            )
         )
-    )
-    email_campaign_id = r.id
+        email_campaign_id = r.id
+    else:
+        email_campaign_id = 0
     nb_requests += 1
     task.update_state(
         state='STARTED',
@@ -238,25 +244,28 @@ def import_(task, newsletters, overhead=0):
 
     polluants = ""
     sms_campaign_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
-    r = sms_campaign_api.create_sms_campaign(
-        sib_api_v3_sdk.CreateSmsCampaign(
-            name = f'{now}',
-            sender = "Ecosante",
-            content =
-"""Aujourd'hui l'indice de la qualité de l'air à {VILLE} est {QUALITE_AIR}
-Plus d'information : {LIEN_AASQA}
-{RECOMMANDATION}
-STOP au [STOP_CODE]
-""" if not polluants else """Indice qualité de l’air à {VILLE} : {QUALITE_AIR}
-Épisode de pollution {POLLUANT}
-Recommandations sanitaires : lien
-""",
-            recipients = sib_api_v3_sdk.CreateSmsCampaignRecipients(
-                list_ids = [lists['sms']]
+    if current_app.config['ENV'] == 'production':
+        r = sms_campaign_api.create_sms_campaign(
+            sib_api_v3_sdk.CreateSmsCampaign(
+                name = f'{now}',
+                sender = "Ecosante",
+                content =
+    """Aujourd'hui l'indice de la qualité de l'air à {VILLE} est {QUALITE_AIR}
+    Plus d'information : {LIEN_AASQA}
+    {RECOMMANDATION}
+    STOP au [STOP_CODE]
+    """ if not polluants else """Indice qualité de l’air à {VILLE} : {QUALITE_AIR}
+    Épisode de pollution {POLLUANT}
+    Recommandations sanitaires : lien
+    """,
+                recipients = sib_api_v3_sdk.CreateSmsCampaignRecipients(
+                    list_ids = [lists['sms']]
+                )
             )
         )
-    )
-    sms_campaign_id = r.id
+        sms_campaign_id = r.id
+    else:
+        sms_campaign_id = 0
     nb_requests += 1
     task.update_state(
         state='STARTED',
