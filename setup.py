@@ -4,7 +4,7 @@ from subprocess import call
 
 DEPENDENCIES = [
     'idna<3',
-    'celery',
+    'celery==5.0.1',
     'email_validator',
     'Flask',
     'Flask-Assets',
