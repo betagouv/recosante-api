@@ -181,6 +181,15 @@ class Recommandation(db.Model):
                 if getattr(self, critere)])
 
     def is_relevant(self, inscription, qualif, polluants):
+        #Inscription
+        if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
+            return False
+        if self.personnes_sensibles and not inscription.personne_sensible:
+            return False
+        if self.population_generale and inscription.personne_sensible:
+            return False
+        if self.enfants and not inscription.enfants:
+            return False
         # Environnement
         if self.raep:
             return False
@@ -202,15 +211,6 @@ class Recommandation(db.Model):
         elif self.ete and season != 3:
             return False
         elif self.automne and season != 4:
-            return False
-        #Inscription
-        if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
-            return False
-        if self.personnes_sensibles and not inscription.personne_sensible:
-            return False
-        if self.population_generale and inscription.personne_sensible:
-            return False
-        if self.enfants and not inscription.enfants:
             return False
         return True
 

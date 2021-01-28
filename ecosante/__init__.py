@@ -44,6 +44,7 @@ def create_app(testing=False):
     app.config['CELERY_RESULT_BACKEND'] = 'db+' + app.config['SQLALCHEMY_DATABASE_URI']
     app.config['CELERY_BROKER_URL'] = 'sqla+' + app.config['SQLALCHEMY_DATABASE_URI']
     app.config['TESTING'] = testing
+    app.config['SERVER_NAME'] = os.getenv("SERVER_NAME")
 
     db.init_app(app)
     migrate.init_app(app, db)

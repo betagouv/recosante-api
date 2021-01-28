@@ -256,7 +256,7 @@ def import_(task, newsletters, overhead=0):
     STOP au [STOP_CODE]
     """ if not polluants else """Indice qualité de l’air à {VILLE} : {QUALITE_AIR}
     Épisode de pollution {POLLUANT}
-    Recommandations sanitaires : lien
+    Recommandations sanitaires : {LIEN_RECOMMANDATIONS_ALERTE}
     """,
                 recipients = sib_api_v3_sdk.CreateSmsCampaignRecipients(
                     list_ids = [lists['sms']]

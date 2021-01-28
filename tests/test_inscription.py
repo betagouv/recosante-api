@@ -10,7 +10,7 @@ def test_inscription(client):
     }
     response = client.post('/inscription/', data=data)
     assert response.status_code == 302
-    assert response.location == 'http://localhost/inscription/personnalisation'
+    assert response.location == 'http://localhost:5000/inscription/personnalisation'
 
     data = {
         "deplacement": "velo",
@@ -22,4 +22,4 @@ def test_inscription(client):
     }
     response = client.post('/inscription/personnalisation', data=data)
     assert response.status_code == 302
-    assert response.location == 'http://localhost/inscription/reussie'
+    assert response.location == 'http://localhost:5000/inscription/reussie'

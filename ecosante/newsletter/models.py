@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from flask.helpers import url_for
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from ecosante.inscription.blueprint import inscription
@@ -63,7 +64,8 @@ class Newsletter:
                 self.polluants
             )
 
-    def formatted_polluants(self):
+    @property
+    def polluants_formatted(self):
         label_to_formatted_text ={
             'dioxyde_soufre': 'au dioxyde de soufre',
             'particules_fines': 'aux particules fines',
@@ -71,6 +73,16 @@ class Newsletter:
             'dioxyde_azote': 'au dioxyde d’azote'
         }
         return oxford_comma([label_to_formatted_text.get(pol) for pol in self.polluants])
+
+    @property
+    def polluants_symbols(self):
+        label_to_symbols = {
+            'ozone': "o3",
+            'particules_fines': "pm10",
+            'dioxyde_azote': "no2",
+            "dioxyde_soufre": "so2"
+        }
+        return [label_to_symbols.get(label) for label in self.polluants]
 
     @classmethod
     def from_inscription_id(cls, inscription_id):
@@ -199,6 +211,15 @@ class Newsletter:
             self.recommandation.id
         ])
 
+    @property
+    def lien_recommandations_alert(self):
+        population = "vulnerable" if self.inscription.personne_sensible else "generale"
+        return url_for(
+            "pages.recommandation_episode_pollution",
+            population=population,
+            polluants=self.polluants_symbols,
+            _external=True)
+
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
     id = db.Column(db.Integer, primary_key=True)
@@ -238,7 +259,8 @@ class NewsletterDB(db.Model, Newsletter):
             'VILLE': self.inscription.ville_name,
             'BACKGROUND_COLOR': self.couleur,
             'SHORT_ID': self.short_id,
-            'POLLUANTS': self.formatted_polluants()
+            'POLLUANTS': self.polluants_formatted,
+            'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alert,
         }
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone
