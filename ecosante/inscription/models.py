@@ -229,3 +229,17 @@ class Inscription(db.Model):
             self.mail,
             self.frequence
         ])
+
+    @classmethod
+    def export_geojson(cls):
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": [],
+                    "geometry": i.ville_centre
+                }
+                for i in cls.query.all()
+            ]
+        }

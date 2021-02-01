@@ -90,3 +90,7 @@ def liste():
         'liste.html',
         inscriptions=inscriptions
     )
+
+@bp.route('/geojson')
+def geojson():
+    return jsonify(Inscription.export_geojson())
