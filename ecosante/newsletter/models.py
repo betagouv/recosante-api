@@ -203,7 +203,7 @@ class Newsletter:
             "Oui",
             self.inscription.date_inscription,
             self.qualif,
-            self.background,
+            self.couleur,
             self.forecast['metadata']['region']['nom'],
             self.forecast['metadata']['region']['website'],
             self.recommandation.format(self.inscription),
