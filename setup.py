@@ -13,7 +13,7 @@ DEPENDENCIES = [
     'Flask-Migrate',
     'Flask-SQLAlchemy',
     'Flask-WTF',
-    'indice_pollution==0.6.94',
+    'indice_pollution==0.7.0',
     'sib-api-v3-sdk',
     'requests',
     'icalevents'

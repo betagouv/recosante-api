@@ -21,10 +21,10 @@ class Newsletter:
     recommandation: Recommandation
     inscription: Inscription
     forecast: dict
-    episodes: dict
     episodes: list
+    raep: int
 
-    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None):
+    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = today()
         self.inscription = inscription
@@ -63,6 +63,7 @@ class Newsletter:
                 self.qualif,
                 self.polluants
             )
+        self.raep = int(raep)
 
     @property
     def polluants_formatted(self):
@@ -171,7 +172,7 @@ class Newsletter:
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = Inscription.active_query().distinct(Inscription.ville_insee)
         insee_region = {i.ville_insee: i.region_name for i in inscriptions}
-        insee_forecast = bulk(insee_region, fetch_episodes=True)
+        insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True)
         for inscription in Inscription.active_query().all():
             if inscription.ville_insee not in insee_forecast:
                 continue
@@ -179,7 +180,8 @@ class Newsletter:
                 inscription,
                 recommandations=recommandations,
                 forecast=insee_forecast[inscription.ville_insee]["forecast"],
-                episodes=insee_forecast[inscription.ville_insee]["episode"]
+                episodes=insee_forecast[inscription.ville_insee]["episode"],
+                raep=insee_forecast[inscription.ville_insee]["raep"]
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
@@ -237,6 +239,7 @@ class NewsletterDB(db.Model, Newsletter):
     appliquee = db.Column(db.Boolean())
     avis = db.Column(db.String())
     polluants = db.Column(postgresql.ARRAY(db.String()))
+    raep = db.Column(db.Integer())
 
     def __init__(self, newsletter):
         self.inscription = newsletter.inscription
@@ -248,6 +251,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.forecast = newsletter.forecast
         self.episodes = newsletter.episodes
         self.polluants = newsletter.polluants
+        self.raep = newsletter.raep
 
     def attributes(self):
         to_return = {
