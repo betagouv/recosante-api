@@ -38,4 +38,3 @@ class FormPersonnalisation(BaseForm):
         """
     )
     allergie_pollen = OuiNonField('Êtes-vous allergique aux pollens ?')
-    fumeur = OuiNonField('Êtes-vous fumeur.euse ?')
