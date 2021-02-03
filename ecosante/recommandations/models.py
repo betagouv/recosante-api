@@ -266,7 +266,6 @@ class Recommandation(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "recommandabilite": self.recommandabilite,
             "recommandation": self.recommandation,
             "precisions": self.precisions,
             "recommandation_format_SMS": self.recommandation_format_SMS,

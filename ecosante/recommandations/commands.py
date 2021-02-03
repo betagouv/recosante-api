@@ -12,7 +12,6 @@ def import_recommandations():
         i = 0
         for r in reader:
             db.session.add(Recommandation(
-                recommandabilite=r['Recommandabilité'],
                 recommandation=r['Recommandation'],
                 precisions=r['Précisions'],
                 recommandation_format_SMS=r['Recommandation format SMS'],
