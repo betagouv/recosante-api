@@ -63,7 +63,10 @@ class Newsletter:
                 self.qualif,
                 self.polluants
             )
-        self.raep = int(raep)
+        try:
+            self.raep = int(raep)
+        except ValueError:
+            self.raep = 0
 
     @property
     def polluants_formatted(self):
@@ -267,3 +270,33 @@ class NewsletterDB(db.Model, Newsletter):
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone
         return to_return
+
+
+    @classmethod
+    def generate_csv_avis(cls):
+        yield generate_line([
+            'Moyens de transport',
+            "Activité sportive",
+            "Activité physique adaptée",
+            "Activités",
+            "Pathologie respiratoire",
+            "Allergie aux pollens",
+            "Enfants",
+            'MAIL',
+            'FORMAT',
+            'SMS',
+            "Fréquence",
+            "Date d'inscription",
+            "QUALITE_AIR",
+            "RECOMMANDATION",
+            "PRECISIONS",
+            "ID RECOMMANDATION",
+            "polluants"
+            "avis"
+        ])
+        newsletters = cls.query\
+            .filter(cls.avis.isnot(None))\
+            .order_by(cls.date.desc())\
+            .all()
+        for newsletter in newsletters:
+            yield newsletter.csv_line()

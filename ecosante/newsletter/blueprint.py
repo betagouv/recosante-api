@@ -253,3 +253,18 @@ def liste_avis():
         .order_by(NewsletterDB.date.desc())\
         .all()
     return render_template('liste_avis.html', newsletters=newsletters)
+
+
+@bp.route('<secret_slug>/avis/csv')
+@bp.route('/avis/csv')
+@admin_capability_url
+def export_avis():
+    return Response(
+        stream_with_context(
+            NewsletterDB.generate_csv_avis()
+        ),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=export-avis-{datetime.now()}"
+        }
+    )
