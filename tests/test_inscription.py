@@ -18,7 +18,6 @@ def test_inscription(client):
         "enfants": "true",
         "pathologie_respiratoire": "true",
         "allergie_pollen": "true",
-        "fumeur": "true"
     }
     response = client.post('/inscription/personnalisation', data=data)
     assert response.status_code == 302

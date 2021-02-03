@@ -89,15 +89,6 @@ class Recommandation(db.Model):
     def sport(self, value):
         self.activite_physique = value
 
-    @property
-    def fumeur(self):
-        return self.categorie and "tabagisme" in self.categorie.lower()
-
-    @fumeur.setter
-    def fumeur(self, value):
-        if value:
-            self.categorie = (self.categorie or "") + " tabagisme"
-
     def _multi_getter(self, prefix, list_):
         to_return = []
         for v in list_:
@@ -176,7 +167,7 @@ class Recommandation(db.Model):
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport", "fumeur"]
+            "voiture", "sport"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 

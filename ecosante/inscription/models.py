@@ -27,7 +27,6 @@ class Inscription(db.Model):
     activites: List[str]
     pathologie_respiratoire: bool
     allergie_pollen: bool
-    fumeur: bool
     enfants: bool
     diffusion: str
     telephone: str
@@ -52,7 +51,6 @@ class Inscription(db.Model):
     #Sante
     pathologie_respiratoire = db.Column(db.Boolean)
     allergie_pollen = db.Column(db.Boolean)
-    fumeur = db.Column(db.Boolean)
     #Misc
     deactivation_date = db.Column(db.Date)
 
@@ -109,7 +107,7 @@ class Inscription(db.Model):
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport", "fumeur"]
+            "voiture", "sport"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
@@ -205,7 +203,6 @@ class Inscription(db.Model):
             'activites',
             'pathologie_respiratoire',
             'allergie_pollen',
-            'fumeur',
             'enfants',
             'diffusion',
             'telephone',
@@ -222,7 +219,6 @@ class Inscription(db.Model):
             self.activites,
             self.pathologie_respiratoire,
             self.allergie_pollen,
-            self.fumeur,
             self.enfants,
             self.diffusion,
             self.telephone,

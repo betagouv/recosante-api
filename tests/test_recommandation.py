@@ -55,15 +55,6 @@ def test_is_relevant_enfants(db_session):
     i = Inscription(enfants=False)
     assert not r.is_relevant(i, None, [])
 
-def test_is_relevant_fumeurs(db_session):
-    r = Recommandation(fumeur=True)
-    i = Inscription(fumeur=True)
-    assert r.is_relevant(i, None, [])
-
-    r = Recommandation(fumeur=True)
-    i = Inscription(fumeur=False)
-    assert not r.is_relevant(i, None, [])
-
 def test_is_qualite_mauvaise(db_session):
     r = Recommandation(qa_mauvaise=True)
     i = Inscription()
