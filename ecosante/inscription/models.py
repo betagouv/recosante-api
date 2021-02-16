@@ -236,6 +236,6 @@ class Inscription(db.Model):
                     "properties": [],
                     "geometry": i.ville_centre
                 }
-                for i in cls.query.all()
+                for i in cls.active_query().all()
             ]
         }
