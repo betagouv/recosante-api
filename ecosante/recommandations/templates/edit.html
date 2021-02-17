@@ -1,22 +1,51 @@
 {% extends "base_form.html" %}
 
+{% block pre_form %}
+
+{% scss "recommandations/css/edit.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
+
+{% endblock pre_form %}
+
 {% block block_form %}
 {% if form.qa.errors %}
 <div class="notification error">
     {{ form.qa.errors[0] }}
 </div>
 {% endif %}
-<form method="POST">
-    <div class="form__group">
-        <button class="button" type="submit" id="submit">{{ action }}</button>
-    </div>
-    {{ form.hidden_tag() }}
-    {% for field in form if field.widget.input_type != 'hidden' %}
-    {{ render_field(field)}}
-    {% endfor %}
-    <div class="form__group">
-        <button class="button" type="submit" id="submit">{{ action }}</button>
-    </div>
-</form>
+<div class="row">
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="panel">
+            <h4 class="subtitle">Recommandation</h4>
+            {{ render_field(form.status) }}
+            {{ render_field(form.recommandation) }}
+            {{ render_field(form.precisions) }}
+            {{ render_field(form.recommandation_format_SMS) }}
+            {{ render_field(form.saison) }}
+            {{ render_field(form.qa) }}
+            {{ render_field(form.polluants) }}
+            {{ render_field(form.raep) }}
+        </div>
+        <div class="panel">
+            <h4 class="subtitle">Inscription</h4>
+            {{ render_field(form.population) }}
+            {{ render_field(form.activites) }}
+            {{ render_field(form.deplacement) }}
+            {{ render_field(form.chauffage_a_bois) }}
+        </div>
+        <div class="panel">
+            <h4 class="subtitle">Misc</h4>
+            {{ render_field(form.autres_conditions) }}
+            {{ render_field(form.sources) }}
+            {{ render_field(form.categorie) }}
+            {{ render_field(form.objectif) }}
+        </div>
+    </form>
+        <div class="form__group">
+            <button class="button" type="submit" id="submit">{{ action }}</button>
+        </div>
+</div>
 
 {% endblock block_form %}
