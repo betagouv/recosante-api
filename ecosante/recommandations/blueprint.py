@@ -88,7 +88,8 @@ def make_query(form):
             or_(
                     Recommandation.recommandation.ilike(search),
                     Recommandation.precisions.ilike(search),
-                    Recommandation.recommandation_format_SMS.ilike(search)
+                    Recommandation.recommandation_format_SMS.ilike(search),
+                    Recommandation.categorie.ilike(search)
             )
         )
     if form.status.data:
