@@ -27,6 +27,9 @@
             {{ render_field(form.qa) }}
             {{ render_field(form.polluants) }}
             {{ render_field(form.raep) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+            </div>
         </div>
         <div class="panel">
             <h4 class="subtitle">Inscription</h4>
@@ -34,6 +37,9 @@
             {{ render_field(form.activites) }}
             {{ render_field(form.deplacement) }}
             {{ render_field(form.chauffage_a_bois) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+            </div>
         </div>
         <div class="panel">
             <h4 class="subtitle">Misc</h4>
@@ -41,11 +47,11 @@
             {{ render_field(form.sources) }}
             {{ render_field(form.categorie) }}
             {{ render_field(form.objectif) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+            </div>
         </div>
     </form>
-        <div class="form__group">
-            <button class="button" type="submit" id="submit">{{ action }}</button>
-        </div>
 </div>
 
 {% endblock block_form %}
