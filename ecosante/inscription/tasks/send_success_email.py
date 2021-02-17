@@ -29,13 +29,7 @@ def send_success_email(inscription_id):
         contact_api.update_contact(
             newsletter.inscription.mail,
             sib_api_v3_sdk.UpdateContact(
-                attributes={
-                    "VILLE": newsletter.inscription.ville_name,
-                    "QUALITE_AIR": newsletter.qualif,
-                    "BACKGROUND_COLOR": newsletter.background,
-                    "RECOMMANDATION": newsletter.recommandation.recommandation,
-                    "PRECISIONS": newsletter.recommandation.precisions,
-                }
+                attributes=newsletter.attributes()
             )
         )
     except ApiException as e:
