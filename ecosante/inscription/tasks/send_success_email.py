@@ -1,5 +1,5 @@
 from ecosante.extensions import celery, sib
-from ecosante.newsletter.models import NewsletterDB, db
+from ecosante.newsletter.models import Newsletter, NewsletterDB, db
 from flask import current_app
 import os
 import sib_api_v3_sdk
@@ -9,7 +9,7 @@ import json
 
 @celery.task()
 def send_success_email(inscription_id):
-    newsletter = NewsletterDB.from_inscription_id(inscription_id)
+    newsletter = NewsletterDB(Newsletter.from_inscription_id(inscription_id))
     success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
