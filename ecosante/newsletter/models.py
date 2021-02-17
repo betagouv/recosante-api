@@ -67,6 +67,8 @@ class Newsletter:
             self.raep = int(raep)
         except ValueError:
             self.raep = 0
+        except TypeError:
+            self.raep = 0
 
     @property
     def polluants_formatted(self):
