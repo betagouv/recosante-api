@@ -77,3 +77,20 @@
 .logo-atmo {
     padding: var(--space-s);
 }
+
+.logo-partners {
+    flex-wrap: wrap;
+    img {
+        object-fit: scale-down;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        margin-left: unset;
+        padding-left: 10px;
+        @media (max-width: 565px) {
+            width: 90%;
+            max-height: 40vh;
+        }
+        width: 150px;
+        max-height: 100%;
+    }
+}
