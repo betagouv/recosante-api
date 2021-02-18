@@ -31,10 +31,10 @@
         <div class="panel user_pref">
             <h1>Préférence des utilisateurs</h1>
             <div>
-                <div class="half_donut">
+                <div class="half_donut graph-container">
                     <canvas id="user_formats"></canvas>
                 </div>
-                <div class="half_donut">
+                <div class="half_donut graph-container">
                     <canvas id="user_frequencies"></canvas>
                 </div>
             </div>
@@ -45,13 +45,17 @@
             {% if nb_responses %}
             <h3>{{ "%.2f"|format((nb_satisfaits/nb_reponses)*100) }}% des utilisateurs ayant répondu au questionnaire de satisfaction recommanderaient la newsletter Ecosanté à leur proche.</h3>
             {% endif %}
-            <canvas id="decouverte_chart"></canvas>
+            <div class="graph-container">
+                <canvas id="decouverte_chart"></canvas>
+            </div>
         </div>
         {% if ouvertures %}
         <div class="panel">
             <h1>Ouverture des mails</h1>
             <h2>{{ "%.2f"|format(ouverture_veille[1]) }}% taux d’ouverture des mails le {{ ouverture_veille[0] }} </h2>
-            <canvas id="ouvertures_chart"></canvas>
+            <div class="graph-container">
+                <canvas id="ouvertures_chart"></canvas>
+            </div>
         </div>
         {% endif %}
     </div>
