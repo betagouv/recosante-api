@@ -1,4 +1,5 @@
 from jinja2.nodes import Mul
+from wtforms.fields.core import SelectField
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
 from wtforms import TextAreaField, HiddenField, validators
 
@@ -66,7 +67,15 @@ class FormAdd(BaseForm):
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
-    objectif = TextAreaField("Objectif")
+    objectif = SelectField(
+        "Objectif",
+        choices=[
+            ("", "(sans)"),
+            ("Améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
+            ("Contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
+            ("Profiter du plein air", "Profiter du plein air")
+        ]
+    )
 
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)

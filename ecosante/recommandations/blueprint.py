@@ -100,6 +100,8 @@ def make_query(form):
         query = query.filter(
             getattr(Recommandation, categorie).is_(True)
         )
+    if form.objectif.data is not None and form.objectif.data != "None":
+        query = query.filter(Recommandation.objectif==form.objectif.data)
     return query.order_by(Recommandation.id)
 
 @bp.route('<secret_slug>/', methods=["GET", "POST"])

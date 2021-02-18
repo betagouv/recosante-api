@@ -12,6 +12,7 @@
         {{ render_field(form.search) }}
         {{ render_field(form.categories)}}
         {{ render_field(form.status)}}
+        {{ render_field(form.objectif)}}
         <div class="input__group">
             <input type="submit" value="Rechercher">
             <a href="{{ url_for("recommandations.csv", **request.args.to_dict(flat=False)) }}" class="button">Export CSV</a>
