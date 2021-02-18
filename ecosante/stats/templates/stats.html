@@ -9,7 +9,9 @@
     <div class="container">
         <div class="panel">
             <h1><span class="number">{{ actifs }}</span> utilisateurs actifs</h1>
-            <canvas id="subscriptions_chart"></canvas>
+            <div class="graph-container">
+                <canvas id="subscriptions_chart"></canvas>
+            </div>
         </div>
         <div class="panel panel-carte">
             <h1>Profil des utilisateurs</h1>
@@ -54,6 +56,10 @@
         {% endif %}
     </div>
 </section>
+
+{% scss "stats/css/stats.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
 {% rollupjs "stats/js/stats.js" %}
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
 {% endassets %}
