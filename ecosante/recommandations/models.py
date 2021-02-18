@@ -227,23 +227,23 @@ class Recommandation(db.Model):
     @classmethod
     def get_relevant(cls, recommandations, inscription, qualif, polluants):
         copy_recommandations = []
-        same_category_recommandations = []
+        same_criteres_recommandations = []
         last_month_newsletters = inscription.last_month_newsletters()
         recent_recommandation_ids = [
             nl.recommandation_id
             for nl in last_month_newsletters
         ]
         recent_recommandations = []
-        last_category = "" if not last_month_newsletters else last_month_newsletters[0].recommandation.categorie
+        last_criteres = "" if not last_month_newsletters else last_month_newsletters[0].recommandation.criteres()
         for recommandation in recommandations:
             if not recommandation.id in recent_recommandation_ids:
-                if recommandation.categorie == last_category:
-                    same_category_recommandations.append(recommandation)
+                if recommandation.criteres == last_criteres:
+                    same_criteres_recommandations.append(recommandation)
                 else:
                     copy_recommandations.append(recommandation)
             else:
                 recent_recommandations.append(recommandation)
-        copy_recommandations.extend(same_category_recommandations)
+        copy_recommandations.extend(same_criteres_recommandations)
         copy_recommandations.extend(recent_recommandations)
 
         try:
