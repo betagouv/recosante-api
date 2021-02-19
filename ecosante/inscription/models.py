@@ -207,7 +207,8 @@ class Inscription(db.Model):
             'diffusion',
             'telephone',
             'mail',
-            'frequence'
+            'frequence',
+            'deactivation_date'
         ])
         for inscription in cls.active_query().all():
             yield inscription.csv_line()
@@ -223,7 +224,8 @@ class Inscription(db.Model):
             self.diffusion,
             self.telephone,
             self.mail,
-            self.frequence
+            self.frequence,
+            self.deactivation_date
         ])
 
     @classmethod
