@@ -234,7 +234,7 @@ class Recommandation(db.Model):
             for nl in last_month_newsletters
         ]
         recent_recommandations = []
-        last_criteres = "" if not last_month_newsletters else last_month_newsletters[0].recommandation.criteres()
+        last_criteres = "" if not last_month_newsletters else last_month_newsletters[0].recommandation.criteres
         for recommandation in recommandations:
             if not recommandation.id in recent_recommandation_ids:
                 if recommandation.criteres == last_criteres:
