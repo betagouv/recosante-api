@@ -29,7 +29,7 @@ RECOMMANDATION_FILTERS = [
     ("activite_physique", "‍🏋", "Activité physique"),
     ("enfants", "🧒", "Enfants"),
     ("personnes_sensibles", "🤓", "Personnes sensibles"),
-    ("population_generale", "🌐", "Population générale"),
+    ("autres", "🌐", "Autres"),
     ("hiver", "☃", "Hiver"),
     ("printemps", "⚘", "Printemps"),
     ("ete", "🌞", "Été"),
@@ -39,7 +39,7 @@ RECOMMANDATION_FILTERS = [
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
     ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
     ("episode_pollution", "⚠️", "Épisode de pollution"),
-    ("raep", "🤧", "Risque allergique lié à l’exposition des pollens")
+    ("min_raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
 
 class Recommandation(db.Model):
@@ -48,11 +48,13 @@ class Recommandation(db.Model):
     recommandation = db.Column(db.String)
     precisions = db.Column(db.String)
     recommandation_format_SMS = db.Column(db.String)
+    type_ = db.Column("type", db.String)
     qa_mauvaise = db.Column(CustomBoolean, nullable=True)
     qa_bonne = db.Column(CustomBoolean, nullable=True)
     menage = db.Column(CustomBoolean)
     bricolage = db.Column(CustomBoolean)
     chauffage_a_bois = db.Column(CustomBoolean)
+    animal_de_compagnie = db.Column(CustomBoolean)
     jardinage = db.Column(CustomBoolean)
     balcon_terasse = db.Column(CustomBoolean)
     velo_trott_skate = db.Column(CustomBoolean)
@@ -61,7 +63,7 @@ class Recommandation(db.Model):
     activite_physique = db.Column(CustomBoolean)
     enfants = db.Column(CustomBoolean)
     personnes_sensibles = db.Column(CustomBoolean)
-    population_generale = db.Column(CustomBoolean)
+    autres = db.Column(CustomBoolean)
     autres_conditions = db.Column(db.String)
     sources = db.Column(db.String)
     categorie = db.Column(db.String)
@@ -75,7 +77,8 @@ class Recommandation(db.Model):
     dioxyde_soufre = db.Column(CustomBoolean, nullable=True)
     particules_fines = db.Column(CustomBoolean, nullable=True)
     episode_pollution = db.Column(CustomBoolean, nullable=True)
-    raep = db.Column(CustomBoolean, nullable=True)
+    min_raep = db.Column(db.Integer, nullable=True)
+    personne_allergique = db.Column(CustomBoolean, nullable=True)
 
     @property
     def velo(self):
@@ -120,11 +123,11 @@ class Recommandation(db.Model):
 
     @property
     def population(self):
-        return self._multi_getter("", ['enfants', 'personnes_sensibles', 'population_generale'])
+        return self._multi_getter("", ['enfants', 'personnes_sensibles', 'autres'])
 
     @population.setter
     def population(self, value):
-        return self._multi_setter("", ['enfants', 'personnes_sensibles', 'population_generale'], value)
+        return self._multi_setter("", ['enfants', 'personnes_sensibles', 'autres'], value)
 
     @property
     def saison(self):
@@ -177,13 +180,13 @@ class Recommandation(db.Model):
             return False
         if self.personnes_sensibles and not inscription.personne_sensible:
             return False
-        if self.population_generale and inscription.personne_sensible:
+        if self.autres and inscription.personne_sensible:
             return False
         if self.enfants and not inscription.enfants:
             return False
         # Environnement
-        if self.raep:
-            return False
+        #if self.min_raep:
+        #    return False
         if polluants:
             for polluant in polluants:
                 if getattr(self, polluant):
@@ -282,7 +285,7 @@ class Recommandation(db.Model):
             "activite_physique": self.activite_physique,
             "enfants": self.enfants,
             "personnes_sensibles": self.personnes_sensibles,
-            "population_generale": self.population_generale,
+            "autres": self.autres,
             "autres_conditions": self.autres_conditions,
             "sources": self.sources,
             "categorie": self.categorie,

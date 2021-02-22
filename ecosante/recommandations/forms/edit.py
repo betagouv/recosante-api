@@ -15,6 +15,14 @@ class FormAdd(BaseForm):
     recommandation = TextAreaField('Recommandation')
     precisions = TextAreaField('Précisions')
     recommandation_format_SMS = TextAreaField('Recommandation format SMS')
+    type = RadioField(
+        'Type',
+        choices=[
+            ("generale", "Générale"),
+            ("episode_pollution", "Épisode de pollution"),
+            ("pollens", "Pollens")
+        ]
+    )
     saison = MultiCheckboxField("Montrer la recommandation que durant les saisons :",
         choices=[
             ('hiver', 'Hiver'),
@@ -37,13 +45,17 @@ class FormAdd(BaseForm):
             ('particules_fines', 'aux particules fines')
         ]
     )
-    raep = OuiNonField("Montrer en cas de RAEP > 0", validators=[validators.Optional(),])
+    min_raep = SelectField(
+        'Montrer jusqu’à un RAEP de',
+        choices=[0, 1, 4]
+    )
+    personne_allergique = OuiNonField("Montre aux personnes allergiques")
     population = MultiCheckboxField(
         "Montrer aux populations suivantes :",
         choices=[
             ('enfants', 'Enfants'),
             ('personnes_sensibles', 'personnes sensibles/vulnérables à la QA'),
-            ('population_generale', 'Population générale')
+            ('autres', 'Autres')
         ]
     )
     activites = MultiCheckboxField(
@@ -64,6 +76,7 @@ class FormAdd(BaseForm):
         ]
     )
     chauffage_a_bois = OuiNonField("Chauffage à bois")
+    animal_de_compagnie = OuiNonField("Animal de compagnie")
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
@@ -79,7 +92,7 @@ class FormAdd(BaseForm):
 
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)
-        if not self.qa.data and not self.polluants.data and not self.raep.data:
+        if not self.qa.data and not self.polluants.data:# and not self.raep.data:
             rv = False
             self.qa.errors = ["Vous devez remplir soit une qualité de l’air, soit un pic de pollution, sinon la recommandation n’est jamais envoyée"]
         return rv

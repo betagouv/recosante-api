@@ -14,8 +14,8 @@
     {{ form.qa.errors[0] }}
 </div>
 {% endif %}
-<div class="row">
-    <form method="POST">
+<div class="row centered_row">
+    <form method="POST" name="editForm">
         {{ form.hidden_tag() }}
         <div class="panel">
             <h4 class="subtitle">Recommandation</h4>
@@ -23,20 +23,41 @@
             {{ render_field(form.recommandation) }}
             {{ render_field(form.precisions) }}
             {{ render_field(form.recommandation_format_SMS) }}
-            {{ render_field(form.saison) }}
-            {{ render_field(form.qa) }}
-            {{ render_field(form.polluants) }}
-            {{ render_field(form.raep) }}
+            {{ render_field(form.type) }}
             <div class="form__group">
                 <button class="button" type="submit" id="submit">{{ action }}</button>
             </div>
         </div>
-        <div class="panel">
+        <div class="panel" id="pollens">
+            <h4 class="subtitle">Pollens</h4>
+            {{ render_field(form.min_raep) }}
+            {{ render_field(form.personne_allergique) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+            </div>
+        </div>
+        <div class="panel" id="episode_pollution">
+            <h4 class="subtitle">Polluants</h4>
+            {{ render_field(form.polluants) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+            </div>
+        </div>
+        <div class="panel" id="generale">
+            <h4 class="subtitle">Précisions pour la population générale</h4>
+            {{ render_field(form.saison) }}
+            {{ render_field(form.qa) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+            </div>
+        </div>
+        <div class="panel" id="inscription">
             <h4 class="subtitle">Inscription</h4>
             {{ render_field(form.population) }}
             {{ render_field(form.activites) }}
             {{ render_field(form.deplacement) }}
             {{ render_field(form.chauffage_a_bois) }}
+            {{ render_field(form.animal_de_compagnie) }}
             <div class="form__group">
                 <button class="button" type="submit" id="submit">{{ action }}</button>
             </div>
@@ -54,4 +75,7 @@
     </form>
 </div>
 
+{% rollupjs "recommandations/js/edit.js" %}
+<script src="{{ ASSET_URL}}"></script>
+{% endassets %}
 {% endblock block_form %}
