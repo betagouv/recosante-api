@@ -178,7 +178,7 @@ class Recommandation(db.Model):
         #Inscription
         if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
             return False
-        if self.personnes_sensibles and (not inscription.personne_sensible or not inscription.enfants):
+        if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.enfants):
             return False
         if self.autres and inscription.personne_sensible:
             return False
