@@ -32,3 +32,13 @@ class FormSearch(BaseForm):
             ("Profiter du plein air", "Profiter du plein air")
         ]
     )
+
+    type = SelectField(
+        "Type",
+        choices = [
+            (None, 'Tous les types'),
+            ("generale", "Générale"),
+            ("episode_pollution", "Épisode de pollution"),
+            ("pollens", "Pollens")
+        ]
+    )

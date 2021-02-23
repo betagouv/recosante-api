@@ -102,6 +102,8 @@ def make_query(form):
         )
     if form.objectif.data is not None and form.objectif.data != "None":
         query = query.filter(Recommandation.objectif==form.objectif.data)
+    if form.type.data is not None and form.type.data != "None":
+        query = query.filter(Recommandation.type_==form.type.data)
     return query.order_by(Recommandation.id)
 
 @bp.route('<secret_slug>/', methods=["GET", "POST"])
