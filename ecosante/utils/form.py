@@ -64,3 +64,8 @@ class OuiNonField(RadioField):
                 }
             }
         )
+
+    def pre_validate(self, form):
+        if self.data is None:
+            return True
+        return super().pre_validate(form)
