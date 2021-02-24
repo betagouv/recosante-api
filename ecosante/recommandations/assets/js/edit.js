@@ -7,8 +7,8 @@ function selectDiv(selectedValue) {
 }
 
 document.addEventListener('DOMContentLoaded', _ => {
-    selectDiv(document.editForm.type.value)
-    document.editForm.type.forEach(
+    selectDiv(document.editForm.type_.value)
+    document.editForm.type_.forEach(
         r => { r.addEventListener('change', e => { selectDiv(e.target.value) }) }
     )
 })

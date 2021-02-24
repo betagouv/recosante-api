@@ -15,7 +15,7 @@ class FormAdd(BaseForm):
     recommandation = TextAreaField('Recommandation')
     precisions = TextAreaField('Précisions')
     recommandation_format_SMS = TextAreaField('Recommandation format SMS')
-    type = RadioField(
+    type_ = RadioField(
         'Type',
         choices=[
             ("generale", "Générale"),
