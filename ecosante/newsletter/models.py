@@ -225,6 +225,10 @@ class Newsletter:
             polluants=self.polluants_symbols,
             _external=True)
 
+    @property
+    def show_raep(self):
+        return (self.raep > 0 and self.inscription.allergie_pollen) or self.raep >= 2
+
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
     id = db.Column(db.Integer, primary_key=True)
@@ -268,6 +272,8 @@ class NewsletterDB(db.Model, Newsletter):
             'SHORT_ID': self.short_id,
             'POLLUANTS': self.polluants_formatted,
             'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alert,
+            'SHOW_RAEP': self.show_raep,
+            'RAEP': self.raep
         }
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone
