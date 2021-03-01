@@ -143,33 +143,6 @@ class Newsletter:
     def has_depassement(self):
         return len(self.get_depassement) > 0
 
-    @classmethod
-    def generate_csv(cls, preferred_reco=None, seed=None, remove_reco=[]):
-        yield generate_line([
-            'VILLE',
-            'Moyens de transport',
-            "Activité sportive",
-            "Activité physique adaptée",
-            "Activités",
-            "Pathologie respiratoire",
-            "Allergie aux pollens",
-            "Enfants",
-            'MAIL',
-            'FORMAT',
-            'SMS',
-            "Fréquence",
-            "Consentement",
-            "Date d'inscription",
-            "QUALITE_AIR",
-            "BACKGROUND_COLOR",
-            "Région",
-            "LIEN_AASQA",
-            "RECOMMANDATION",
-            "PRECISIONS",
-            "ID RECOMMANDATION"
-        ])
-        for newsletter in cls.export(preferred_reco, seed, remove_reco):
-            yield newsletter.csv_line()
 
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[]):

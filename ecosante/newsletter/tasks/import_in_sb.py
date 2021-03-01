@@ -11,25 +11,6 @@ from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
 from ecosante.extensions import db, sib, celery
 from ecosante.utils import send_log_mail
 
-def get_nl_csv(filepath):
-    for delimiter in [',', ';']:
-        with open(filepath) as f:
-            reader = csv.DictReader(f, delimiter=delimiter)
-            if 'MAIL' in reader.fieldnames:
-                return [NewsletterDB(Newsletter.from_csv_line(l)) for l in reader]
-    raise ValueError("Impossible de lire le fichier importé, le délimiteur doit être `,` ou `;`")
-
-@celery.task(bind=True)
-def delete_file(self, return_, filepath):
-    os.remove(filepath)
-    return return_
-
-@celery.task()
-def delete_file_error(self, exc, traceback, filepath):
-    os.remove(filepath)
-    current_app.logger.error('Task {0} raised exception: {1!r}\n{2!r}'.format(
-          self.id, exc, traceback))
-
 def get_all_contacts(limit=100):
     contacts_api = sib_api_v3_sdk.ContactsApi(sib)
     contacts = []
@@ -53,31 +34,9 @@ def deactivate_contacts():
         db_contact.unsubscribe()
 
 @celery.task(bind=True)
-def import_in_sb(self, filepath):
-    self.update_state(
-        state='PENDING',
-        meta={
-            "progress": 0,
-            "details": "Lecture du fichier CSV"
-        }
-    )
-    newsletters = get_nl_csv(filepath)
-    result = import_(self, newsletters)
-    self.update_state(
-        state='STARTED',
-        meta={
-            "progress": 100,
-            "details": f"Création de la campagne SMS",
-            "email_campaign_id": result['email_campaign_id'],
-            "sms_campaign_id": result['sms_campaign_id']
-        }
-    )
-    return result
-
-@celery.task(bind=True)
 def import_and_send(self, seed, preferred_reco, remove_reco):
     self.update_state(
-        state='PENDING',
+        state='STARTED',
         meta={
             "progress": 0,
             "details": "Prise en compte de la désincription des membres"
@@ -85,7 +44,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
     )
     deactivate_contacts()
     self.update_state(
-        state='PENDING',
+        state='STARTED',
         meta={
             "progress": 0,
             "details": "Suppression des anciennes listes"
@@ -96,14 +55,14 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
     for i, list_id in enumerate(list_ids_to_delete, 1):
         contacts_api.delete_list(list_id)
         self.update_state(
-            state='PENDING',
+            state='STARTED',
             meta={
                 "progress": 0,
                 "details": f"Suppression des anciennes listes ({i}/{len(list_ids_to_delete)})"
             }
         )
     self.update_state(
-        state='PENDING',
+        state='STARTED',
         meta={
             "progress": 0,
             "details": "Constitution de la liste"
@@ -120,7 +79,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         )
     )
     self.update_state(
-        state='PENDING',
+        state='STARTED',
         meta={
             "progress" :0,
             "details": "Construction des listes SIB d'envoi"
@@ -131,7 +90,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(result["email_campaign_id"])
         self.update_state(
-            state='PENDING',
+            state='STARTED',
             meta={
                 "progress": 99,
                 "details": "Envoi de la liste email",
@@ -142,7 +101,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         send_sms_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
         send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
         self.update_state(
-            state='PENDING',
+            state='STARTED',
             meta={
                 "progress": 100,
                 "details": "Envoi de la liste email",
@@ -288,7 +247,15 @@ def import_(task, newsletters, overhead=0):
 
 @celery.task(bind=True)
 def import_send_and_report(self):
-    result = import_and_send(str(uuid4()), None, [])
+    new_task_id = str(uuid4())
+    self.update_state(
+        state='STARTED',
+        meta={
+            "progress": 0,
+            "details": f"Lancement de la tache: '{new_task_id}'",
+        }
+    )
+    result = import_and_send(new_task_id, None, [])
     errors = '\n'.join(result['errors'])
     body = """
 Bonjour,
@@ -302,6 +269,15 @@ Il y a eu des erreurs lors de l’envoi de la newsletter :
 Bonne journée
 """
     send_log_mail("Rapport d’envoi de la newsletter", body)
+    task.update_state(
+        state='SUCESS',
+        meta={
+            "progress": 100,
+            "details": f"Fin",
+            "email_campaign_id": email_campaign_id,
+            "sms_campaign_id": sms_campaign_id
+        }
+    )
     return result
 
 def get_lists_ids_to_delete():
