@@ -33,9 +33,8 @@ def deactivate_contacts():
             continue
         db_contact.unsubscribe()
 
-@celery.task(bind=True)
-def import_and_send(self, seed, preferred_reco, remove_reco):
-    self.update_state(
+def import_and_send(task, seed, preferred_reco, remove_reco):
+    task.update_state(
         state='STARTED',
         meta={
             "progress": 0,
@@ -43,7 +42,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         }
     )
     deactivate_contacts()
-    self.update_state(
+    task.update_state(
         state='STARTED',
         meta={
             "progress": 0,
@@ -54,14 +53,14 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
     contacts_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, list_id in enumerate(list_ids_to_delete, 1):
         contacts_api.delete_list(list_id)
-        self.update_state(
+        task.update_state(
             state='STARTED',
             meta={
                 "progress": 0,
                 "details": f"Suppression des anciennes listes ({i}/{len(list_ids_to_delete)})"
             }
         )
-    self.update_state(
+    task.update_state(
         state='STARTED',
         meta={
             "progress": 0,
@@ -78,18 +77,18 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
             )
         )
     )
-    self.update_state(
+    task.update_state(
         state='STARTED',
         meta={
             "progress" :0,
             "details": "Construction des listes SIB d'envoi"
         }
     )
-    result = import_(self, newsletters, 2)
+    result = import_(task, newsletters, 2)
     if current_app.config['ENV'] == 'production':
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(result["email_campaign_id"])
-        self.update_state(
+        task.update_state(
             state='STARTED',
             meta={
                 "progress": 99,
@@ -100,7 +99,7 @@ def import_and_send(self, seed, preferred_reco, remove_reco):
         )
         send_sms_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
         send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
-        self.update_state(
+        task.update_state(
             state='STARTED',
             meta={
                 "progress": 100,
@@ -255,7 +254,7 @@ def import_send_and_report(self):
             "details": f"Lancement de la tache: '{new_task_id}'",
         }
     )
-    result = import_and_send(self, None, [])
+    result = import_and_send(self, str(uuid4()), None, [])
     errors = '\n'.join(result['errors'])
     body = """
 Bonjour,
