@@ -18,7 +18,7 @@ class FormAdd(BaseForm):
     type_ = RadioField(
         'Type',
         choices=[
-            ("generale", "Générale"),
+            ("generale", "Indice ATMO"),
             ("episode_pollution", "Épisode de pollution"),
             ("pollens", "Pollens")
         ]
@@ -46,8 +46,8 @@ class FormAdd(BaseForm):
         ]
     )
     min_raep = SelectField(
-        'Montrer jusqu’à un RAEP de',
-        choices=[0, 1, 4]
+        'Montrer à partir d’un un RAEP de',
+        choices=[(None, "--"), (1, "1"), (4, "4")]
     )
     personne_allergique = OuiNonField("Montre aux personnes allergiques")
     population = MultiCheckboxField(
