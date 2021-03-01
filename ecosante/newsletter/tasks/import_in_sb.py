@@ -255,7 +255,7 @@ def import_send_and_report(self):
             "details": f"Lancement de la tache: '{new_task_id}'",
         }
     )
-    result = import_and_send(new_task_id, None, [])
+    result = import_and_send(self, None, [])
     errors = '\n'.join(result['errors'])
     body = """
 Bonjour,
