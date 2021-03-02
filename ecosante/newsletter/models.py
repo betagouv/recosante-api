@@ -235,15 +235,14 @@ class NewsletterDB(db.Model, Newsletter):
 
     def attributes(self):
         to_return = {
-            'FORMAT': self.inscription.diffusion,
-            'QUALITE_AIR': self.label,
-            'LIEN_AASQA': self.forecast['metadata']['region']['website'],
             'RECOMMANDATION': self.recommandation.format(self.inscription),
+            'LIEN_AASQA': self.forecast['metadata']['region']['website'],
             'PRECISIONS': self.recommandation.precisions,
+            'QUALITE_AIR': self.label,
             'VILLE': self.inscription.ville_name,
             'BACKGROUND_COLOR': self.couleur,
             'SHORT_ID': self.short_id,
-            'POLLUANTS': self.polluants_formatted,
+            'POLLUANT': self.polluants_formatted,
             'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alert,
             'SHOW_RAEP': self.show_raep,
             'RAEP': self.raep
