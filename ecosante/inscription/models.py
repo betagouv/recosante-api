@@ -14,6 +14,7 @@ from typing import List
 import requests
 import json
 from datetime import date
+from sqlalchemy import text
 
 @dataclass
 class Inscription(db.Model):
@@ -35,6 +36,10 @@ class Inscription(db.Model):
 
 
     id = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(
+        db.String(),
+        server_default=text("generate_random_id('public', 'inscription', 'uid', 8)")
+    )
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
     ville_insee = db.Column(db.String)

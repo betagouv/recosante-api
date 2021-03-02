@@ -94,3 +94,8 @@ def liste():
 @bp.route('/geojson')
 def geojson():
     return jsonify(Inscription.export_geojson())
+
+
+@bp.route('/changement')
+def changement():
+    return render_template('changement.html')
