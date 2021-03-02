@@ -1,4 +1,5 @@
 from flask import (
+    abort,
     render_template,
     request,
     redirect,
@@ -98,4 +99,17 @@ def geojson():
 
 @bp.route('/changement')
 def changement():
-    return render_template('changement.html')
+    return render_template('changement.html', uid=request.args.get('uid'))
+
+@bp.route('/confirmer-changement', methods=['POST'])
+def confirmer_changement():
+    uid = request.args.get('uid')
+    if not uid:
+        abort(400)
+    inscription = Inscription.query.filter_by(uid=uid).first()
+    if not inscription:
+        abort(404)
+    inscription.deactivation_date = None
+    db.session.add(inscription)
+    db.session.commit()
+    return render_template('confirmer_changement.html')

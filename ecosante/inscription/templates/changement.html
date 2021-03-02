@@ -23,7 +23,11 @@
         <h3>Écosanté fait peau neuve !</h3>
         <p>La lettre d’information devient plus simple et plus lisible.</p>
 
-        <div class="notification">Pour rester inscrit·e, c’est simple, confirmez votre inscription à la lettre d’information quotidienne en cliquant sur le bouton : <button class="button">Rester inscrit</button></div>
+        <div class="notification">
+            <form method="POST" action='{{ url_for('inscription.confirmer_changement', uid=uid)}}' class="full-form">
+                Pour rester inscrit·e, c’est simple, confirmez votre inscription à la lettre d’information quotidienne en cliquant sur le bouton :
+                <button class="button" type="submit">Rester inscrit</button>
+            </form></div>
     </div>
 </div>
 {% endblock content %}
