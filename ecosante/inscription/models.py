@@ -14,7 +14,7 @@ from typing import List
 import requests
 import json
 from datetime import date
-from sqlalchemy import text
+from sqlalchemy import text, or_
 
 @dataclass
 class Inscription(db.Model):
@@ -163,7 +163,7 @@ class Inscription(db.Model):
 
     @property
     def is_active(self):
-        return self.deactivation_date <= date.today()
+        return self.deactivation_date is None or self.deactivation_date <= date.today()
 
     def last_month_newsletters(self):
         from ecosante.newsletter.models import NewsletterDB
@@ -188,7 +188,7 @@ class Inscription(db.Model):
 
     @classmethod
     def active_query(cls):
-        return db.session.query(cls).filter(Inscription.deactivation_date<= date.today())
+        return db.session.query(cls).filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date <= date.today()))
 
     def unsubscribe(self):
         from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
