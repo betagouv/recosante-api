@@ -40,10 +40,20 @@ li + li {
             p {
                 color: #fff;
             }
+            button {
+                margin: unset;
+            }
         }
     }
 }
 
 .button.larger {
     font-size: 2em;
+}
+
+.bullet::before {
+  content: "•";
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em
 }
