@@ -9,7 +9,7 @@ from flask import (
     stream_with_context,
 )
 from .models import Inscription, db
-from .forms import FormInscription, FormPersonnalisation
+from .forms import FormInscription, FormPersonnalisation, FormPremiereEtape, FormDeuxiemeEtape
 from ecosante.utils.decorators import (
     admin_capability_url,
     webhook_capability_url
@@ -20,6 +20,32 @@ from flask.wrappers import Response
 from datetime import datetime
 
 bp = Blueprint("inscription", __name__)
+
+@bp.route('/premiere-etape', methods=['POST'])
+def premiere_etape():
+    form = FormPremiereEtape()
+    if form.validate_on_submit():
+        inscription = Inscription.query.filter_by(mail=form.mail.data).first() or Inscription()
+        form.populate_obj(inscription)
+        db.session.add(inscription)
+        db.session.commit()
+        return jsonify({"uid": inscription.uid}), 201
+    abort(400)
+
+
+@bp.route('/<uid>/', methods=['PUT'])
+def deuxieme_etape(uid):
+    form = FormDeuxiemeEtape()
+    inscription = Inscription.query.filter_by(uid=uid).first()
+    if not inscription:
+        abort(404)
+    if form.validate_on_submit():
+        form.populate_obj(inscription)
+        db.session.add(inscription)
+        db.session.commit()
+        return 'ok'
+    abort(400)
+
 
 @bp.route('/', methods=['GET', 'POST'])
 def inscription():
