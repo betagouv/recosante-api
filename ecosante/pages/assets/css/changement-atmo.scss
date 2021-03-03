@@ -32,3 +32,18 @@
 li + li {
     margin-top: 0.5em;
 }
+
+.section-color {
+    .hero {
+        background-color: unset;
+        .hero__container {
+            p {
+                color: #fff;
+            }
+        }
+    }
+}
+
+.button.larger {
+    font-size: 2em;
+}

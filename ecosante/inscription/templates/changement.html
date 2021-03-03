@@ -1,10 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% scss "pages/css/changement-atmo.scss" %}
+  <link href="{{ ASSET_URL }}" rel="stylesheet">
+{% endassets %}
+    <div class="hero" role="banner">
+        <div class="hero__container">
+            <h1>Écosanté évolue : confirmez votre inscription !</h1>
+            <p>Merci d’être testeur·se d’Ecosanté, la lettre d’information sur la qualité de l’air. Vous le savez, Écosanté est un service en constante évolution. À partir du 15 mars, le service évolue et s’enrichit !</p>
+        </div>
+    </div>
 <div class="section">
     <div class="container">
-        <h1>Écosanté évolue : confirmez votre inscription !</h1>
-        <p>Merci d’être testeur·se d’Ecosanté, la lettre d’information sur la qualité de l’air. Vous le savez, Écosanté est un service en constante évolution. À partir du 15 mars, le service évolue et s’enrichit !</p>
 
         <h2>Qu’est ce qui change ?</h2>
 
@@ -22,12 +29,18 @@
 
         <h3>Écosanté fait peau neuve !</h3>
         <p>La lettre d’information devient plus simple et plus lisible.</p>
-
-        <div class="notification">
+</div>
+<div class="section">
+    <div class="hero">
+        <div class="hero__container">
+            <p>Pour rester inscrit·e, c’est simple, confirmez votre inscription à la lettre d’information quotidienne en cliquant sur le bouton :</p>
             <form method="POST" action='{{ url_for('inscription.confirmer_changement', uid=uid)}}' class="full-form">
-                Pour rester inscrit·e, c’est simple, confirmez votre inscription à la lettre d’information quotidienne en cliquant sur le bouton :
-                <button class="button" type="submit">Rester inscrit</button>
-            </form></div>
+                <div class="form__group" style="margin: 0 auto;">
+                    <button class="button larger" type="submit">Rester inscrit·e</button>
+                </div>
+            </form>
+
+        </div>
     </div>
 </div>
 {% endblock content %}
