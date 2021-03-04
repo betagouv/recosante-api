@@ -43,10 +43,10 @@ class Inscription(db.Model):
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
     ville_insee = db.Column(db.String)
-    diffusion = db.Column(db.Enum("sms", "mail", name="diffusion_enum"))
+    diffusion = db.Column(db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     _telephone = db.Column("telephone", db.String)
     mail = db.Column(db.String)
-    frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"))
+    frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"), default="quotidien")
     #Habitudes
     deplacement = db.Column(postgresql.ARRAY(db.String))
     _sport = db.Column("sport", db.Boolean)

@@ -39,3 +39,14 @@ def test_inscription_multi_etapes(client):
     }
     response = client.put(f'/inscription/{uid}/', data=data)
     assert response.status_code == 200
+
+    inscription = Inscription.query.filter_by(uid=uid).first()
+
+    assert inscription
+    assert inscription.mail == 'dodo@example.com'
+    assert inscription.diffusion == 'mail'
+    assert inscription.frequence == 'quotidien'
+    assert inscription.ville_insee == '53130'
+    assert inscription.deplacement == ['velo', 'tec']
+    assert inscription.activites == ['jardinage']
+    assert inscription.allergie_pollen == True
