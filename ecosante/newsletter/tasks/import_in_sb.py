@@ -268,13 +268,11 @@ Il y a eu des erreurs lors de l’envoi de la newsletter :
 Bonne journée
 """
     send_log_mail("Rapport d’envoi de la newsletter", body)
-    task.update_state(
+    self.update_state(
         state='SUCESS',
         meta={
             "progress": 100,
             "details": f"Fin",
-            "email_campaign_id": email_campaign_id,
-            "sms_campaign_id": sms_campaign_id
         }
     )
     return result
