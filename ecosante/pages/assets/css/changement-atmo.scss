@@ -48,7 +48,9 @@ li + li {
 }
 
 .button.larger {
-    font-size: 2em;
+    &, &:active, &:focus, &:visited {
+        font-size: 2em;
+    }
 }
 
 .bullet::before {
