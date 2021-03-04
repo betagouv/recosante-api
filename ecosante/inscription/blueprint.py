@@ -136,6 +136,8 @@ def confirmer_changement():
     if not inscription:
         abort(404)
     inscription.deactivation_date = None
+    inscription.diffusion = 'mail'
+    inscription.frequence = 'quotidien'
     db.session.add(inscription)
     db.session.commit()
     return render_template('confirmer_changement.html')
