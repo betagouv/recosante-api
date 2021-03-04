@@ -19,24 +19,8 @@ class FormInscription(BaseForm):
         [validators.InputRequired(), validators.Email()],
         description='(attention, les mails Ecosanté peut se retrouver dans vos SPAM ou dans le dossier "Promotions" de votre boîte mail !)'
     )
-    diffusion = RadioField(
-        'Souhaitez-vous recevoir les recommandations par ?',
-        [validators.InputRequired()],
-        choices=[('mail', 'Email'), ('sms', 'SMS')]
-    )
-    telephone = TelField(
-        'Numéro de téléphone',
-        description="(si vous avez choisi l'option d'envoi par SMS)"
-    )
-    frequence = RadioField(
-        'À quelle fréquence souhaitez-vous recevoir les informations ?',
-        [validators.InputRequired()],
-        description="En selectionnant «lorsque la qualité de l'air est mauvaise», vous recevrez Écosanté en cas d’épisode de pollution ou lorsque l’indide de qualité de l’air est mauvais.",
-        choices=[
-            ('quotidien',  'Tous les jours'),
-            ('pollution',  'Lorsque la qualité de l’air est mauvaise')
-        ]
-    )
+    diffusion = HiddenField(default='mail')
+    frequence = HiddenField(default='quotidien')
     rgpd = BooleanField(
         "En cochant cette case vous consentez à partager vos données personnelles avec l'équipe écosanté",
         [validators.DataRequired(message='Vous devez accepter de partager vos données pour vous inscrire')],
