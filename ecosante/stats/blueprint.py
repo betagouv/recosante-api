@@ -1,17 +1,16 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from flask import current_app, render_template
 from ecosante.extensions import db, sib
 from ecosante.inscription.models import Inscription
 from ecosante.avis.models import Avis
 from ecosante.avis.forms import Form
 from ecosante.utils.blueprint import Blueprint
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from calendar import month_name, different_locale
 import json
 from dateutil.parser import parse, ParserError
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-from datetime import datetime, timedelta
 
 def get_month_name(month_no, locale):
     with different_locale(locale):
@@ -25,7 +24,7 @@ def stats():
     subscriptions = {
         f"{get_month_name(v[0].month, 'fr_FR.utf8')} {v[0].year}": v[1]
         for v in
-        db.session.query(g, func.count(Inscription.id)).group_by(g).filter(Inscription.deactivation_date == None).order_by(g).all()
+        db.session.query(g, func.count(Inscription.id)).group_by(g).filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date > date.today())).order_by(g).all()
     }
     decouverte_labels = {v[0]: v[1] for v in Form.decouverte.kwargs["choices"]}
     decouverte_unnest_query = db.session.query(func.unnest(Avis.decouverte).label('d')).subquery()
