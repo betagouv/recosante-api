@@ -50,7 +50,11 @@ class RadioField(SelectField):
 def coerce(value):
     if value is None:
         return value
-    return value == True or value == 'oui'
+    if type(value) == str:
+        return value.lower() == 'oui' or value.lower() == 'true'
+    if type(value) == bool:
+        return value
+    return False
 
 class OuiNonField(RadioField):
     def __init__(self, *args, **kwargs):
