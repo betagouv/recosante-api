@@ -33,18 +33,26 @@ def premiere_etape():
     abort(400)
 
 
-@bp.route('/<uid>/', methods=['PUT'])
+@bp.route('/<uid>/', methods=['POST', 'GET'])
 def deuxieme_etape(uid):
-    form = FormDeuxiemeEtape()
-    inscription = Inscription.query.filter_by(uid=uid).first()
-    if not inscription:
-        abort(404)
-    if form.validate_on_submit():
-        form.populate_obj(inscription)
-        db.session.add(inscription)
-        db.session.commit()
-        return 'ok'
-    abort(400)
+    inscription = db.session.query(Inscription).filter_by(uid=uid).first()
+    form = FormDeuxiemeEtape(obj=inscription)
+    if request.method == 'POST':
+        if not inscription:
+            abort(404)
+        if form.validate_on_submit():
+            form.populate_obj(inscription)
+            db.session.add(inscription)
+            db.session.commit()
+            inscription = db.session.query(Inscription).filter_by(uid=uid).first()
+        else:
+            abort(400)
+    return {
+        k: v
+        for k, v in inscription.__dict__.items()
+        if k in form._fields
+    }
+
 
 
 @bp.route('/', methods=['GET', 'POST'])

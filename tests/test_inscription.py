@@ -34,11 +34,13 @@ def test_inscription_multi_etapes(client):
         'ville_insee': '53130',
         'deplacement': ['velo', 'tec'],
         'activites': ['jardinage'],
-        'pathologie_respiratoire': 'non',
-        'allergie_pollen': 'oui'
+        'pathologie_respiratoire': False,
+        'allergie_pollen': True
     }
-    response = client.put(f'/inscription/{uid}/', data=data)
+    response = client.post(f'/inscription/{uid}/', data=data)
     assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v
 
     inscription = Inscription.query.filter_by(uid=uid).first()
 
@@ -49,4 +51,10 @@ def test_inscription_multi_etapes(client):
     assert inscription.ville_insee == '53130'
     assert inscription.deplacement == ['velo', 'tec']
     assert inscription.activites == ['jardinage']
+    assert inscription.pathologie_respiratoire == False
     assert inscription.allergie_pollen == True
+
+    response = client.get(f'/inscription/{uid}/')
+    assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v

@@ -220,7 +220,7 @@ class Inscription(db.Model):
     
     def csv_line(self):
         return generate_line([
-            self.ville_name, 
+            self.ville_name,
             self.deplacement,
             self.activites,
             self.pathologie_respiratoire,
