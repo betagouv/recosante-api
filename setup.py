@@ -10,6 +10,7 @@ DEPENDENCIES = [
     'email_validator',
     'Flask',
     'Flask-Assets',
+    'flask-cors',
     'Flask-Migrate',
     'Flask-SQLAlchemy',
     'Flask-WTF',

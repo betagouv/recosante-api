@@ -17,11 +17,13 @@ from ecosante.utils.decorators import (
 from ecosante.utils import Blueprint
 from ecosante.extensions import celery
 from flask.wrappers import Response
+from flask_cors import cross_origin
 from datetime import datetime
 
 bp = Blueprint("inscription", __name__)
 
 @bp.route('/premiere-etape', methods=['POST'])
+@cross_origin(origins='*')
 def premiere_etape():
     form = FormPremiereEtape()
     if form.validate_on_submit():
@@ -34,6 +36,7 @@ def premiere_etape():
 
 
 @bp.route('/<uid>/', methods=['POST', 'GET'])
+@cross_origin(origins='*')
 def deuxieme_etape(uid):
     inscription = db.session.query(Inscription).filter_by(uid=uid).first()
     form = FormDeuxiemeEtape(obj=inscription)
