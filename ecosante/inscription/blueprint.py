@@ -135,12 +135,12 @@ def geojson():
 def changement():
     return render_template('changement.html', uid=request.args.get('uid'))
 
-@bp.route('/confirmer-changement', methods=['POST'])
+@bp.route('/confirmer-changement', methods=['POST', 'GET'])
 def confirmer_changement():
     uid = request.args.get('uid')
     if not uid:
         abort(400)
-    inscription = Inscription.query.filter_by(uid=uid).first()
+    inscription = db.session.query(Inscription).filter_by(uid=uid).first()
     if not inscription:
         abort(404)
     inscription.deactivation_date = None
