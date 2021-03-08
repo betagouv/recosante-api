@@ -66,7 +66,7 @@ class Inscription(db.Model):
     )
 
     date_inscription = db.Column(db.Date())
-    _cache_api_commune = db.Column("cache_api_commune", db.String())
+    _cache_api_commune = db.Column("cache_api_commune", db.JSON())
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -148,10 +148,10 @@ class Inscription(db.Model):
                     "geometry": "centre"
                 }
             )
-            self._cache_api_commune = r.text
+            self._cache_api_commune = r.json()
             db.session.add(self)
             db.session.commit()
-        return json.loads(self._cache_api_commune)
+        return self._cache_api_commune
 
     @property
     def ville_centre(self):

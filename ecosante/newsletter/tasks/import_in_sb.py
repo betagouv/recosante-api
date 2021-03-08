@@ -1,12 +1,9 @@
 from flask import current_app
 from datetime import datetime
 from uuid import uuid4
-import csv
 import os
-from flask_migrate import current
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-from urllib.parse import quote_plus
 from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
 from ecosante.extensions import db, sib, celery
 from ecosante.utils import send_log_mail
@@ -142,7 +139,10 @@ def import_(task, newsletters, overhead=0):
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
         if nl.label is None:
-            errors.append(f"Pas de qualité de l’air pour {nl.inscription.mail} ville : {nl.inscription.ville_entree} ")
+            errors.append({
+                "type": "no_air_quality",
+                "nl": nl
+            })
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
         else:
             try:
@@ -243,6 +243,21 @@ def import_(task, newsletters, overhead=0):
         "errors": errors
     }
 
+def format_errors(errors):
+    if not errors:
+        return ''
+    r = ''
+    regions = dict()
+    for error in errors:
+        if error['type'] == 'no_air_quality':
+            region = error['nl'].inscription.cache_api_commune['region']['nom']
+            r += f"Pas de qualité de l’air pour la ville de {error['nl'].inscription.ville_name} ({error['nl'].inscription.ville_insee}) région: '{region}'\n"
+            regions.setdefault(region, 0)
+            regions[region] += 1
+    r += '\n'
+    for region, i in regions.items():
+        r += f'La région {region} a eu {i} erreurs\n'
+    return r
 
 @celery.task(bind=True)
 def import_send_and_report(self):
@@ -255,7 +270,7 @@ def import_send_and_report(self):
         }
     )
     result = import_and_send(self, str(uuid4()), None, [])
-    errors = '\n'.join(result['errors'])
+    errors = format_errors(result['errors'])
     body = """
 Bonjour,
 Il n’y a pas eu d’erreur lors de l’envoi de la newsletter
