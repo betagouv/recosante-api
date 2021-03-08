@@ -141,7 +141,10 @@ def import_(task, newsletters, overhead=0):
         if nl.label is None:
             errors.append({
                 "type": "no_air_quality",
-                "nl": nl
+                "nl": nl,
+                "region": nl.inscription.cache_api_commune['region']['nom'],
+                "ville": nl.inscription.ville_name,
+                "insee": nl.inscription.ville_insee
             })
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
         else:
@@ -247,16 +250,19 @@ def format_errors(errors):
     if not errors:
         return ''
     r = ''
+    r2 = ''
     regions = dict()
     for error in errors:
         if error['type'] == 'no_air_quality':
-            region = error['nl'].inscription.cache_api_commune['region']['nom']
-            r += f"Pas de qualité de l’air pour la ville de {error['nl'].inscription.ville_name} ({error['nl'].inscription.ville_insee}) région: '{region}'\n"
-            regions.setdefault(region, 0)
-            regions[region] += 1
+            r += f"Pas de qualité de l’air pour la ville de {error['ville']} ({error['insee']}) région: '{error['region']}'\n"
+            r2 += f"{error['ville']}, {error['insee']}, {error['region']}"
+            regions.setdefault(error['region'], 0)
+            regions[error['region']] += 1
     r += '\n'
     for region, i in regions.items():
         r += f'La région {region} a eu {i} erreurs\n'
+    r += '\n'
+    r += r2
     return r
 
 @celery.task(bind=True)
