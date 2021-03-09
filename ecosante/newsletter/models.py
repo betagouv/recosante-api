@@ -202,6 +202,18 @@ class Newsletter:
     def show_raep(self):
         return (self.raep > 0 and self.inscription.allergie_pollen) or self.raep >= 2
 
+    @property
+    def couleur_raep(self):
+        return {
+            0: "#fff",
+            1: "#75f94c",
+            2: "#377d22",
+            3: "#fffd54",
+            4: "#ef8641",
+            5: "#ea3522"
+        }.get(self.raep)
+
+
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
     id = db.Column(db.Integer, primary_key=True)
@@ -245,7 +257,8 @@ class NewsletterDB(db.Model, Newsletter):
             'POLLUANT': self.polluants_formatted,
             'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alert,
             'SHOW_RAEP': self.show_raep,
-            'RAEP': self.raep
+            'RAEP': self.raep,
+            'BACKGROUND_COLOR_RAEP': self.couleur_raep,
         }
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone
