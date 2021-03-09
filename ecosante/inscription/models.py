@@ -213,9 +213,10 @@ class Inscription(db.Model):
             'telephone',
             'mail',
             'frequence',
+            'date_inscription',
             'deactivation_date'
         ])
-        for inscription in cls.active_query().all():
+        for inscription in cls.query.all():
             yield inscription.csv_line()
     
     def csv_line(self):
@@ -230,6 +231,7 @@ class Inscription(db.Model):
             self.telephone,
             self.mail,
             self.frequence,
+            self.date_inscription,
             self.deactivation_date
         ])
 
