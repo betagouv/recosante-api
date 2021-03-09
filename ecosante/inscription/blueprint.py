@@ -44,7 +44,10 @@ def deuxieme_etape(uid):
         if not inscription:
             abort(404)
         if form.validate_on_submit():
-            form.populate_obj(inscription)
+            for fieldname in request.form.keys():
+                if fieldname not in form._fields.keys():
+                    continue
+                setattr(inscription, fieldname, getattr(form, fieldname).data)
             db.session.add(inscription)
             db.session.commit()
             inscription = db.session.query(Inscription).filter_by(uid=uid).first()

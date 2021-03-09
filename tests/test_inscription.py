@@ -58,3 +58,9 @@ def test_inscription_multi_etapes(client):
     assert response.status_code == 200
     for k, v in data.items():
         assert response.json[k] == v
+
+    for k, v in data.items():
+        response = client.post(f'/inscription/{uid}/', data={k: v})
+        assert response.status_code == 200
+        for k2, v2 in data.items():
+            assert response.json[k2] == v2
