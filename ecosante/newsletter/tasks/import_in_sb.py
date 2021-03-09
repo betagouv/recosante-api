@@ -255,7 +255,7 @@ def format_errors(errors):
     for error in errors:
         if error['type'] == 'no_air_quality':
             r += f"Pas de qualité de l’air pour la ville de {error['ville']} ({error['insee']}) région: '{error['region']}'\n"
-            r2 += f"{error['ville']}, {error['insee']}, {error['region']}"
+            r2 += f"{error['ville']}, {error['insee']}, {error['region']}\n"
             regions.setdefault(error['region'], 0)
             regions[error['region']] += 1
     r += '\n'
