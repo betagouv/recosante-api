@@ -15,6 +15,7 @@ import requests
 import json
 from datetime import date
 from sqlalchemy import text, or_
+from sqlalchemy.ext.hybrid import hybrid_property
 
 @dataclass
 class Inscription(db.Model):
@@ -27,7 +28,7 @@ class Inscription(db.Model):
     apa: bool
     activites: List[str]
     pathologie_respiratoire: bool
-    allergie_pollen: bool
+    allergie_pollens: bool
     enfants: bool
     diffusion: str
     telephone: str
@@ -56,8 +57,7 @@ class Inscription(db.Model):
     chauffage = db.Column(postgresql.ARRAY(db.String))
     animaux_domestiques = db.Column(postgresql.ARRAY(db.String))
     #Sante
-    pathologie_respiratoire = db.Column(db.Boolean)
-    allergie_pollen = db.Column(db.Boolean)
+    population = db.Column(postgresql.ARRAY(db.String))
     #Misc
     deactivation_date = db.Column(db.Date)
     connaissance_produit = db.Column(postgresql.ARRAY(db.String))
@@ -137,7 +137,35 @@ class Inscription(db.Model):
 
     @property
     def personne_sensible(self):
-        return self.enfants or self.pathologie_respiratoire or self.allergie_pollen
+        if type(self.population) != list:
+            return False
+        return "pathologie_respiratoire" in self.population\
+                or "allergie_pollens" in self.population\
+                or self.enfants
+
+    @hybrid_property
+    def allergie_pollens(self):
+        return type(self.population) == list and "allergie_pollens" in self.population
+    @allergie_pollens.setter
+    def allergie_pollens(self, value):
+        if not type(self.population) == list:
+            self.population = []
+        if value and not "allergie_pollens" in self.population:
+            self.population.append("allergie_pollens")
+        elif not value and "allergie_pollens" in self.population:
+            self.population.remove("allergie_pollens")
+
+    @hybrid_property
+    def pathologie_respiratoire(self):
+        return type(self.population) == list and "pathologie_respiratoire" in self.population
+    @pathologie_respiratoire.setter
+    def pathologie_respiratoire(self, value):
+        if not type(self.population) == list:
+            self.population = []
+        if value and not "pathologie_respiratoire" in self.population:
+            self.population.append("pathologie_respiratoire")
+        elif not value and "pathologie_respiratoire" in self.population:
+            self.population.remove("pathologie_respiratoire")
 
     @property
     def cache_api_commune(self):
@@ -212,7 +240,7 @@ class Inscription(db.Model):
             'deplacement',
             'activites',
             'pathologie_respiratoire',
-            'allergie_pollen',
+            'allergie_pollens',
             'enfants',
             'diffusion',
             'telephone',
@@ -230,7 +258,7 @@ class Inscription(db.Model):
             self.deplacement,
             self.activites,
             self.pathologie_respiratoire,
-            self.allergie_pollen,
+            self.allergie_pollens,
             self.enfants,
             self.diffusion,
             self.telephone,

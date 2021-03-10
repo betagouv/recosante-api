@@ -39,8 +39,8 @@ def stats():
     nb_satisfaits = Avis.query.filter(Avis.recommandabilite > 8).count()
 
     nb_inscriptions = Inscription.active_query().count()
-    nb_allergies = Inscription.active_query().filter_by(allergie_pollen=True).count()
-    nb_pathologie_respiratoire = Inscription.active_query().filter_by(pathologie_respiratoire=True).count()
+    nb_allergies = Inscription.active_query().filter(Inscription.population.any("allergie_pollens")).count()
+    nb_pathologie_respiratoire = Inscription.active_query().filter(Inscription.population.any("pathologie_respiratoire")).count()
 
     ouvertures = []
     api_instance = sib_api_v3_sdk.EmailCampaignsApi(sib)

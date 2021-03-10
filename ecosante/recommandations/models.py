@@ -1,4 +1,3 @@
-from itertools import compress
 from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types

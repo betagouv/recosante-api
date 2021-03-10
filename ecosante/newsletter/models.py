@@ -172,7 +172,7 @@ class Newsletter:
             "Non",
             ";".join(self.inscription.activites or []),
             convert_boolean_to_oui_non(self.inscription.pathologie_respiratoire),
-            convert_boolean_to_oui_non(self.inscription.allergie_pollen),
+            convert_boolean_to_oui_non(self.inscription.allergie_pollens),
             convert_boolean_to_oui_non(self.inscription.enfants),
             self.inscription.mail,
             self.inscription.diffusion,
@@ -200,7 +200,7 @@ class Newsletter:
 
     @property
     def show_raep(self):
-        return (self.raep > 0 and self.inscription.allergie_pollen) or self.raep >= 2
+        return (self.raep > 0 and self.inscription.allergie_pollens) or self.raep >= 2
 
     @property
     def couleur_raep(self):

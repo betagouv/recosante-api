@@ -14,12 +14,10 @@ class FormDeuxiemeEtape(BaseForm):
         csrf = False
 
     ville_insee = FormInscription.ville_insee
-    deplacement = FormPersonnalisation.deplacement
+    deplacement = MultiCheckboxField(choices=[('velo', ''), ('tec', ''), ('voiture', '')])
     activites = MultiCheckboxField(
         choices=[('jardinage', ''), ('bricolage', ''), ('menage', ''), ('sport', ''), ('aucun', '')]
     )
-    pathologie_respiratoire =  FormPersonnalisation.pathologie_respiratoire
-    allergie_pollen = FormPersonnalisation.allergie_pollen
     animaux_domestiques = MultiCheckboxField(choices=[('chat', ''), ('chien', ''), ('aucun', '')])
     chauffage = MultiCheckboxField(choices=[('bois', ''), ('fioul', ''), ('appoint', ''), ('aucun', '')])
     connaissance_produit = MultiCheckboxField(
@@ -27,10 +25,11 @@ class FormDeuxiemeEtape(BaseForm):
             ('medecin', ''),
             ('association', ''),
             ('reseaux_sociaux', ''),
-            ('publicitie', ''),
+            ('publicite', ''),
             ('ami', ''),
             ('autrement', '')
     ])
+    population = MultiCheckboxField(choices=[('vulnerable', ''), ('allergie_pollens', ''), ('aucun', '')])
 
     def validate_ville_insee(form, field):
         r = requests.get(f'https://geo.api.gouv.fr/communes/{field.data}')

@@ -18,7 +18,7 @@ def test_inscription(client):
         "activites": ["jardinage"],
         "enfants": "true",
         "pathologie_respiratoire": "true",
-        "allergie_pollen": "true",
+        "allergie_pollens": "true",
     }
     response = client.post('/inscription/personnalisation', data=data)
     assert response.status_code == 302
@@ -38,8 +38,7 @@ def test_inscription_multi_etapes(client):
         'ville_insee': '53130',
         'deplacement': ['velo', 'tec'],
         'activites': ['jardinage'],
-        'pathologie_respiratoire': False,
-        'allergie_pollen': True
+        'population': ['vulnerable', 'allergie_pollens']
     }
     response = client.post(f'/inscription/{uid}/', data=data)
     assert response.status_code == 200
@@ -55,8 +54,7 @@ def test_inscription_multi_etapes(client):
     assert inscription.ville_insee == '53130'
     assert inscription.deplacement == ['velo', 'tec']
     assert inscription.activites == ['jardinage']
-    assert inscription.pathologie_respiratoire == False
-    assert inscription.allergie_pollen == True
+    assert inscription.population == ['vulnerable', 'allergie_pollens']
 
 def test_partial_updates(client):
     _mail, uid = premiere_etape(client)
@@ -65,8 +63,7 @@ def test_partial_updates(client):
         'ville_insee': '53130',
         'deplacement': ['velo', 'tec'],
         'activites': ['jardinage'],
-        'pathologie_respiratoire': False,
-        'allergie_pollen': True
+        'population': ['vulnerable', 'allergie_pollens']
     }
 
     for k, v in data.items():
@@ -91,8 +88,7 @@ def test_json(client):
         'ville_insee': '53130',
         'deplacement': ['velo', 'tec'],
         'activites': ['jardinage'],
-        'pathologie_respiratoire': False,
-        'allergie_pollen': True,
+        'population': ['vulnerable', 'allergie_pollens']
     }
 
     for k, v in data.items():
@@ -129,7 +125,7 @@ def test_chauffage(client):
 def test_connaissace_produit(client):
     _mail, uid = premiere_etape(client)
 
-    choices = ['medecin', 'association', 'reseaux_sociaux', 'publicitie', 'ami', 'autrement']
+    choices = ['medecin', 'association', 'reseaux_sociaux', 'publicite', 'ami', 'autrement']
 
     for choice in choices:
         response = client.post(f'/inscription/{uid}/', json={"connaissance_produit": [choice]})
@@ -139,3 +135,17 @@ def test_connaissace_produit(client):
     assert response.json['connaissance_produit'] == ["medecin", "association"]
     response = client.post(f'/inscription/{uid}/', json={"connaissance_produit": []})
     assert response.json['connaissance_produit'] == []
+
+def test_population(client):
+    _mail, uid = premiere_etape(client)
+
+    choices = ['vulnerable', 'allergie_pollens', 'aucun']
+
+    for choice in choices:
+        response = client.post(f'/inscription/{uid}/', json={"population": [choice]})
+        assert response.json['population'] == [choice]
+
+    response = client.post(f'/inscription/{uid}/', json={"population": ["vulnerable", "allergie_pollens"]})
+    assert response.json['population'] == ["vulnerable", "allergie_pollens"]
+    response = client.post(f'/inscription/{uid}/', json={"population": []})
+    assert response.json['population'] == []

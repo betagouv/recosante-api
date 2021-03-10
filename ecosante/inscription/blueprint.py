@@ -53,9 +53,8 @@ def deuxieme_etape(uid):
         else:
             return jsonify(form.errors), 400
     return {
-        k: v
-        for k, v in inscription.__dict__.items()
-        if k in form._fields
+        k: getattr(inscription, k)
+        for k in form._fields.keys()
     }
 
 

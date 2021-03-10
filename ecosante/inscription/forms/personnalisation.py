@@ -37,4 +37,4 @@ class FormPersonnalisation(BaseForm):
         <a href="#definition-vulnerables">Qu’est-ce qu’une personne sensible ou vulnérable ?</a>
         """
     )
-    allergie_pollen = OuiNonField('Êtes-vous allergique aux pollens ?')
+    allergie_pollens = OuiNonField('Êtes-vous allergique aux pollens ?')
