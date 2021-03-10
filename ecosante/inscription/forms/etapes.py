@@ -29,7 +29,7 @@ class FormDeuxiemeEtape(BaseForm):
             ('ami', ''),
             ('autrement', '')
     ])
-    population = MultiCheckboxField(choices=[('vulnerable', ''), ('allergie_pollens', ''), ('aucun', '')])
+    population = MultiCheckboxField(choices=[('pathologie_respiratoire', ''), ('allergie_pollens', ''), ('aucun', '')])
 
     def validate_ville_insee(form, field):
         r = requests.get(f'https://geo.api.gouv.fr/communes/{field.data}')
