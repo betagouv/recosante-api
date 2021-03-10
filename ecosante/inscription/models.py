@@ -16,6 +16,7 @@ import json
 from datetime import date
 from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm.attributes import flag_modified
 
 @dataclass
 class Inscription(db.Model):
@@ -154,6 +155,7 @@ class Inscription(db.Model):
             self.population.append("allergie_pollens")
         elif not value and "allergie_pollens" in self.population:
             self.population.remove("allergie_pollens")
+        flag_modified(self, 'population')
 
     @hybrid_property
     def pathologie_respiratoire(self):
@@ -163,9 +165,11 @@ class Inscription(db.Model):
         if not type(self.population) == list:
             self.population = []
         if value and not "pathologie_respiratoire" in self.population:
-            self.population.append("pathologie_respiratoire")
+            self.population += ["pathologie_respiratoire"]
         elif not value and "pathologie_respiratoire" in self.population:
             self.population.remove("pathologie_respiratoire")
+        flag_modified(self, 'population')
+
 
     @property
     def cache_api_commune(self):

@@ -79,7 +79,7 @@ def inscription():
 def personnalisation():
     if not session['inscription']:
         return redirect(url_for('index'))
-    inscription = Inscription.query.get(session['inscription']['id'])
+    inscription = db.session.query(Inscription).get(session['inscription']['id'])
     form = FormPersonnalisation(obj=inscription)
     if request.method == 'POST' and form.validate_on_submit():
         form.populate_obj(inscription)        
