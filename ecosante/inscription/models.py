@@ -53,11 +53,14 @@ class Inscription(db.Model):
     apa = db.Column(db.Boolean)
     activites = db.Column(postgresql.ARRAY(db.String))
     enfants = db.Column(db.Boolean)
+    chauffage = db.Column(postgresql.ARRAY(db.String))
+    animaux_domestiques = db.Column(postgresql.ARRAY(db.String))
     #Sante
     pathologie_respiratoire = db.Column(db.Boolean)
     allergie_pollen = db.Column(db.Boolean)
     #Misc
     deactivation_date = db.Column(db.Date)
+    connaissance_produit = db.Column(postgresql.ARRAY(db.String))
 
     newsletters = db.relationship(
         "ecosante.newsletter.models.NewsletterDB",

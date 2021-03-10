@@ -92,10 +92,50 @@ def test_json(client):
         'deplacement': ['velo', 'tec'],
         'activites': ['jardinage'],
         'pathologie_respiratoire': False,
-        'allergie_pollen': True
+        'allergie_pollen': True,
     }
 
     for k, v in data.items():
         response = client.post(f'/inscription/{uid}/', json={k: v})
         assert response.status_code == 200
         assert response.json[k] == v
+
+def test_animaux(client):
+    _mail, uid = premiere_etape(client)
+
+    response = client.post(f'/inscription/{uid}/', json={"animaux_domestiques": ["chat"]})
+    assert response.json['animaux_domestiques'] == ["chat"]
+    response = client.post(f'/inscription/{uid}/', json={"animaux_domestiques": ["chien"]})
+    assert response.json['animaux_domestiques'] == ["chien"]
+    response = client.post(f'/inscription/{uid}/', json={"animaux_domestiques": ["chat", "chien"]})
+    assert response.json['animaux_domestiques'] == ["chat", "chien"]
+    response = client.post(f'/inscription/{uid}/', json={"animaux_domestiques": []})
+    assert response.json['animaux_domestiques'] == []
+
+def test_chauffage(client):
+    _mail, uid = premiere_etape(client)
+
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["bois"]})
+    assert response.json['chauffage'] == ["bois"]
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["fioul"]})
+    assert response.json['chauffage'] == ["fioul"]
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["appoint"]})
+    assert response.json['chauffage'] == ["appoint"]
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["bois", "fioul", "appoint"]})
+    assert response.json['chauffage'] == ["bois", "fioul", "appoint"]
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": []})
+    assert response.json['chauffage'] == []
+
+def test_connaissace_produit(client):
+    _mail, uid = premiere_etape(client)
+
+    choices = ['medecin', 'association', 'reseaux_sociaux', 'publicitie', 'ami', 'autrement']
+
+    for choice in choices:
+        response = client.post(f'/inscription/{uid}/', json={"connaissance_produit": [choice]})
+        assert response.json['connaissance_produit'] == [choice]
+
+    response = client.post(f'/inscription/{uid}/', json={"connaissance_produit": ["medecin", "association"]})
+    assert response.json['connaissance_produit'] == ["medecin", "association"]
+    response = client.post(f'/inscription/{uid}/', json={"connaissance_produit": []})
+    assert response.json['connaissance_produit'] == []
