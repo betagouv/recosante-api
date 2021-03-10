@@ -15,11 +15,13 @@ class FormDeuxiemeEtape(BaseForm):
 
     ville_insee = FormInscription.ville_insee
     deplacement = FormPersonnalisation.deplacement
-    activites = FormPersonnalisation.activites
+    activites = MultiCheckboxField(
+        choices=[('jardinage', ''), ('bricolage', ''), ('menage', ''), ('sport', ''), ('aucun', '')]
+    )
     pathologie_respiratoire =  FormPersonnalisation.pathologie_respiratoire
     allergie_pollen = FormPersonnalisation.allergie_pollen
-    animaux_domestiques = MultiCheckboxField(choices=[('chat', ''), ('chien', '')])
-    chauffage = MultiCheckboxField(choices=[('bois', ''), ('fioul', ''), ('appoint', '')])
+    animaux_domestiques = MultiCheckboxField(choices=[('chat', ''), ('chien', ''), ('aucun', '')])
+    chauffage = MultiCheckboxField(choices=[('bois', ''), ('fioul', ''), ('appoint', ''), ('aucun', '')])
     connaissance_produit = MultiCheckboxField(
         choices=[
             ('medecin', ''),
