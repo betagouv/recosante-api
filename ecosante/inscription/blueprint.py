@@ -25,7 +25,7 @@ bp = Blueprint("inscription", __name__)
 @bp.route('/premiere-etape', methods=['POST'])
 @cross_origin(origins='*')
 def premiere_etape():
-    form = FormPremiereEtape()
+    form = FormPremiereEtape(data=request.json)
     if form.validate_on_submit():
         inscription = Inscription.query.filter_by(mail=form.mail.data).first() or Inscription()
         form.populate_obj(inscription)
@@ -39,20 +39,19 @@ def premiere_etape():
 @cross_origin(origins='*')
 def deuxieme_etape(uid):
     inscription = db.session.query(Inscription).filter_by(uid=uid).first()
-    form = FormDeuxiemeEtape(obj=inscription)
+    form = FormDeuxiemeEtape(obj=inscription, data=request.json)
     if request.method == 'POST':
         if not inscription:
             abort(404)
         if form.validate_on_submit():
-            for fieldname in request.form.keys():
-                if fieldname not in form._fields.keys():
-                    continue
-                setattr(inscription, fieldname, getattr(form, fieldname).data)
+            for fieldname in form._fields.keys():
+                if (request.form and fieldname in request.form.keys()) or (request.json and fieldname in request.json.keys()):
+                    setattr(inscription, fieldname, getattr(form, fieldname).data)
             db.session.add(inscription)
             db.session.commit()
             inscription = db.session.query(Inscription).filter_by(uid=uid).first()
         else:
-            abort(400)
+            return jsonify(form.errors), 400
     return {
         k: v
         for k, v in inscription.__dict__.items()

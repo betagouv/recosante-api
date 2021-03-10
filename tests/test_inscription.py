@@ -1,4 +1,5 @@
 from ecosante.inscription.models import Inscription
+from datetime import datetime
 
 def test_inscription(client):
     data = {
@@ -23,12 +24,15 @@ def test_inscription(client):
     assert response.status_code == 302
     assert response.location == 'http://localhost:5000/inscription/reussie'
 
-
-def test_inscription_multi_etapes(client):
-    data = {'mail': 'dodo@example.com'}
+def premiere_etape(client):
+    mail = f'dodo-{datetime.timestamp(datetime.now())}@example.com'
+    data = {'mail': mail}
     response = client.post('/inscription/premiere-etape', data=data)
     assert response.status_code == 201
-    uid = response.json['uid']
+    return mail, response.json['uid']
+
+def test_inscription_multi_etapes(client):
+    mail, uid = premiere_etape(client)
 
     data = {
         'ville_insee': '53130',
@@ -45,7 +49,7 @@ def test_inscription_multi_etapes(client):
     inscription = Inscription.query.filter_by(uid=uid).first()
 
     assert inscription
-    assert inscription.mail == 'dodo@example.com'
+    assert inscription.mail == mail
     assert inscription.diffusion == 'mail'
     assert inscription.frequence == 'quotidien'
     assert inscription.ville_insee == '53130'
@@ -54,13 +58,44 @@ def test_inscription_multi_etapes(client):
     assert inscription.pathologie_respiratoire == False
     assert inscription.allergie_pollen == True
 
-    response = client.get(f'/inscription/{uid}/')
-    assert response.status_code == 200
-    for k, v in data.items():
-        assert response.json[k] == v
+def test_partial_updates(client):
+    _mail, uid = premiere_etape(client)
+
+    data = {
+        'ville_insee': '53130',
+        'deplacement': ['velo', 'tec'],
+        'activites': ['jardinage'],
+        'pathologie_respiratoire': False,
+        'allergie_pollen': True
+    }
 
     for k, v in data.items():
         response = client.post(f'/inscription/{uid}/', data={k: v})
         assert response.status_code == 200
-        for k2, v2 in data.items():
-            assert response.json[k2] == v2
+        assert response.json[k] == v
+
+def test_errors(client):
+    _mail, uid = premiere_etape(client)
+
+    response = client.post(f'/inscription/{uid}/', data={"ville_insee": "13"}, headers={"Accept": "application/json"})
+    assert response.status_code == 400
+    assert 'ville_insee' in response.json
+
+def test_json(client):
+    data = {'mail': f'dodo-{datetime.timestamp(datetime.now())}@example.com'}
+    response = client.post('/inscription/premiere-etape', json=data)
+    assert response.status_code == 201
+
+    uid = response.json['uid']
+    data = {
+        'ville_insee': '53130',
+        'deplacement': ['velo', 'tec'],
+        'activites': ['jardinage'],
+        'pathologie_respiratoire': False,
+        'allergie_pollen': True
+    }
+
+    for k, v in data.items():
+        response = client.post(f'/inscription/{uid}/', json={k: v})
+        assert response.status_code == 200
+        assert response.json[k] == v
