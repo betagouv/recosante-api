@@ -22,7 +22,7 @@ from datetime import datetime
 
 bp = Blueprint("inscription", __name__)
 
-@bp.route('/premiere-etape', methods=['POST'])
+@bp.route('/premiere-etape', methods=['POST'], strict_slashes=False)
 @cross_origin(origins='*')
 def premiere_etape():
     form = FormPremiereEtape(data=request.json)
@@ -35,7 +35,7 @@ def premiere_etape():
     abort(400)
 
 
-@bp.route('/<uid>/', methods=['POST', 'GET'])
+@bp.route('/<uid>/', methods=['POST', 'GET'], strict_slashes=False)
 @cross_origin(origins='*')
 def deuxieme_etape(uid):
     inscription = db.session.query(Inscription).filter_by(uid=uid).first()
