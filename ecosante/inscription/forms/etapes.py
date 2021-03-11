@@ -1,3 +1,4 @@
+from wtforms.fields.simple import HiddenField
 from . import FormInscription, FormPersonnalisation
 from ecosante.utils.form import BaseForm, MultiCheckboxField
 from wtforms import ValidationError

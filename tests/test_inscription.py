@@ -95,6 +95,8 @@ def test_json(client):
         response = client.post(f'/inscription/{uid}/', json={k: v})
         assert response.status_code == 200
         assert response.json[k] == v
+    assert response.json['ville_nom'] == 'Laval'
+    assert response.json['ville_codes_postaux'] == ['53000']
 
 def test_animaux(client):
     _mail, uid = premiere_etape(client)

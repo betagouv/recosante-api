@@ -53,10 +53,15 @@ def deuxieme_etape(uid):
         else:
             return jsonify(form.errors), 400
     return {
-        k: getattr(inscription, k)
-        for k in form._fields.keys()
+        **{
+            k: getattr(inscription, k)
+            for k in form._fields.keys()
+        },
+        **{
+            "ville_nom": inscription.ville_nom,
+            "ville_codes_postaux": inscription.ville_codes_postaux
+        }
     }
-
 
 
 @bp.route('/', methods=['GET', 'POST'])
