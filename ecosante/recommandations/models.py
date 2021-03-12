@@ -191,6 +191,9 @@ class Recommandation(db.Model):
                 if getattr(self, polluant):
                     return True
             return False
+        else:
+            if self.polluants:
+                return False
         if qualif:
             if not self.is_relevant_qualif(qualif):
                 return False

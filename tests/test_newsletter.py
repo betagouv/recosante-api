@@ -1,10 +1,26 @@
-from ecosante.newsletter.models import Inscription, Newsletter, Recommandation
+from indice_pollution import today
+from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
+from datetime import date, timedelta
 
-def test_formatted_polluants_generale_pm10():
+def test_episode_passe(client):
+    yesterday = date.today() - timedelta(days=1)
+    nl = NewsletterDB(Newsletter(
+        Inscription(diffusion='mail'),
+        forecast={"data": []},
+        episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(yesterday)}]},
+        recommandations=[Recommandation(particules_fines=True), Recommandation(recommandation="ça va en fait")]
+    ))
+    assert nl.polluants_formatted == None
+    assert nl.polluants_symbols == []
+    assert nl.lien_recommandations_alert == None
+    assert nl.attributes()['POLLUANT'] == None
+    assert nl.attributes()['RECOMMANDATION'] == 'ça va en fait'
+
+def test_formatted_polluants_generale_pm10(client):
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
-        episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION"}]},
+        episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]},
         recommandations=[Recommandation(particules_fines=True)]
     )
     assert nl.polluants_formatted == "aux particules fines"
@@ -16,8 +32,8 @@ def test_formatted_polluants_generale_pm10_no2():
         Inscription(),
         forecast={"data": []},
         episodes={"data": [
-            {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION"},
-            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION"},
+            {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
         recommandations=[Recommandation(particules_fines=True)]
     )
@@ -30,10 +46,10 @@ def test_formatted_polluants_generale_tous():
         Inscription(),
         forecast={"data": []},
         episodes={"data": [
-            {"code_pol": "1", "etat": "INFORMATION ET RECOMMANDATION"},
-            {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION"},
-            {"code_pol": "7", "etat": "INFORMATION ET RECOMMANDATION"},
-            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION"},
+            {"code_pol": "1", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+            {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+            {"code_pol": "7", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
         recommandations=[Recommandation(particules_fines=True)]
     )
@@ -46,10 +62,10 @@ def test_formatted_polluants_generale_pm10_o3_no2():
         Inscription(),
         forecast={"data": []},
         episodes={"data": [
-            {"code_pol": "1", "etat": "PAS DE DEPASSEMENT"},
-            {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION"},
-            {"code_pol": "7", "etat": "INFORMATION ET RECOMMANDATION"},
-            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION"},
+            {"code_pol": "1", "etat": "PAS DE DEPASSEMENT", "date": str(date.today())},
+            {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+            {"code_pol": "7", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
         recommandations=[Recommandation(particules_fines=True)]
     )
@@ -63,7 +79,7 @@ def test_formatted_polluants_vulnerable_no2(client):
         Inscription(pathologie_respiratoire=True),
         forecast={"data": []},
         episodes={"data": [
-            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION"},
+            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
         recommandations=[
             Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),

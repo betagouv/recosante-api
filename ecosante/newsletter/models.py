@@ -52,7 +52,9 @@ class Newsletter:
                 '8': 'dioxyde_azote',
             }.get(str(e['code_pol']), f'erreur: {e["code_pol"]}')
             for e in self.episodes['data']
-            if e['etat'] != 'PAS DE DEPASSEMENT'
+            if e['etat'] != 'PAS DE DEPASSEMENT'\
+               and 'date' in e\
+               and e['date'] == str(self.date)
         ]
 
         self.recommandation =\
@@ -191,6 +193,8 @@ class Newsletter:
 
     @property
     def lien_recommandations_alert(self):
+        if not self.polluants:
+            return
         population = "vulnerable" if self.inscription.personne_sensible else "generale"
         return url_for(
             "pages.recommandation_episode_pollution",
@@ -248,7 +252,7 @@ class NewsletterDB(db.Model, Newsletter):
     def attributes(self):
         to_return = {
             'RECOMMANDATION': self.recommandation.format(self.inscription),
-            'LIEN_AASQA': self.forecast['metadata']['region']['website'],
+            'LIEN_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('website'),
             'PRECISIONS': self.recommandation.precisions,
             'QUALITE_AIR': self.label,
             'VILLE': self.inscription.ville_name,
