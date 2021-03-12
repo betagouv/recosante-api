@@ -1,5 +1,5 @@
-from wtforms.fields.simple import HiddenField
-from . import FormInscription, FormPersonnalisation
+from wtforms.fields.core import SelectField
+from . import FormInscription
 from ecosante.utils.form import BaseForm, MultiCheckboxField
 from wtforms import ValidationError
 import requests
@@ -31,6 +31,7 @@ class FormDeuxiemeEtape(BaseForm):
             ('autrement', '')
     ])
     population = MultiCheckboxField(choices=[('pathologie_respiratoire', ''), ('allergie_pollens', ''), ('aucun', '')])
+    enfants = SelectField(choices=['oui', 'non', 'aucun', None], coerce=lambda v: None if v is None else str(v))
 
     def validate_ville_insee(form, field):
         r = requests.get(f'https://geo.api.gouv.fr/communes/{field.data}')

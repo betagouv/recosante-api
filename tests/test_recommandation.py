@@ -48,11 +48,11 @@ def test_is_relevant_voiture(db_session):
 
 def test_is_relevant_enfants(db_session):
     r = Recommandation(enfants=True)
-    i = Inscription(enfants=True)
+    i = Inscription(enfants='oui')
     assert r.is_relevant(i, None, [])
 
     r = Recommandation(enfants=True)
-    i = Inscription(enfants=False)
+    i = Inscription(enfants='non')
     assert not r.is_relevant(i, None, [])
 
 def test_is_qualite_mauvaise(db_session):

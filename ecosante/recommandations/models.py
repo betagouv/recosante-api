@@ -1,3 +1,4 @@
+from ecosante.inscription.models import Inscription
 from flask.globals import current_app
 from .. import db
 import sqlalchemy.types as types
@@ -173,15 +174,15 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription, qualif, polluants):
+    def is_relevant(self, inscription: Inscription, qualif, polluants):
         #Inscription
         if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
             return False
-        if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.enfants):
+        if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.has_enfants):
             return False
         if self.autres and inscription.personne_sensible:
             return False
-        if self.enfants and not inscription.enfants:
+        if self.enfants and not inscription.has_enfants:
             return False
         # Environnement
         #if self.min_raep:

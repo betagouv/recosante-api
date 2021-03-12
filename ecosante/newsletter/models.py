@@ -175,7 +175,7 @@ class Newsletter:
             ";".join(self.inscription.activites or []),
             convert_boolean_to_oui_non(self.inscription.pathologie_respiratoire),
             convert_boolean_to_oui_non(self.inscription.allergie_pollens),
-            convert_boolean_to_oui_non(self.inscription.enfants),
+            self.inscription.enfants,
             self.inscription.mail,
             self.inscription.diffusion,
             self.inscription.telephone,

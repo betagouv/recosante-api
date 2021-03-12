@@ -151,3 +151,11 @@ def test_population(client):
     assert response.json['population'] == ["pathologie_respiratoire", "allergie_pollens"]
     response = client.post(f'/inscription/{uid}/', json={"population": []})
     assert response.json['population'] == []
+
+def test_inscription(client):
+    _mail, uid = premiere_etape(client)
+
+    for choice in ["oui", "non", "aucun"]:
+        response = client.post(f'/inscription/{uid}/', json={"enfants": [choice]})
+        assert response.status_code == 200
+        assert response.json['enfants'] == choice

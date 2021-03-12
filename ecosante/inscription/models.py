@@ -54,7 +54,7 @@ class Inscription(db.Model):
     _sport = db.Column("sport", db.Boolean)
     apa = db.Column(db.Boolean)
     activites = db.Column(postgresql.ARRAY(db.String))
-    enfants = db.Column(db.Boolean)
+    enfants = db.Column("enfants", db.String)
     chauffage = db.Column(postgresql.ARRAY(db.String))
     animaux_domestiques = db.Column(postgresql.ARRAY(db.String))
     #Sante
@@ -142,7 +142,7 @@ class Inscription(db.Model):
             return False
         return "pathologie_respiratoire" in self.population\
                 or "allergie_pollens" in self.population\
-                or self.enfants
+                or self.has_enfants
 
     @hybrid_property
     def allergie_pollens(self):
@@ -170,6 +170,9 @@ class Inscription(db.Model):
             self.population.remove("pathologie_respiratoire")
         flag_modified(self, 'population')
 
+    @property
+    def has_enfants(self):
+        return self.enfants == 'oui'
 
     @property
     def cache_api_commune(self):
