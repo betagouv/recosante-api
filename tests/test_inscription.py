@@ -159,3 +159,13 @@ def test_inscription(client):
         response = client.post(f'/inscription/{uid}/', json={"enfants": [choice]})
         assert response.status_code == 200
         assert response.json['enfants'] == choice
+
+def test_changement_ville(client):
+    _mail, uid = premiere_etape(client)
+    response = client.post(f'/inscription/{uid}/', json={"ville_insee": "53130"})
+    assert response.status_code == 200
+    assert response.json['ville_nom'] == 'Laval'
+
+    response = client.post(f'/inscription/{uid}/', json={"ville_insee": "53144"})
+    assert response.status_code == 200
+    assert response.json['ville_nom'] == 'Marcillé-la-Ville'

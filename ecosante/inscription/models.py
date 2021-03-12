@@ -44,7 +44,7 @@ class Inscription(db.Model):
     )
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
-    ville_insee = db.Column(db.String)
+    _ville_insee = db.Column("ville_insee", db.String)
     diffusion = db.Column(db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     _telephone = db.Column("telephone", db.String)
     mail = db.Column(db.String)
@@ -174,22 +174,35 @@ class Inscription(db.Model):
     def has_enfants(self):
         return self.enfants == 'oui'
 
+    def set_cache_api_commune(self):
+        if not self.ville_insee:
+            return
+        r = requests.get(f'https://geo.api.gouv.fr/communes/{self.ville_insee}',
+            params={
+                "fields": "nom,centre,region,codesPostaux",
+                "format": "json",
+                "geometry": "centre"
+            }
+        )
+        self._cache_api_commune = r.json()
+        db.session.add(self)
+        db.session.commit()
+
     @property
     def cache_api_commune(self):
+        if not self.ville_insee:
+            return {}
         if not self._cache_api_commune or not 'codesPostaux' in self._cache_api_commune:
-            if not self.ville_insee:
-                return {}
-            r = requests.get(f'https://geo.api.gouv.fr/communes/{self.ville_insee}',
-                params={
-                    "fields": "nom,centre,region,codesPostaux",
-                    "format": "json",
-                    "geometry": "centre"
-                }
-            )
-            self._cache_api_commune = r.json()
-            db.session.add(self)
-            db.session.commit()
+            self.set_cache_api_commune()
         return self._cache_api_commune
+
+    @hybrid_property
+    def ville_insee(self):
+        return self._ville_insee
+    @ville_insee.setter
+    def ville_insee(self, value):
+        self._ville_insee = value
+        self.set_cache_api_commune()
 
     @property
     def ville_centre(self):
