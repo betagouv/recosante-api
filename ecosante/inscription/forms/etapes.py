@@ -20,7 +20,7 @@ class FormDeuxiemeEtape(BaseForm):
         choices=[('jardinage', ''), ('bricolage', ''), ('menage', ''), ('sport', ''), ('aucun', '')]
     )
     animaux_domestiques = MultiCheckboxField(choices=[('chat', ''), ('chien', ''), ('aucun', '')])
-    chauffage = MultiCheckboxField(choices=[('bois', ''), ('fioul', ''), ('appoint', ''), ('aucun', '')])
+    chauffage = MultiCheckboxField(choices=[('bois', ''), ('chaudiere', ''), ('appoint', ''), ('aucun', '')])
     connaissance_produit = MultiCheckboxField(
         choices=[
             ('medecin', ''),

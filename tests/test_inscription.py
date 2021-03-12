@@ -115,12 +115,12 @@ def test_chauffage(client):
 
     response = client.post(f'/inscription/{uid}/', json={"chauffage": ["bois"]})
     assert response.json['chauffage'] == ["bois"]
-    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["fioul"]})
-    assert response.json['chauffage'] == ["fioul"]
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["chaudiere"]})
+    assert response.json['chauffage'] == ["chaudiere"]
     response = client.post(f'/inscription/{uid}/', json={"chauffage": ["appoint"]})
     assert response.json['chauffage'] == ["appoint"]
-    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["bois", "fioul", "appoint"]})
-    assert response.json['chauffage'] == ["bois", "fioul", "appoint"]
+    response = client.post(f'/inscription/{uid}/', json={"chauffage": ["bois", "chaudiere", "appoint"]})
+    assert response.json['chauffage'] == ["bois", "chaudiere", "appoint"]
     response = client.post(f'/inscription/{uid}/', json={"chauffage": []})
     assert response.json['chauffage'] == []
 
