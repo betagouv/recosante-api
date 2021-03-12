@@ -253,6 +253,7 @@ class NewsletterDB(db.Model, Newsletter):
         to_return = {
             'RECOMMANDATION': self.recommandation.format(self.inscription),
             'LIEN_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('website'),
+            'NOM_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa'),
             'PRECISIONS': self.recommandation.precisions,
             'QUALITE_AIR': self.label,
             'VILLE': self.inscription.ville_name,
