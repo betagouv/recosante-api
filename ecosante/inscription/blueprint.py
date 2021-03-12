@@ -63,6 +63,18 @@ def deuxieme_etape(uid):
         }
     }
 
+@bp.route('/<uid>/_confirm', methods=['GET'], strict_slashes=False)
+@cross_origin(origins='*')
+def confirm(uid):
+    inscription = Inscription.query.filter_by(uid=uid).first()
+    if not inscription:
+        return jsonify({"errors": ["Unable to find inscription"]}), 404
+    celery.send_task(
+        "ecosante.inscription.tasks.send_success_email.send_success_email",
+        (inscription.id,),
+    )
+    return jsonify({"result": "ok"})
+
 
 @bp.route('/', methods=['GET', 'POST'])
 def inscription():
