@@ -179,7 +179,7 @@ class Inscription(db.Model):
             return
         r = requests.get(f'https://geo.api.gouv.fr/communes/{self.ville_insee}',
             params={
-                "fields": "nom,centre,region,codesPostaux",
+                "fields": "nom,centre,region,codesPostaux,departement",
                 "format": "json",
                 "geometry": "centre"
             }
@@ -192,9 +192,14 @@ class Inscription(db.Model):
     def cache_api_commune(self):
         if not self.ville_insee:
             return {}
-        if not self._cache_api_commune or not 'codesPostaux' in self._cache_api_commune:
+        if not self._cache_api_commune:
             self.set_cache_api_commune()
         return self._cache_api_commune
+
+    def cache_api_commune_get(self, key, default_value=None):
+        if self._cache_api_commune and not key in self._cache_api_commune:
+            self._cache_api_commune = None
+        return self.cache_api_commune.get(key, default_value)
 
     @hybrid_property
     def ville_insee(self):
@@ -206,19 +211,23 @@ class Inscription(db.Model):
 
     @property
     def ville_centre(self):
-        return self.cache_api_commune.get('centre')
+        return self.cache_api_commune_get('centre')
 
     @property
     def ville_nom(self):
-        return self.cache_api_commune.get('nom')
+        return self.cache_api_commune_get('nom')
 
     @property
     def ville_codes_postaux(self):
-        return self.cache_api_commune.get('codesPostaux')
+        return self.cache_api_commune_get('codesPostaux')
 
     @property
     def region_name(self):
-        return self.cache_api_commune.get('region', {}).get('nom')
+        return self.cache_api_commune_get('region', {}).get('nom')
+
+    @property
+    def departement(self):
+        return self.cache_api_commune_get('departement', {})
 
     @property
     def is_active(self):

@@ -192,7 +192,7 @@ class Newsletter:
         ])
 
     @property
-    def lien_recommandations_alert(self):
+    def lien_recommandations_alerte(self):
         if not self.polluants:
             return
         population = "vulnerable" if self.inscription.personne_sensible else "generale"
@@ -252,18 +252,20 @@ class NewsletterDB(db.Model, Newsletter):
     def attributes(self):
         to_return = {
             'RECOMMANDATION': self.recommandation.format(self.inscription),
-            'LIEN_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('website'),
-            'NOM_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa'),
-            'PRECISIONS': self.recommandation.precisions,
-            'QUALITE_AIR': self.label,
-            'VILLE': self.inscription.ville_name,
-            'BACKGROUND_COLOR': self.couleur,
-            'SHORT_ID': self.short_id,
-            'POLLUANT': self.polluants_formatted,
-            'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alert,
-            'SHOW_RAEP': self.show_raep,
-            'RAEP': self.raep,
-            'BACKGROUND_COLOR_RAEP': self.couleur_raep,
+            'LIEN_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('website') or "",
+            'NOM_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or "",
+            'PRECISIONS': self.recommandation.precisions or "",
+            'QUALITE_AIR': self.label or "",
+            'VILLE': self.inscription.ville_name or "",
+            'BACKGROUND_COLOR': self.couleur or "",
+            'SHORT_ID': self.short_id or "",
+            'POLLUANT': self.polluants_formatted or "",
+            'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
+            'SHOW_RAEP': self.show_raep or "",
+            'RAEP': self.raep or "",
+            'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
+            'USER_UID': self.inscription.uid,
+            'DEPARTEMENT': self.inscription.departement.get('nom') or ""
         }
         if self.inscription.telephone and len(self.inscription.telephone) == 12:
             to_return['SMS'] = self.inscription.telephone
