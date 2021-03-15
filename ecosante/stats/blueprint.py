@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from flask import current_app, render_template
+from flask.globals import request
 from ecosante.extensions import db, sib
 from ecosante.inscription.models import Inscription
 from ecosante.avis.models import Avis
@@ -69,25 +70,29 @@ def stats():
     ouvertures = [(datetime.strftime(v[0], "%d/%m/%Y"), v[1]) for v in ouvertures]
     ouverture_veille = ouvertures[-1] if ouvertures else None
 
-    return render_template(
-        'stats.html', 
-        actifs=Inscription.active_query().count(),
-        subscriptions=json.dumps(subscriptions),
-        media=json.dumps({
+    to_return = {
+        "actifs": Inscription.active_query().count(),
+        "subscriptions": json.dumps(subscriptions),
+        "media": json.dumps({
             "SMS": Inscription.active_query().filter_by(diffusion='sms').count(),
             "Mail": Inscription.active_query().filter_by(diffusion='mail').count()
         }),
-        frequence=json.dumps({
+        "frequence": json.dumps({
             'Tous les jours': Inscription.active_query().filter_by(frequence='quotidien').count(),
             "Lorsque la qualité de l'air est mauvaise": Inscription.active_query().filter_by(frequence='pollution').count()
         }),
-        ouvertures=json.dumps(dict(ouvertures)),
-        ouverture_veille=ouverture_veille,
-        nb_reponses=nb_reponses,
-        nb_satisfaits=nb_satisfaits,
-        nb_inscriptions=nb_inscriptions,
-        nb_allergies=nb_allergies,
-        nb_pathologie_respiratoire=nb_pathologie_respiratoire,
-        decouverte=json.dumps(decouverte),
-    )
+        "ouvertures": json.dumps(dict(ouvertures)),
+        "ouverture_veille": ouverture_veille,
+        "nb_reponses": nb_reponses,
+        "nb_satisfaits": nb_satisfaits,
+        "nb_inscriptions": nb_inscriptions,
+        "nb_allergies": nb_allergies,
+        "nb_pathologie_respiratoire": nb_pathologie_respiratoire,
+        "decouverte": json.dumps(decouverte),
+
+    }
+
+    if not request.accept_mimetypes.accept_html:
+        return to_return
+    return render_template('stats.html', **to_return)
 
