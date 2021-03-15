@@ -160,6 +160,14 @@ def test_enfants(client):
         assert response.status_code == 200
         assert response.json['enfants'] == choice
 
+def test_deplacement(client):
+    _mail, uid = premiere_etape(client)
+
+    for choice in ["velo", "tec", "voiture", "aucun"]:
+        response = client.post(f'/inscription/{uid}/', json={"deplacement": [choice]})
+        assert response.status_code == 200
+        assert response.json['deplacement'] == [choice]
+
 def test_changement_ville(client):
     _mail, uid = premiere_etape(client)
     response = client.post(f'/inscription/{uid}/', json={"ville_insee": "53130"})

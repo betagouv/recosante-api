@@ -15,7 +15,7 @@ class FormDeuxiemeEtape(BaseForm):
         csrf = False
 
     ville_insee = FormInscription.ville_insee
-    deplacement = MultiCheckboxField(choices=[('velo', ''), ('tec', ''), ('voiture', '')])
+    deplacement = MultiCheckboxField(choices=[('velo', ''), ('tec', ''), ('voiture', ''), ('aucun', '')])
     activites = MultiCheckboxField(
         choices=[('jardinage', ''), ('bricolage', ''), ('menage', ''), ('sport', ''), ('aucun', '')]
     )
