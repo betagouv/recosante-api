@@ -182,7 +182,7 @@ def import_(task, newsletters, overhead=0):
                     email="newsletter@recosante.beta.gouv.fr"
                 ),
                 name = f'{now}',
-                template_id = int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 226)),
+                template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 446),
                 subject = "Vos recommandations Recosanté",
                 reply_to = "newsletter@recosante.beta.gouv.fr",
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
