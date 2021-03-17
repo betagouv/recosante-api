@@ -153,15 +153,22 @@ class Recommandation(db.Model):
     def deplacement(self, value):
         return self._multi_setter("", ['velo_trott_skate', 'transport_en_commun', 'voiture'], value)
 
+    @staticmethod
+    def qualif_categorie(qualif):
+        # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
+        if qualif in (['bon', 'moyen'] + ['tres_bon', 'mediocre']):
+            return "bon"
+        elif qualif in ['degrade', 'mauvais', 'tres_mauvais', 'extrement_mauvais']:
+            return "mauvais"
+
     def is_relevant_qualif(self, qualif):
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne
-        # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
-        if qualif in (['bon', 'moyen'] + ['tres_bon', 'mediocre']) and self.qa_bonne:
+        if self.qualif_categorie(qualif) == "bon" and self.qa_bonne:
             return True
         # Si la qualité de l’air est mauvaise
         # que la reco concerne la qualité de l’air mauvaise
-        elif qualif in ['degrade', 'mauvais', 'tres_mauvais', 'extrement_mauvais'] and self.qa_mauvaise:
+        elif self.qualif_categorie(qualif) == "mauvais" and self.qa_mauvaise:
             return True
         # Sinon c’est pas bon
         else:
@@ -174,7 +181,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription, qualif, polluants):
+    def is_relevant(self, inscription: Inscription, qualif, polluants, raep, date_):
         #Inscription
         if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
             return False
@@ -185,8 +192,6 @@ class Recommandation(db.Model):
         if self.enfants and not inscription.has_enfants:
             return False
         # Environnement
-        #if self.min_raep:
-        #    return False
         if polluants:
             for polluant in polluants:
                 if getattr(self, polluant):
@@ -195,12 +200,26 @@ class Recommandation(db.Model):
         else:
             if self.polluants:
                 return False
-        if qualif:
+        if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
             if not self.is_relevant_qualif(qualif):
                 return False
+        # Pollens
+        if self.personne_allergique:
+            if raep == 0:
+                return False
+            if 0 < raep < 4: #RAEP Faible
+                if inscription.allergie_pollens:
+                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
+                else:
+                    return False
+            if raep >= 4:
+                if inscription.allergie_pollens:
+                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
+                else:
+                    return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
-        season = date.today().month%12//3 + 1
+        season = date_.month%12//3 + 1
         if self.hiver and season != 1:
             return False
         elif self.printemps and season != 2:
@@ -231,7 +250,7 @@ class Recommandation(db.Model):
         return recommandations
 
     @classmethod
-    def get_relevant(cls, recommandations, inscription, qualif, polluants):
+    def get_relevant(cls, recommandations, inscription, qualif, polluants, raep, date_):
         copy_recommandations = []
         same_criteres_recommandations = []
         last_month_newsletters = inscription.last_month_newsletters()
@@ -253,7 +272,7 @@ class Recommandation(db.Model):
         copy_recommandations.extend(recent_recommandations)
 
         try:
-            return next(filter(lambda r: r.is_relevant(inscription, qualif, polluants), copy_recommandations))
+            return next(filter(lambda r: r.is_relevant(inscription, qualif, polluants, raep, date_), copy_recommandations))
         except StopIteration as e:
             current_app.logger.error(f"Unable to get recommandation for {inscription.mail} and '{qualif}'")
             raise e

@@ -24,9 +24,9 @@ class Newsletter:
     episodes: list
     raep: int
 
-    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None):
+    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None, date_=None):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
-        self.date = today()
+        self.date = date_ or today()
         self.inscription = inscription
         try:
             self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
@@ -57,20 +57,23 @@ class Newsletter:
                and e['date'] == str(self.date)
         ]
 
-        self.recommandation =\
-             Recommandation.query.get(recommandation_id) or\
-             Recommandation.get_relevant(
-                recommandations,
-                inscription,
-                self.qualif,
-                self.polluants
-            )
         try:
             self.raep = int(raep)
         except ValueError:
             self.raep = 0
         except TypeError:
             self.raep = 0
+
+        self.recommandation =\
+             Recommandation.query.get(recommandation_id) or\
+             Recommandation.get_relevant(
+                recommandations,
+                inscription,
+                self.qualif,
+                self.polluants,
+                self.raep,
+                self.date
+            )
 
     @property
     def polluants_formatted(self):
@@ -204,7 +207,15 @@ class Newsletter:
 
     @property
     def show_raep(self):
-        return (self.raep > 0 and self.inscription.allergie_pollens) or self.raep >= 2
+        #On envoie pas en cas de polluants
+        #ni en cas de risque faible à un personne non-allergique
+        if self.polluants:
+            return False
+        if self.raep == 0:
+            return False
+        elif self.raep < 4 and not self.inscription.allergie_pollens:
+            return False
+        return True
 
     @property
     def couleur_raep(self):
