@@ -9,7 +9,7 @@ import json
 
 @celery.task()
 def send_success_email(inscription_id):
-    success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
+    success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108))
     if not success_template_id:
         return
     newsletter = NewsletterDB(Newsletter.from_inscription_id(inscription_id))
