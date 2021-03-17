@@ -9,10 +9,10 @@ import json
 
 @celery.task()
 def send_success_email(inscription_id):
-    if not os.getenv('SEND_SUCESS_EMAIL'):
+    success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
+    if not success_template_id:
         return
     newsletter = NewsletterDB(Newsletter.from_inscription_id(inscription_id))
-    success_template_id = os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108)
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     try:
