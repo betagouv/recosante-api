@@ -272,7 +272,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.forecast = newsletter.forecast
         self.episodes = newsletter.episodes
         self.polluants = newsletter.polluants
-        self.raep = newsletter.raep
+        self.raep = int(newsletter.raep)
 
     def attributes(self):
         to_return = {
@@ -286,7 +286,7 @@ class NewsletterDB(db.Model, Newsletter):
             'SHORT_ID': self.short_id or "",
             'POLLUANT': self.polluants_formatted or "",
             'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
-            'SHOW_RAEP': self.show_raep or "",
+            'SHOW_RAEP': self.show_raep,
             'RAEP': self.qualif_raep or "",
             'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
             'USER_UID': self.inscription.uid,
