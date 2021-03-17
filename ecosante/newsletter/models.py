@@ -228,6 +228,17 @@ class Newsletter:
             5: "#ea3522"
         }.get(self.raep)
 
+    @property
+    def qualif_raep(self):
+        return {
+            0: "nul",
+            1: "très faible",
+            2: "faible",
+            3: "moyen",
+            4: "élevé",
+            5: "très élevé"
+        }.get(self.raep)
+
 
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
@@ -273,7 +284,7 @@ class NewsletterDB(db.Model, Newsletter):
             'POLLUANT': self.polluants_formatted or "",
             'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
             'SHOW_RAEP': self.show_raep or "",
-            'RAEP': self.raep or "",
+            'RAEP': self.qualif_raep or "",
             'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
             'USER_UID': self.inscription.uid,
             'DEPARTEMENT': self.inscription.departement.get('nom') or ""
