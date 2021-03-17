@@ -150,12 +150,15 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[]):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None):
+        query = Inscription.active_query()
+        if only_to:
+            query = query.filter(Inscription.mail.in_(only_to))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        inscriptions = Inscription.active_query().distinct(Inscription.ville_insee)
+        inscriptions = query.distinct(Inscription.ville_insee)
         insee_region = {i.ville_insee: i.region_name for i in inscriptions}
         insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True)
-        for inscription in Inscription.active_query().all():
+        for inscription in query.all():
             if inscription.ville_insee not in insee_forecast:
                 continue
             newsletter = cls(

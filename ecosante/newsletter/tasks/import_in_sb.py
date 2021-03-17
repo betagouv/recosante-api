@@ -30,7 +30,7 @@ def deactivate_contacts():
             continue
         db_contact.unsubscribe()
 
-def import_and_send(task, seed, preferred_reco, remove_reco):
+def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
     task.update_state(
         state='STARTED',
         meta={
@@ -70,7 +70,8 @@ def import_and_send(task, seed, preferred_reco, remove_reco):
             Newsletter.export(
                 preferred_reco=preferred_reco,
                 user_seed=seed,
-                remove_reco=remove_reco
+                remove_reco=remove_reco,
+                only_to=only_to
             )
         )
     )
@@ -266,7 +267,8 @@ def format_errors(errors):
     return r
 
 @celery.task(bind=True)
-def import_send_and_report(self):
+def import_send_and_report(self, only_to=None):
+    current_app.logger.error("Début !")
     new_task_id = str(uuid4())
     self.update_state(
         state='STARTED',
@@ -275,7 +277,7 @@ def import_send_and_report(self):
             "details": f"Lancement de la tache: '{new_task_id}'",
         }
     )
-    result = import_and_send(self, str(uuid4()), None, [])
+    result = import_and_send(self, str(uuid4()), None, [], only_to)
     errors = format_errors(result['errors'])
     body = """
 Bonjour,
