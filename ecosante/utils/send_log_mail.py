@@ -3,10 +3,10 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from flask import current_app
 
-def send_log_mail(subject, text_content):
+def send_log_mail(subject, text_content, name="Technique recosanté", email="technique@recosante.beta.gouv.fr"):
     contact_dict = {
-        "name": "equipe ecosante",
-        "email": 'ecosante@data.gouv.fr'
+        "name": name,
+        "email": email
     }
     api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib)
     send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(

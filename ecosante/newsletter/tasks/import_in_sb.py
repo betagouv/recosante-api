@@ -177,13 +177,13 @@ def import_(task, newsletters, overhead=0):
         r = email_campaign_api.create_email_campaign(
             sib_api_v3_sdk.CreateEmailCampaign(
                 sender = sib_api_v3_sdk.CreateEmailCampaignSender(
-                    name="L'équipe Écosanté",
-                    email="ecosante@data.gouv.fr"
+                    name="L'équipe Recosanté",
+                    email="newsletter@recosante.beta.gouv.fr"
                 ),
                 name = f'{now}',
                 template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 226),
-                subject = "Vos recommandations Écosanté",
-                reply_to = "ecosante@data.gouv.fr",
+                subject = "Vos recommandations Recosanté",
+                reply_to = "newsletter@recosante.beta.gouv.fr",
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
                     list_ids=[lists['mail']]
                 ),
@@ -288,7 +288,7 @@ Il y a eu des erreurs lors de l’envoi de la newsletter :
 
 Bonne journée
 """
-    send_log_mail("Rapport d’envoi de la newsletter", body)
+    send_log_mail("Rapport d’envoi de la newsletter", body, name="Rapport recosante", email="rapport-envoi@recosante.beta.gouv.fr")
     self.update_state(
         state='SUCESS',
         meta={

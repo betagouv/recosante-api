@@ -44,13 +44,13 @@ def send_success_email(inscription_id):
         email_api.send_transac_email(
             sib_api_v3_sdk.SendSmtpEmail(
                 sender=sib_api_v3_sdk.SendSmtpEmailSender(
-                    name= "L'équipe écosanté",
-                    email= "ecosante@data.gouv.fr"
+                    name= "Recosanté",
+                    email= "hi@recosante.beta.gouv.fr"
                 ),
                 to=[sib_api_v3_sdk.SendSmtpEmailTo(email=newsletter.inscription.mail)],
                 reply_to=sib_api_v3_sdk.SendSmtpEmailReplyTo(
-                    name="L'équipe écosanté",
-                    email="ecosante@data.gouv.fr"
+                    name="Recosanté",
+                    email="hi@recosante.beta.gouv.fr"
                 ),
                 template_id=success_template_id
             )
