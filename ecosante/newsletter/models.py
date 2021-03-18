@@ -223,12 +223,12 @@ class Newsletter:
     @property
     def couleur_raep(self):
         return {
-            0: "#fff",
-            1: "#75f94c",
-            2: "#377d22",
-            3: "#fffd54",
-            4: "#ef8641",
-            5: "#ea3522"
+            0: "#31bcf0",
+            1: "#21a84c",
+            2: "#fdd401",
+            3: "#f69321",
+            4: "#ee6344",
+            5: "#d94049"
         }.get(self.raep)
 
     @property
