@@ -57,8 +57,8 @@ def avis(short_id):
 def avis_enregistre(short_id):
     return render_template('avis_enregistre.html')
 
-@bp.route('<secret_slug>/avis/')
-@bp.route('/avis/')
+@bp.route('<secret_slug>/avis/liste')
+@bp.route('/avis/liste')
 @admin_capability_url
 def liste_avis():
     newsletters = NewsletterDB.query\
