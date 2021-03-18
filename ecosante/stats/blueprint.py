@@ -55,7 +55,7 @@ def stats():
             try:
                 date_ = parse(campaign['name'])
             except ParserError as e:
-                current_app.logger.error(e)
+                current_app.logger.info(e)
                 continue
             stats = campaign['statistics']['globalStats']
             if stats['delivered'] == 0:
