@@ -57,9 +57,9 @@ def stats():
             except ParserError as e:
                 current_app.logger.error(e)
                 continue
+            stats = campaign['statistics']['globalStats']
             if stats['delivered'] == 0:
                 continue
-            stats = campaign['statistics']['globalStats']
             ouvertures.append(
                 (
                     date_,
