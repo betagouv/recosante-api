@@ -20,10 +20,10 @@ def send_success_email(inscription_id):
             sib_api_v3_sdk.CreateContact(email=newsletter.inscription.mail,)
         )
     except ApiException as e:
-        current_app.logger.error(
-            f"Error: {e}"
-        )
         if json.loads(e.body)['code'] != 'duplicate_parameter':
+            current_app.logger.error(
+                f"Unable to create_contact: {e}"
+            )
             raise e
 
     sleep(0.5)
