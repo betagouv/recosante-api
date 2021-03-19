@@ -281,7 +281,7 @@ class NewsletterDB(db.Model, Newsletter):
             'NOM_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or "",
             'PRECISIONS': self.recommandation.precisions or "",
             'QUALITE_AIR': self.label or "",
-            'VILLE': self.inscription.ville_name or "",
+            'VILLE': self.inscription.ville_nom or "",
             'BACKGROUND_COLOR': self.couleur or "",
             'SHORT_ID': self.short_id or "",
             'POLLUANT': self.polluants_formatted or "",
