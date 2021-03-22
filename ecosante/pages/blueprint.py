@@ -4,9 +4,10 @@ from flask import (
 )
 from werkzeug.utils import redirect
 from ecosante.utils import Blueprint
-from ecosante.utils.decorators import admin_capability_url
+from ecosante.utils.decorators import admin_capability_url, webhook_capability_url
 from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB
+from sentry_sdk import capture_event
 
 bp = Blueprint("pages", __name__, url_prefix='/')
 
@@ -53,4 +54,9 @@ def recommandation_episode_pollution():
         polluants=polluants
     )
 
-            
+
+@bp.route('<secret_slug>/sib_error', methods=['POST'])
+@webhook_capability_url
+def sib_error():
+    capture_event(request.json)
+
