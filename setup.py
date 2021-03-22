@@ -19,7 +19,8 @@ DEPENDENCIES = [
     'sib-api-v3-sdk',
     'requests',
     'icalevents',
-    'sentry-sdk[flask]'
+    'sentry-sdk[flask]',
+    'redis'
 ]
 
 class CustomPsycopg2Install(install):
