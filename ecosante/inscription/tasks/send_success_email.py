@@ -1,5 +1,5 @@
 from ecosante.extensions import celery, sib
-from ecosante.newsletter.models import Newsletter, NewsletterDB, db
+from ecosante.newsletter.models import Newsletter, NewsletterDB, db, Inscription
 from flask import current_app
 import os
 import sib_api_v3_sdk
@@ -12,12 +12,12 @@ def send_success_email(inscription_id):
     success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108))
     if not success_template_id:
         return
-    newsletter = NewsletterDB(Newsletter.from_inscription_id(inscription_id))
+    inscription = Inscription.query.get(inscription_id)
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     try:
         contact_api.create_contact(
-            sib_api_v3_sdk.CreateContact(email=newsletter.inscription.mail,)
+            sib_api_v3_sdk.CreateContact(email=inscription.mail,)
         )
     except ApiException as e:
         if json.loads(e.body)['code'] != 'duplicate_parameter':
@@ -26,6 +26,7 @@ def send_success_email(inscription_id):
             )
             raise e
 
+    newsletter = NewsletterDB(Newsletter(inscription_id))
     sleep(0.5)
     try:
         contact_api.update_contact(

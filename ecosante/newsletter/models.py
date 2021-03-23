@@ -96,11 +96,6 @@ class Newsletter:
         return [label_to_symbols.get(label) for label in self.polluants]
 
     @classmethod
-    def from_inscription_id(cls, inscription_id):
-        inscription = Inscription.query.get(inscription_id)
-        return cls(inscription)
-
-    @classmethod
     def from_csv_line(cls, line):
         inscription = Inscription.query.filter_by(mail=line['MAIL']).first()
         return cls(
