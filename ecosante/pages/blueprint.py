@@ -1,8 +1,8 @@
 from flask import (
+    redirect,
     render_template,
     request
 )
-from werkzeug.utils import redirect
 from ecosante.utils import Blueprint
 from ecosante.utils.decorators import admin_capability_url, webhook_capability_url
 from datetime import date, timedelta
@@ -13,7 +13,7 @@ bp = Blueprint("pages", __name__, url_prefix='/')
 
 @bp.route('/')
 def index():
-    return render_template("index.html")
+    return redirect('https://recosante.beta.gouv.fr/', code=301)
 
 @bp.route('/changement-indice-atmo')
 def changement_atmo():
