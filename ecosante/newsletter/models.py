@@ -110,7 +110,11 @@ class Newsletter:
 
     @property
     def today_forecast(self):
-        data = self.forecast['data']
+        try:
+            data = self.forecast['data']
+        except KeyError:
+            current_app.logger.error(f'No data for forecast of inscription "{self.inscription.id}" INSEE: "{self.inscription.ville_insee}"')
+            return dict()
         try:
             return next(iter([v for v in data if v['date'] == str(self.date)]), dict())
         except (TypeError, ValueError, StopIteration) as e:
