@@ -57,6 +57,6 @@ def recommandation_episode_pollution():
 
 @bp.route('<secret_slug>/sib_error', methods=['POST'])
 @webhook_capability_url
-def sib_error():
+def sib_error(secret_slug):
     capture_event(request.json)
 
