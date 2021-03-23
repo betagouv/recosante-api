@@ -2,7 +2,9 @@ from ecosante.extensions import celery
 from ecosante.utils import send_log_mail
 
 @celery.task()
-def send_unsubscribe(mail, send_log_mail=False):
+def send_unsubscribe(mail, send_mail=True):
+    if not send_mail:
+        return
     send_log_mail(
         "Désinscription de la liste de diffusion",
         f"""
