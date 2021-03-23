@@ -29,7 +29,7 @@ def premiere_etape():
     form = FormPremiereEtape(data=request.json)
     if form.validate_on_submit():
         valid = validate_email(form.mail.data)
-        mail = valid.ascii_email
+        mail = valid.email.lower()
         inscription = Inscription.query.filter_by(mail=mail).first() or Inscription()
         inscription.mail = mail
         db.session.add(inscription)
