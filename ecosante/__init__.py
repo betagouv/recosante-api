@@ -41,8 +41,8 @@ def create_app(testing=False):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['ASSETS_DEBUG'] = True
-    app.config['CELERY_RESULT_BACKEND'] = 'db+' + app.config['SQLALCHEMY_DATABASE_URI']
-    app.config['CELERY_BROKER_URL'] = 'sqla+' + app.config['SQLALCHEMY_DATABASE_URI']
+    app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND') or f"db+{app.config['SQLALCHEMY_DATABASE_URI']}"
+    app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL') or f"sqla+{app.config['SQLALCHEMY_DATABASE_URI']}"
     app.config['TESTING'] = testing
     app.config['SERVER_NAME'] = os.getenv("SERVER_NAME")
 
