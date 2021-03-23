@@ -16,7 +16,7 @@ class FormInscription(BaseForm):
     ville_name = HiddenField('ville_name')
     mail = EmailField(
         'Adresse email',
-        [validators.InputRequired(), validators.Email()],
+        [validators.InputRequired(), validators.Email(check_deliverability=True)],
         description='(attention, les mails Ecosanté peut se retrouver dans vos SPAM ou dans le dossier "Promotions" de votre boîte mail !)'
     )
     diffusion = HiddenField(default='mail')

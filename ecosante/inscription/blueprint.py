@@ -19,6 +19,7 @@ from ecosante.extensions import celery
 from flask.wrappers import Response
 from flask_cors import cross_origin
 from datetime import datetime
+from email_validator import validate_email
 
 bp = Blueprint("inscription", __name__)
 
@@ -27,8 +28,10 @@ bp = Blueprint("inscription", __name__)
 def premiere_etape():
     form = FormPremiereEtape(data=request.json)
     if form.validate_on_submit():
-        inscription = Inscription.query.filter_by(mail=form.mail.data).first() or Inscription()
-        form.populate_obj(inscription)
+        valid = validate_email(form.mail.data)
+        mail = valid.ascii_email
+        inscription = Inscription.query.filter_by(mail=mail).first() or Inscription()
+        inscription.mail = mail
         db.session.add(inscription)
         db.session.commit()
         return jsonify({"uid": inscription.uid}), 201
