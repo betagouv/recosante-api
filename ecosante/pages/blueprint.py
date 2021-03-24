@@ -59,4 +59,4 @@ def recommandation_episode_pollution():
 @webhook_capability_url
 def sib_error(secret_slug):
     capture_event(request.json)
-    return request.json
+    return {"body": request.json}
