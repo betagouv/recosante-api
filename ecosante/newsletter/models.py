@@ -96,14 +96,6 @@ class Newsletter:
         }
         return [label_to_symbols.get(label) for label in self.polluants]
 
-    @classmethod
-    def from_csv_line(cls, line):
-        inscription = Inscription.query.filter_by(mail=line['MAIL']).first()
-        return cls(
-            inscription,
-            recommandation_id=line['ID RECOMMANDATION']
-        )
-
     @property
     def today_forecast(self):
         try:
