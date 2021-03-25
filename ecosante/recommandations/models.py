@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from ecosante.inscription.models import Inscription
 from flask.globals import current_app
 from .. import db
@@ -42,7 +43,45 @@ RECOMMANDATION_FILTERS = [
     #("min_raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
 
+@dataclass
 class Recommandation(db.Model):
+    id: int
+    status: str
+    recommandation: str
+    precisions: str
+    recommandation_format_SMS: str
+    type_: str
+    qa_mauvaise: bool
+    qa_bonne: bool
+    menage: bool
+    bricolage: bool
+    chauffage_a_bois: bool
+    animal_de_compagnie: bool
+    jardinage: bool
+    balcon_terasse: bool
+    velo_trott_skate: bool
+    transport_en_commun: bool
+    voiture: bool
+    activite_physique: bool
+    enfants: bool
+    personnes_sensibles: bool
+    autres: bool
+    autres_conditions: str
+    sources: str
+    categorie: str
+    objectif: str
+    automne: bool
+    hiver: bool
+    printemps: bool
+    ete: bool
+    ozone: bool
+    dioxyde_azote: bool
+    dioxyde_soufre: bool
+    particules_fines: bool
+    episode_pollution: bool
+    min_raep: int
+    personne_allergique: bool
+
     id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.String)
     recommandation = db.Column(db.String)

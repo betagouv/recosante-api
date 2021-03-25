@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from datetime import datetime
+from typing import List
+from datetime import datetime, date
 from flask.helpers import url_for
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
@@ -243,6 +244,20 @@ class Newsletter:
 
 
 class NewsletterDB(db.Model, Newsletter):
+    id: int
+    inscription_id: int
+    inscription: Inscription
+    recommandation_id: int
+    recommandation: Recommandation
+    date: date
+    qai: int
+    qualif: str
+    appliquee: bool
+    avis: str
+    polluants: List[str]
+    raep: int
+
+
     __tablename__ = "newsletter"
     id = db.Column(db.Integer, primary_key=True)
     short_id = db.Column(
