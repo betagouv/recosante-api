@@ -112,7 +112,6 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
 
 def import_(task, newsletters, overhead=0):
     email_campaign_id = None,
-    sms_campaign_id = None
     errors = []
     
     lists = dict()
@@ -120,22 +119,21 @@ def import_(task, newsletters, overhead=0):
     total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
     lists_api = sib_api_v3_sdk.ListsApi(sib)
-    for format in ["sms", "mail"]:
-        r = lists_api.create_list(
-            sib_api_v3_sdk.CreateList(
-                name=f'{now} - {format}',
-                folder_id=os.getenv('SIB_FOLDERID', 5)
-            )
+    r = lists_api.create_list(
+        sib_api_v3_sdk.CreateList(
+            name=f'{now} - mail',
+            folder_id=os.getenv('SIB_FOLDERID', 5)
         )
-        lists[format] = r.id
-        nb_requests += 1
-        task.update_state(
-            state='STARTED',
-            meta={
-                "progress": (nb_requests/total_nb_requests)*100,
-                "details": f"Création de la liste {format}"
-            }
-        )
+    )
+    mail_list_id = r.id
+    nb_requests += 1
+    task.update_state(
+        state='STARTED',
+        meta={
+            "progress": (nb_requests/total_nb_requests)*100,
+            "details": f"Création de la liste"
+        }
+    )
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
@@ -186,7 +184,7 @@ def import_(task, newsletters, overhead=0):
                 subject = "Vos recommandations Recosanté",
                 reply_to = "newsletter@recosante.beta.gouv.fr",
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
-                    list_ids=[lists['mail']]
+                    list_ids=[mail_list_id]
                 ),
                 header="Aujourd'hui, la qualité de l'air autour de chez vous est…"
             )
@@ -204,30 +202,6 @@ def import_(task, newsletters, overhead=0):
         }
     )
 
-    polluants = ""
-    sms_campaign_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
-    if current_app.config['ENV'] == 'production':
-        r = sms_campaign_api.create_sms_campaign(
-            sib_api_v3_sdk.CreateSmsCampaign(
-                name = f'{now}',
-                sender = "Ecosante",
-                content =
-    """Aujourd'hui l'indice de la qualité de l'air à {VILLE} est {QUALITE_AIR}
-    Plus d'information : {LIEN_AASQA}
-    {RECOMMANDATION}
-    STOP au [STOP_CODE]
-    """ if not polluants else """Indice qualité de l’air à {VILLE} : {QUALITE_AIR}
-    Épisode de pollution {POLLUANT}
-    Recommandations sanitaires : {LIEN_RECOMMANDATIONS_ALERTE}
-    """,
-                recipients = sib_api_v3_sdk.CreateSmsCampaignRecipients(
-                    list_ids = [lists['sms']]
-                )
-            )
-        )
-        sms_campaign_id = r.id
-    else:
-        sms_campaign_id = 0
     nb_requests += 1
     task.update_state(
         state='STARTED',
@@ -235,7 +209,6 @@ def import_(task, newsletters, overhead=0):
             "progress": (nb_requests/total_nb_requests)*100,
             "details": f"Création de la campagne SMS",
             "email_campaign_id": email_campaign_id,
-            "sms_campaign_id": sms_campaign_id
         }
     )
     return {
@@ -243,7 +216,6 @@ def import_(task, newsletters, overhead=0):
         "progress": (nb_requests/total_nb_requests)*100,
         "details": "Terminé",
         "email_campaign_id": email_campaign_id,
-        "sms_campaign_id": sms_campaign_id,
         "errors": errors
     }
 

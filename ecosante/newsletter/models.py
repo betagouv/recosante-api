@@ -176,7 +176,6 @@ class Newsletter:
             self.inscription.enfants,
             self.inscription.mail,
             self.inscription.diffusion,
-            self.inscription.telephone,
             self.inscription.frequence,
             "Oui",
             self.inscription.date_inscription,
@@ -298,8 +297,6 @@ class NewsletterDB(db.Model, Newsletter):
             'USER_UID': self.inscription.uid,
             'DEPARTEMENT': self.inscription.departement.get('nom') or ""
         }
-        if self.inscription.telephone and len(self.inscription.telephone) == 12:
-            to_return['SMS'] = self.inscription.telephone
         return to_return
 
 
@@ -315,7 +312,6 @@ class NewsletterDB(db.Model, Newsletter):
             "Enfants",
             'MAIL',
             'FORMAT',
-            'SMS',
             "Fréquence",
             "Date d'inscription",
             "QUALITE_AIR",

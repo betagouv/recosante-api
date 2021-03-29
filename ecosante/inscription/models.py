@@ -32,7 +32,6 @@ class Inscription(db.Model):
     allergie_pollens: bool
     enfants: bool
     diffusion: str
-    telephone: str
     mail: str
     frequence: str
 
@@ -45,7 +44,7 @@ class Inscription(db.Model):
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
     _ville_insee = db.Column("ville_insee", db.String)
-    diffusion = db.Column(db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
+    _diffusion = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     _telephone = db.Column("telephone", db.String)
     mail = db.Column(db.String)
     frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"), default="quotidien")
@@ -78,26 +77,6 @@ class Inscription(db.Model):
 
     def has_deplacement(self, deplacement):
         return self.deplacement and deplacement in self.deplacement
-
-    @staticmethod
-    def convert_telephone(value):
-        if not value:
-            return value
-        if value[:1] == "+":
-            return value
-        if value[:2] in ("00", "33"):
-            return value
-        if value[:1] == "0":
-            return "+33" + value[1:]
-        return "+33" + value
-
-    @property
-    def telephone(self):
-        return self.convert_telephone(self._telephone)
-
-    @telephone.setter
-    def telephone(self, value):
-        self._telephone = self.convert_telephone(value)
 
     @property
     def voiture(self):
@@ -280,7 +259,6 @@ class Inscription(db.Model):
             'allergie_pollens',
             'enfants',
             'diffusion',
-            'telephone',
             'mail',
             'frequence',
             'date_inscription',
@@ -298,7 +276,6 @@ class Inscription(db.Model):
             self.allergie_pollens,
             self.enfants,
             self.diffusion,
-            self.telephone,
             self.mail,
             self.frequence,
             self.date_inscription,
