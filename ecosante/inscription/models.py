@@ -44,7 +44,7 @@ class Inscription(db.Model):
     ville_entree = db.Column(db.String)
     ville_name = db.Column(db.String)
     _ville_insee = db.Column("ville_insee", db.String)
-    _diffusion = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
+    diffusion = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     _telephone = db.Column("telephone", db.String)
     mail = db.Column(db.String)
     frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"), default="quotidien")
