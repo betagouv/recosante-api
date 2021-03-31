@@ -15,7 +15,7 @@ from time import time
 from uuid import uuid4
 
 from werkzeug.urls import url_encode
-from indice_pollution.regions.solvers import get_region
+from indice_pollution.regions.solvers import region as get_region
 from indice_pollution.history.models import IndiceHistory
 from ecosante.recommandations.models import Recommandation, db
 from ecosante.utils.decorators import admin_capability_url, task_status_capability_url
