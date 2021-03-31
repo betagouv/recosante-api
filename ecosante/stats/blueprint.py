@@ -21,11 +21,25 @@ bp = Blueprint("stats", __name__)
 
 @bp.route('/')
 def stats():
+    func_count_id = func.count(Inscription.id)
     g = func.date_trunc('month', Inscription.date_inscription)
-    subscriptions = {
+    active_users = {
         f"{get_month_name(v[0].month, 'fr_FR.utf8')} {v[0].year}": v[1]
         for v in
-        db.session.query(g, func.count(Inscription.id)).group_by(g).filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date > date.today())).order_by(g).all()
+        db.session.query(g, func_count_id).filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date > date.today())).group_by(g).order_by(g).all()
+    }
+    last_month = (datetime.now() - timedelta(weeks=5)).date()
+    g_sub = func.date_trunc('week', Inscription.date_inscription)
+    inscriptions = {
+        v[0].isocalendar()[1]: v[1]
+        for v in
+        db.session.query(g_sub, func_count_id).filter(Inscription.date_inscription >= last_month).group_by(g_sub).order_by(g_sub).all()
+    }
+    g_unsub = func.date_trunc('week', Inscription.deactivation_date)
+    desinscriptions = {
+        v[0].isocalendar()[1]: v[1]
+        for v in
+        db.session.query(g_unsub, func_count_id).filter(Inscription.deactivation_date >= last_month).group_by(g_unsub).order_by(g_unsub).all()
     }
     decouverte_labels = {v[0]: v[1] for v in Form.decouverte.kwargs["choices"]}
     decouverte_unnest_query = db.session.query(func.unnest(Avis.decouverte).label('d')).subquery()
@@ -36,12 +50,13 @@ def stats():
         for v in
         db.session.query(decouverte_col, func.count('*')).group_by(decouverte_col).order_by(decouverte_col).all()
     }
-    nb_reponses = Avis.query.count()
-    nb_satisfaits = Avis.query.filter(Avis.recommandabilite > 8).count()
+    total_reponses = Avis.query.count()
+    total_satisfaits = Avis.query.filter(Avis.recommandabilite > 8).count()
 
-    nb_inscriptions = Inscription.active_query().count()
-    nb_allergies = Inscription.active_query().filter(Inscription.population.any("allergie_pollens")).count()
-    nb_pathologie_respiratoire = Inscription.active_query().filter(Inscription.population.any("pathologie_respiratoire")).count()
+    total_inscriptions = Inscription.query.count()
+    total_actifs = Inscription.active_query().count()
+    total_allergies = Inscription.active_query().filter(Inscription.population.any("allergie_pollens")).count()
+    total_pathologie_respiratoire = Inscription.active_query().filter(Inscription.population.any("pathologie_respiratoire")).count()
 
     ouvertures = []
     api_instance = sib_api_v3_sdk.EmailCampaignsApi(sib)
@@ -73,25 +88,18 @@ def stats():
     ouverture_veille = ouvertures[-1] if ouvertures else None
 
     to_return = {
-        "actifs": Inscription.active_query().count(),
-        "subscriptions": json.dumps(subscriptions),
-        "media": json.dumps({
-            "SMS": Inscription.active_query().filter_by(diffusion='sms').count(),
-            "Mail": Inscription.active_query().filter_by(diffusion='mail').count()
-        }),
-        "frequence": json.dumps({
-            'Tous les jours': Inscription.active_query().filter_by(frequence='quotidien').count(),
-            "Lorsque la qualité de l'air est mauvaise": Inscription.active_query().filter_by(frequence='pollution').count()
-        }),
+        "active_users": json.dumps(active_users),
+        "total_actifs": total_actifs,
+        "total_allergies": total_allergies,
+        "total_pathologie_respiratoire": total_pathologie_respiratoire,
+        "decouverte": json.dumps(decouverte),
         "ouvertures": json.dumps(dict(ouvertures)),
         "ouverture_veille": ouverture_veille,
-        "nb_reponses": nb_reponses,
-        "nb_satisfaits": nb_satisfaits,
-        "nb_inscriptions": nb_inscriptions,
-        "nb_allergies": nb_allergies,
-        "nb_pathologie_respiratoire": nb_pathologie_respiratoire,
-        "decouverte": json.dumps(decouverte),
-
+        "inscriptions": inscriptions,
+        "desinscriptions": desinscriptions,
+        "total_reponses": total_reponses,
+        "total_satisfaits": total_satisfaits,
+        "total_inscriptions": total_inscriptions,
     }
 
     if not request.accept_mimetypes.accept_html:
