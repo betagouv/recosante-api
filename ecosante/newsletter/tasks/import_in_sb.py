@@ -114,7 +114,6 @@ def import_(task, newsletters, overhead=0):
     email_campaign_id = None,
     errors = []
     
-    lists = dict()
     now = datetime.now()
     total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
@@ -153,7 +152,7 @@ def import_(task, newsletters, overhead=0):
                         nl.inscription.mail,
                         sib_api_v3_sdk.UpdateContact(
                             attributes=nl.attributes(),
-                            list_ids=[lists[nl.inscription.diffusion]]
+                            list_ids=[mail_list_id]
                         )
                     )
             except ApiException as e:
