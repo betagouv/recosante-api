@@ -7,16 +7,6 @@ import uuid
 import random
 from datetime import date
 
-class CustomBoolean(types.TypeDecorator):
-    impl = db.Boolean
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return False
-        if type(value) is bool:
-            return value
-        return 'x' in value.lower() or 't' in value.lower()
-
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
     ("qa_bonne", "👍", "Qualité de l’air bonne"),
@@ -51,36 +41,36 @@ class Recommandation(db.Model):
     precisions: str = db.Column(db.String)
     recommandation_format_SMS: str = db.Column(db.String)
     type_: str = db.Column("type", db.String)
-    qa_mauvaise: bool = db.Column(CustomBoolean, nullable=True)
-    qa_bonne: bool = db.Column(CustomBoolean, nullable=True)
-    menage: bool = db.Column(CustomBoolean)
-    bricolage: bool = db.Column(CustomBoolean)
-    chauffage_a_bois: bool = db.Column(CustomBoolean)
-    animal_de_compagnie: bool = db.Column(CustomBoolean)
-    jardinage: bool = db.Column(CustomBoolean)
-    balcon_terasse: bool = db.Column(CustomBoolean)
-    velo_trott_skate: bool = db.Column(CustomBoolean)
-    transport_en_commun: bool = db.Column(CustomBoolean)
-    voiture: bool = db.Column(CustomBoolean)
-    activite_physique: bool = db.Column(CustomBoolean)
-    enfants: bool = db.Column(CustomBoolean)
-    personnes_sensibles: bool = db.Column(CustomBoolean)
-    autres: bool = db.Column(CustomBoolean)
+    qa_mauvaise: bool = db.Column(db.Boolean, nullable=True)
+    qa_bonne: bool = db.Column(db.Boolean, nullable=True)
+    menage: bool = db.Column(db.Boolean)
+    bricolage: bool = db.Column(db.Boolean)
+    chauffage_a_bois: bool = db.Column(db.Boolean)
+    animal_de_compagnie: bool = db.Column(db.Boolean)
+    jardinage: bool = db.Column(db.Boolean)
+    balcon_terasse: bool = db.Column(db.Boolean)
+    velo_trott_skate: bool = db.Column(db.Boolean)
+    transport_en_commun: bool = db.Column(db.Boolean)
+    voiture: bool = db.Column(db.Boolean)
+    activite_physique: bool = db.Column(db.Boolean)
+    enfants: bool = db.Column(db.Boolean)
+    personnes_sensibles: bool = db.Column(db.Boolean)
+    autres: bool = db.Column(db.Boolean)
     autres_conditions: str = db.Column(db.String)
     sources: str = db.Column(db.String)
     categorie: str = db.Column(db.String)
     objectif: str = db.Column(db.String)
-    automne: bool = db.Column(CustomBoolean, nullable=True)
-    hiver: bool = db.Column(CustomBoolean, nullable=True)
-    printemps: bool = db.Column(CustomBoolean, nullable=True)
-    ete: bool = db.Column(CustomBoolean, nullable=True)
-    ozone: bool = db.Column(CustomBoolean, nullable=True)
-    dioxyde_azote: bool = db.Column(CustomBoolean, nullable=True)
-    dioxyde_soufre: bool = db.Column(CustomBoolean, nullable=True)
-    particules_fines: bool = db.Column(CustomBoolean, nullable=True)
-    episode_pollution: bool = db.Column(CustomBoolean, nullable=True)
+    automne: bool = db.Column(db.Boolean, nullable=True)
+    hiver: bool = db.Column(db.Boolean, nullable=True)
+    printemps: bool = db.Column(db.Boolean, nullable=True)
+    ete: bool = db.Column(db.Boolean, nullable=True)
+    ozone: bool = db.Column(db.Boolean, nullable=True)
+    dioxyde_azote: bool = db.Column(db.Boolean, nullable=True)
+    dioxyde_soufre: bool = db.Column(db.Boolean, nullable=True)
+    particules_fines: bool = db.Column(db.Boolean, nullable=True)
+    episode_pollution: bool = db.Column(db.Boolean, nullable=True)
     min_raep: int = db.Column(db.Integer, nullable=True)
-    personne_allergique: bool = db.Column(CustomBoolean, nullable=True)
+    personne_allergique: bool = db.Column(db.Boolean, nullable=True)
 
     @property
     def velo(self) -> bool:

@@ -47,29 +47,28 @@ class RadioField(SelectField):
     widget = BlankListWidget(prefix_label=False, class_labels="label-inline")
     option_widget = widgets.RadioInput()
 
-def coerce(value):
-    if value is None:
-        return value
-    if type(value) == str:
-        return value.lower() == 'oui' or value.lower() == 'true'
-    if type(value) == bool:
-        return value
-    return False
+class OuiNonField(SelectMultipleField):
+    option_widget = widgets.RadioInput()
+    widget = BlankListWidget(prefix_label=False, class_labels="label-inline")
 
-class OuiNonField(RadioField):
     def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, 
-            **{
-                **kwargs,
-                **{
-                    "choices":[('oui', 'Oui'), ('non', 'Non')],
-                    "coerce": coerce
-                }
-            }
-        )
+        kwargs['choices']= [('oui', 'Oui'), ('non', 'Non')]
+        super().__init__(*args, **kwargs)
+
+    def process_data(self, value):
+        if value == True:
+            self.data = ['oui']
+        elif value == False:
+            self.data = ['non']
+        else:
+            self.data = []
+
+    def process_formdata(self, valuelist):
+        if len(valuelist) == 1:
+            self.data = valuelist[0].lower() in ('oui', 'true')
+        else:
+            self.data = None
 
     def pre_validate(self, form):
-        if self.data is None:
-            return True
-        return super().pre_validate(form)
+        if self.data not in (True, False, None):
+            raise ValueError(self.gettext("'%(value)s' is not a valid choice for this field") % dict(value=d))
