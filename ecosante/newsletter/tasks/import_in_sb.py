@@ -21,7 +21,7 @@ def get_all_contacts(limit=100):
     return contacts
 
 def get_blacklisted_contacts():
-    return [c for c in get_all_contacts() if c['emailBlacklisted'] or c['smsBlacklisted']]
+    return [c for c in get_all_contacts() if c['emailBlacklisted']]
 
 def deactivate_contacts():
     for contact in get_blacklisted_contacts():
@@ -92,18 +92,6 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
                 "progress": 99,
                 "details": "Envoi de la liste email",
                 "email_campaign_id": result['email_campaign_id'],
-                "sms_campaign_id": result['sms_campaign_id']
-            }
-        )
-        send_sms_api = sib_api_v3_sdk.SMSCampaignsApi(sib)
-        send_sms_api.send_sms_campaign_now(result["sms_campaign_id"])
-        task.update_state(
-            state='STARTED',
-            meta={
-                "progress": 100,
-                "details": "Envoi de la liste email",
-                "email_campaign_id": result['email_campaign_id'],
-                "sms_campaign_id": result['sms_campaign_id']
             }
         )
     result['progress'] = 100
@@ -198,16 +186,6 @@ def import_(task, newsletters, overhead=0):
             "progress": (nb_requests/total_nb_requests)*100,
             "details": f"Création de la campagne mail",
             "email_campaign_id": email_campaign_id
-        }
-    )
-
-    nb_requests += 1
-    task.update_state(
-        state='STARTED',
-        meta={
-            "progress": (nb_requests/total_nb_requests)*100,
-            "details": f"Création de la campagne SMS",
-            "email_campaign_id": email_campaign_id,
         }
     )
     return {
