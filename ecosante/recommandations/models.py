@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from ecosante.inscription.models import Inscription
 from flask.globals import current_app
 from .. import db
@@ -43,88 +43,51 @@ RECOMMANDATION_FILTERS = [
     #("min_raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
 
-@dataclass
+@dataclass(repr=True)
 class Recommandation(db.Model):
-    id: int
-    status: str
-    recommandation: str
-    precisions: str
-    recommandation_format_SMS: str
-    type_: str
-    qa_mauvaise: bool
-    qa_bonne: bool
-    menage: bool
-    bricolage: bool
-    chauffage_a_bois: bool
-    animal_de_compagnie: bool
-    jardinage: bool
-    balcon_terasse: bool
-    velo_trott_skate: bool
-    transport_en_commun: bool
-    voiture: bool
-    activite_physique: bool
-    enfants: bool
-    personnes_sensibles: bool
-    autres: bool
-    autres_conditions: str
-    sources: str
-    categorie: str
-    objectif: str
-    automne: bool
-    hiver: bool
-    printemps: bool
-    ete: bool
-    ozone: bool
-    dioxyde_azote: bool
-    dioxyde_soufre: bool
-    particules_fines: bool
-    episode_pollution: bool
-    min_raep: int
-    personne_allergique: bool
-
-    id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String)
-    recommandation = db.Column(db.String)
-    precisions = db.Column(db.String)
-    recommandation_format_SMS = db.Column(db.String)
-    type_ = db.Column("type", db.String)
-    qa_mauvaise = db.Column(CustomBoolean, nullable=True)
-    qa_bonne = db.Column(CustomBoolean, nullable=True)
-    menage = db.Column(CustomBoolean)
-    bricolage = db.Column(CustomBoolean)
-    chauffage_a_bois = db.Column(CustomBoolean)
-    animal_de_compagnie = db.Column(CustomBoolean)
-    jardinage = db.Column(CustomBoolean)
-    balcon_terasse = db.Column(CustomBoolean)
-    velo_trott_skate = db.Column(CustomBoolean)
-    transport_en_commun = db.Column(CustomBoolean)
-    voiture = db.Column(CustomBoolean)
-    activite_physique = db.Column(CustomBoolean)
-    enfants = db.Column(CustomBoolean)
-    personnes_sensibles = db.Column(CustomBoolean)
-    autres = db.Column(CustomBoolean)
-    autres_conditions = db.Column(db.String)
-    sources = db.Column(db.String)
-    categorie = db.Column(db.String)
-    objectif = db.Column(db.String)
-    automne = db.Column(CustomBoolean, nullable=True)
-    hiver = db.Column(CustomBoolean, nullable=True)
-    printemps = db.Column(CustomBoolean, nullable=True)
-    ete = db.Column(CustomBoolean, nullable=True)
-    ozone = db.Column(CustomBoolean, nullable=True)
-    dioxyde_azote = db.Column(CustomBoolean, nullable=True)
-    dioxyde_soufre = db.Column(CustomBoolean, nullable=True)
-    particules_fines = db.Column(CustomBoolean, nullable=True)
-    episode_pollution = db.Column(CustomBoolean, nullable=True)
-    min_raep = db.Column(db.Integer, nullable=True)
-    personne_allergique = db.Column(CustomBoolean, nullable=True)
+    id: int = db.Column(db.Integer, primary_key=True)
+    status: str = db.Column(db.String)
+    recommandation: str = db.Column(db.String)
+    precisions: str = db.Column(db.String)
+    recommandation_format_SMS: str = db.Column(db.String)
+    type_: str = db.Column("type", db.String)
+    qa_mauvaise: bool = db.Column(CustomBoolean, nullable=True)
+    qa_bonne: bool = db.Column(CustomBoolean, nullable=True)
+    menage: bool = db.Column(CustomBoolean)
+    bricolage: bool = db.Column(CustomBoolean)
+    chauffage_a_bois: bool = db.Column(CustomBoolean)
+    animal_de_compagnie: bool = db.Column(CustomBoolean)
+    jardinage: bool = db.Column(CustomBoolean)
+    balcon_terasse: bool = db.Column(CustomBoolean)
+    velo_trott_skate: bool = db.Column(CustomBoolean)
+    transport_en_commun: bool = db.Column(CustomBoolean)
+    voiture: bool = db.Column(CustomBoolean)
+    activite_physique: bool = db.Column(CustomBoolean)
+    enfants: bool = db.Column(CustomBoolean)
+    personnes_sensibles: bool = db.Column(CustomBoolean)
+    autres: bool = db.Column(CustomBoolean)
+    autres_conditions: str = db.Column(db.String)
+    sources: str = db.Column(db.String)
+    categorie: str = db.Column(db.String)
+    objectif: str = db.Column(db.String)
+    automne: bool = db.Column(CustomBoolean, nullable=True)
+    hiver: bool = db.Column(CustomBoolean, nullable=True)
+    printemps: bool = db.Column(CustomBoolean, nullable=True)
+    ete: bool = db.Column(CustomBoolean, nullable=True)
+    ozone: bool = db.Column(CustomBoolean, nullable=True)
+    dioxyde_azote: bool = db.Column(CustomBoolean, nullable=True)
+    dioxyde_soufre: bool = db.Column(CustomBoolean, nullable=True)
+    particules_fines: bool = db.Column(CustomBoolean, nullable=True)
+    episode_pollution: bool = db.Column(CustomBoolean, nullable=True)
+    min_raep: int = db.Column(db.Integer, nullable=True)
+    personne_allergique: bool = db.Column(CustomBoolean, nullable=True)
 
     @property
-    def velo(self):
+    def velo(self) -> bool:
         return self.velo_trott_skate
 
     @property
-    def sport(self):
+    def sport(self) -> bool:
         return self.activite_physique
 
     @sport.setter
@@ -328,35 +291,4 @@ class Recommandation(db.Model):
         return cls.query.filter_by(status="published").order_by(cls.id)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "recommandation": self.recommandation,
-            "precisions": self.precisions,
-            "recommandation_format_SMS": self.recommandation_format_SMS,
-            "qa_mauvaise": self.qa_mauvaise,
-            "qa_bonne": self.qa_bonne,
-            "menage": self.menage,
-            "bricolage": self.bricolage,
-            "chauffage_a_bois": self.chauffage_a_bois,
-            "jardinage": self.jardinage,
-            "balcon_terasse": self.balcon_terasse,
-            "velo_trott_skate": self.velo_trott_skate,
-            "transport_en_commun": self.transport_en_commun,
-            "voiture": self.voiture,
-            "activite_physique": self.activite_physique,
-            "enfants": self.enfants,
-            "personnes_sensibles": self.personnes_sensibles,
-            "autres": self.autres,
-            "autres_conditions": self.autres_conditions,
-            "sources": self.sources,
-            "categorie": self.categorie,
-            "objectif": self.objectif,
-            "automne": self.automne,
-            "hiver": self.hiver,
-            "ete": self.ete,
-            "ozone": self.ozone,
-            "dioxyde_azote": self.dioxyde_azote,
-            "dioxyde_soufre": self.dioxyde_soufre,
-            "particules_fines": self.particules_fines,
-            "episode_pollution": self.episode_pollution
-        }
+        return asdict(self)
