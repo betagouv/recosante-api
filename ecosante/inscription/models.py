@@ -1,8 +1,5 @@
 from ecosante.extensions import db
-from ecosante.utils.funcs import (
-    convert_boolean_to_oui_non,
-    generate_line
-)
+from ecosante.utils.funcs import generate_line
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import func
 from datetime import (
@@ -12,7 +9,6 @@ from datetime import (
 from dataclasses import dataclass
 from typing import List
 import requests
-import json
 from datetime import date
 from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
