@@ -129,7 +129,7 @@ def import_(task, newsletters, overhead=0):
                 "type": "no_air_quality",
                 "nl": nl,
                 "region": nl.inscription.cache_api_commune['region']['nom'],
-                "ville": nl.inscription.ville_name,
+                "ville": nl.inscription.ville_nom,
                 "insee": nl.inscription.ville_insee
             })
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
