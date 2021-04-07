@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List
 from datetime import datetime, date
 from flask.helpers import url_for
+import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from ecosante.inscription.blueprint import inscription
@@ -58,11 +59,19 @@ class Newsletter:
                and e['date'] == str(self.date)
         ]
 
-        try:
-            self.raep = int(raep)
-        except ValueError:
-            self.raep = 0
-        except TypeError:
+        if raep:
+            try:
+                self.raep = int(raep)
+            except ValueError as e:
+                current_app.logger.error(f"Parsing error for raep of {inscription.mail}")
+                current_app.logger.error(e)
+                self.raep = 0
+            except TypeError:
+                current_app.logger.error(f"Parsing error for raep of {inscription.mail}")
+                current_app.logger.error(e)
+                self.raep = 0
+        else:
+            current_app.logger.error(f'No RAEP for {inscription.mail}')
             self.raep = 0
 
         self.recommandation =\
@@ -149,16 +158,20 @@ class Newsletter:
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.ville_insee)
         insee_region = {i.ville_insee: i.region_name for i in inscriptions}
-        insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True)
+        try:
+            insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True)
+        except requests.exceptions.HTTPError as e:
+            print(e)
+            raise e
         for inscription in query.all():
             if inscription.ville_insee not in insee_forecast:
                 continue
             newsletter = cls(
                 inscription,
                 recommandations=recommandations,
-                forecast=insee_forecast[inscription.ville_insee]["forecast"],
-                episodes=insee_forecast[inscription.ville_insee]["episode"],
-                raep=insee_forecast[inscription.ville_insee]["raep"]
+                forecast=insee_forecast[inscription.ville_insee].get("forecast"),
+                episodes=insee_forecast[inscription.ville_insee].get("episode"),
+                raep=insee_forecast[inscription.ville_insee].get("raep")
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
