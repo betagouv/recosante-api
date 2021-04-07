@@ -16,47 +16,35 @@ from sqlalchemy.orm.attributes import flag_modified
 
 @dataclass
 class Inscription(db.Model):
-    id: int
-    ville_entree: str
-    ville_name: str
     ville_insee: str
-    deplacement: List[str]
     sport: bool
-    apa: bool
-    activites: List[str]
-    pathologie_respiratoire: bool
-    allergie_pollens: bool
-    enfants: bool
-    diffusion: str
-    mail: str
-    frequence: str
 
 
-    id = db.Column(db.Integer, primary_key=True)
-    uid = db.Column(
+    id: int = db.Column(db.Integer, primary_key=True)
+    uid: str = db.Column(
         db.String(),
         server_default=text("generate_random_id('public', 'inscription', 'uid', 8)")
     )
-    ville_entree = db.Column(db.String)
-    ville_name = db.Column(db.String)
-    _ville_insee = db.Column("ville_insee", db.String)
-    diffusion = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
-    _telephone = db.Column("telephone", db.String)
-    mail = db.Column(db.String)
-    frequence = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"), default="quotidien")
+    ville_entree: str = db.Column(db.String)
+    ville_name: str = db.Column(db.String)
+    _ville_insee: str = db.Column("ville_insee", db.String)
+    diffusion: str = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
+    _telephone: str = db.Column("telephone", db.String)
+    mail: str = db.Column(db.String)
+    frequence: str = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"), default="quotidien")
     #Habitudes
-    deplacement = db.Column(postgresql.ARRAY(db.String))
-    _sport = db.Column("sport", db.Boolean)
-    apa = db.Column(db.Boolean)
-    activites = db.Column(postgresql.ARRAY(db.String))
-    enfants = db.Column("enfants", db.String)
-    chauffage = db.Column(postgresql.ARRAY(db.String))
-    animaux_domestiques = db.Column(postgresql.ARRAY(db.String))
+    deplacement: str = db.Column(postgresql.ARRAY(db.String))
+    _sport: bool = db.Column("sport", db.Boolean)
+    apa: bool = db.Column(db.Boolean)
+    activites: List[str] = db.Column(postgresql.ARRAY(db.String))
+    enfants: str = db.Column("enfants", db.String)
+    chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
+    animaux_domestiques: List[str] = db.Column(postgresql.ARRAY(db.String))
     #Sante
-    population = db.Column(postgresql.ARRAY(db.String))
+    population: List[str] = db.Column(postgresql.ARRAY(db.String))
     #Misc
-    deactivation_date = db.Column(db.Date)
-    connaissance_produit = db.Column(postgresql.ARRAY(db.String))
+    deactivation_date: date = db.Column(db.Date)
+    connaissance_produit: List[str] = db.Column(postgresql.ARRAY(db.String))
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
@@ -75,6 +63,7 @@ class Inscription(db.Model):
     @property
     def velo(self):
         return self.has_deplacement("velo")
+
     @property
     def transport_en_commun(self):
         return self.has_deplacement("tec")
