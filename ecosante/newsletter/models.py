@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List
 from datetime import datetime, date
 from flask.helpers import url_for
+from indice_pollution.history.models.commune import Commune
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
@@ -245,39 +246,35 @@ class Newsletter:
             5: "très élevé"
         }.get(self.raep)
 
+    @property
+    def departement_preposition(self):
+        commune = Commune.get(self.inscription.ville_insee)
+        if commune and commune.departement:
+            preposition = commune.departement.preposition
+            if preposition[-1].isalpha():
+                return preposition + " "
+            return preposition
+        return ""
 
 class NewsletterDB(db.Model, Newsletter):
-    id: int
-    inscription_id: int
-    inscription: Inscription
-    recommandation_id: int
-    recommandation: Recommandation
-    date: date
-    qai: int
-    qualif: str
-    appliquee: bool
-    avis: str
-    polluants: List[str]
-    raep: int
-
-
     __tablename__ = "newsletter"
-    id = db.Column(db.Integer, primary_key=True)
-    short_id = db.Column(
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    short_id: str = db.Column(
         db.String(),
         server_default=text("generate_random_id('public', 'newsletter', 'short_id', 8)")
     )
-    inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'))
-    inscription = db.relationship("Inscription", backref="inscription")
-    recommandation_id = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
-    recommandation = db.relationship("Recommandation")
-    date = db.Column(db.Date())
-    qai = db.Column(db.Integer())
-    qualif = db.Column(db.String())
-    appliquee = db.Column(db.Boolean())
-    avis = db.Column(db.String())
-    polluants = db.Column(postgresql.ARRAY(db.String()))
-    raep = db.Column(db.Integer())
+    inscription_id: int = db.Column(db.Integer, db.ForeignKey('inscription.id'))
+    inscription: Inscription = db.relationship("Inscription", backref="inscription")
+    recommandation_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation: Recommandation = db.relationship("Recommandation")
+    date: date = db.Column(db.Date())
+    qai: int = db.Column(db.Integer())
+    qualif: str = db.Column(db.String())
+    appliquee: bool = db.Column(db.Boolean())
+    avis: str = db.Column(db.String())
+    polluants: List[str] = db.Column(postgresql.ARRAY(db.String()))
+    raep: int = db.Column(db.Integer())
 
     def __init__(self, newsletter):
         self.inscription = newsletter.inscription
@@ -307,7 +304,8 @@ class NewsletterDB(db.Model, Newsletter):
             'RAEP': self.qualif_raep or "",
             'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
             'USER_UID': self.inscription.uid,
-            'DEPARTEMENT': self.inscription.departement.get('nom') or ""
+            'DEPARTEMENT': self.inscription.departement.get('nom') or "",
+            'DEPARTEMENT_PREPOSITION': self.departement_preposition
         }
         return to_return
 
