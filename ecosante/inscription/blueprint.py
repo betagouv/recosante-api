@@ -9,7 +9,7 @@ from flask import (
     stream_with_context,
 )
 from .models import Inscription, db
-from .forms import FormInscription, FormPersonnalisation, FormPremiereEtape, FormDeuxiemeEtape
+from .forms import FormPersonnalisation, FormPremiereEtape, FormDeuxiemeEtape
 from ecosante.utils.decorators import (
     admin_capability_url,
     webhook_capability_url
@@ -78,22 +78,6 @@ def confirm(uid):
     )
     return jsonify({"result": "ok"})
 
-
-@bp.route('/', methods=['GET', 'POST'])
-def inscription():
-    form = FormInscription()
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            inscription = Inscription.query.filter_by(mail=form.mail.data).first() or Inscription()
-            form.populate_obj(inscription)
-            db.session.add(inscription)
-            db.session.commit()
-            session['inscription'] = inscription
-            return redirect(url_for('inscription.personnalisation'))
-    else:
-        form.mail.process_data(request.args.get('mail'))
-
-    return render_template('inscription.html', form=form)
 
 @bp.route('/personnalisation', methods=['GET', 'POST'])
 def personnalisation():

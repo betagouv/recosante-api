@@ -1,20 +1,24 @@
-from wtforms.fields.core import SelectField
-from . import FormInscription
-from ecosante.utils.form import BaseForm, MultiCheckboxField
-from wtforms import ValidationError
 import requests
+from wtforms import ValidationError, validators, HiddenField
+from wtforms.fields.core import SelectField
+from wtforms.fields.html5 import EmailField
+from ecosante.utils.form import BaseForm, MultiCheckboxField
 
 class FormPremiereEtape(BaseForm):
     class Meta:
         csrf = False
-    mail = FormInscription.mail
+    mail = EmailField(
+        'Adresse email',
+        [validators.InputRequired(), validators.Email(check_deliverability=True)],
+        description='(attention, les mails Ecosanté peut se retrouver dans vos SPAM ou dans le dossier "Promotions" de votre boîte mail !)'
+    )
 
 
 class FormDeuxiemeEtape(BaseForm):
     class Meta:
         csrf = False
 
-    ville_insee = FormInscription.ville_insee
+    ville_insee = HiddenField('ville_insee')
     deplacement = MultiCheckboxField(choices=[('velo', ''), ('tec', ''), ('voiture', ''), ('aucun', '')])
     activites = MultiCheckboxField(
         choices=[('jardinage', ''), ('bricolage', ''), ('menage', ''), ('sport', ''), ('aucun', '')]
