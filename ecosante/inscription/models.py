@@ -62,12 +62,6 @@ class Inscription(db.Model):
     deactivation_date = db.Column(db.Date)
     connaissance_produit = db.Column(postgresql.ARRAY(db.String))
 
-    newsletters = db.relationship(
-        "ecosante.newsletter.models.NewsletterDB",
-        backref="newsletter",
-        lazy="dynamic"
-    )
-
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
 
