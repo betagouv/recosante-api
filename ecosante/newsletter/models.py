@@ -290,7 +290,7 @@ class NewsletterDB(db.Model, Newsletter):
 
     def attributes(self):
         to_return = {
-            'RECOMMANDATION': self.recommandation.format(self.inscription),
+            'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
             'LIEN_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('website') or "",
             'NOM_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or "",
             'PRECISIONS': self.recommandation.precisions or "",
@@ -300,12 +300,13 @@ class NewsletterDB(db.Model, Newsletter):
             'SHORT_ID': self.short_id or "",
             'POLLUANT': self.polluants_formatted or "",
             'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
-            'SHOW_RAEP': self.show_raep,
+            'SHOW_RAEP': self.show_raep or False,
             'RAEP': self.qualif_raep or "",
             'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
             'USER_UID': self.inscription.uid,
             'DEPARTEMENT': self.inscription.departement.get('nom') or "",
-            'DEPARTEMENT_PREPOSITION': self.departement_preposition
+            'DEPARTEMENT_PREPOSITION': self.departement_preposition,
+            "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False
         }
         return to_return
 

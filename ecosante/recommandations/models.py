@@ -30,6 +30,7 @@ RECOMMANDATION_FILTERS = [
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
     ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
     ("episode_pollution", "⚠️", "Épisode de pollution"),
+    ("lien_qa_pollen", "🔗", "Lien QA/pollen")
     #("min_raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
 
