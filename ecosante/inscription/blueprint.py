@@ -9,7 +9,7 @@ from flask import (
     stream_with_context,
 )
 from .models import Inscription, db
-from .forms import FormPersonnalisation, FormPremiereEtape, FormDeuxiemeEtape
+from .forms import FormPremiereEtape, FormDeuxiemeEtape
 from ecosante.utils.decorators import (
     admin_capability_url,
     webhook_capability_url
@@ -78,28 +78,6 @@ def confirm(uid):
     )
     return jsonify({"result": "ok"})
 
-
-@bp.route('/personnalisation', methods=['GET', 'POST'])
-def personnalisation():
-    if not session['inscription']:
-        return redirect(url_for('index'))
-    inscription = db.session.query(Inscription).get(session['inscription']['id'])
-    form = FormPersonnalisation(obj=inscription)
-    if request.method == 'POST' and form.validate_on_submit():
-        form.populate_obj(inscription)        
-        db.session.add(inscription)
-        db.session.commit()
-        session['inscription'] = inscription
-        celery.send_task(
-            "ecosante.inscription.tasks.send_success_email.send_success_email",
-            (inscription.id,),
-        )
-        return redirect(url_for('inscription.reussie'))
-    return render_template('personnalisation.html', form=form)
-
-@bp.route('/reussie')
-def reussie():
-    return render_template('reussi.html')
 
 @bp.route('<secret_slug>/user_unsubscription', methods=['POST'])
 @webhook_capability_url
