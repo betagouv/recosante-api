@@ -5,7 +5,6 @@ from flask.helpers import url_for
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
-from ecosante.inscription.blueprint import inscription
 from flask import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
