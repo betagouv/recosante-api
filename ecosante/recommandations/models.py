@@ -71,6 +71,7 @@ class Recommandation(db.Model):
     episode_pollution: bool = db.Column(db.Boolean, nullable=True)
     min_raep: int = db.Column(db.Integer, nullable=True)
     personne_allergique: bool = db.Column(db.Boolean, nullable=True)
+    lien_qa_pollen: bool = db.Column(db.Boolean, nullable=True)
 
     @property
     def velo(self) -> bool:
