@@ -12,6 +12,7 @@ import json
 from dateutil.parser import parse, ParserError
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
+from itertools import accumulate
 
 def get_month_name(month_no, locale):
     with different_locale(locale):
@@ -28,11 +29,11 @@ def stats():
         for v in
         db.session.query(g, func_count_id).filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date > date.today())).group_by(g).order_by(g).all()
     }
-    all_users = {
-        f"{get_month_name(v[0].month, 'fr_FR.utf8')} {v[0].year}": v[1]
+    all_users = dict(accumulate([
+        (f"{get_month_name(v[0].month, 'fr_FR.utf8')} {v[0].year}", v[1])
         for v in
         db.session.query(g, func_count_id).group_by(g).order_by(g).all()
-    }
+    ], lambda acc, i: (i[0], acc[1] + i[1])))
     last_month = (datetime.now() - timedelta(weeks=5)).date()
     g_sub = func.date_trunc('week', Inscription.date_inscription)
     inscriptions = {
