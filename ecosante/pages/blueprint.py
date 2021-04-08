@@ -68,4 +68,4 @@ def inscription_patients():
         request.json['nom_medecin'],
         request.json['mails']
     )
-    return "ok"
+    return '"ok"'
