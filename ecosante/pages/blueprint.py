@@ -1,3 +1,4 @@
+from ecosante.tasks.inscriptions_patients import inscription_patients_task
 from flask import (
     redirect,
     render_template,
@@ -60,3 +61,11 @@ def recommandation_episode_pollution():
 def sib_error(secret_slug):
     capture_event(request.json)
     return {"body": "ok"}
+
+@bp.route('/inscription-patients', methods=['POST'])
+def inscription_patients():
+    inscription_patients_task.delay(
+        request.json['nom_medecin'],
+        request.json['mails']
+    )
+    return "ok"
