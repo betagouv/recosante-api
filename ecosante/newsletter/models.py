@@ -305,7 +305,7 @@ class NewsletterDB(db.Model, Newsletter):
             'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
             'USER_UID': self.inscription.uid,
             'DEPARTEMENT': self.inscription.departement.get('nom') or "",
-            'DEPARTEMENT_PREPOSITION': self.departement_preposition,
+            'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
             "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False
         }
         return to_return

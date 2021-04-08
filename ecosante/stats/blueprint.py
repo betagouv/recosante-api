@@ -28,6 +28,11 @@ def stats():
         for v in
         db.session.query(g, func_count_id).filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date > date.today())).group_by(g).order_by(g).all()
     }
+    all_users = {
+        f"{get_month_name(v[0].month, 'fr_FR.utf8')} {v[0].year}": v[1]
+        for v in
+        db.session.query(g, func_count_id).group_by(g).order_by(g).all()
+    }
     last_month = (datetime.now() - timedelta(weeks=5)).date()
     g_sub = func.date_trunc('week', Inscription.date_inscription)
     inscriptions = {
@@ -89,6 +94,7 @@ def stats():
 
     to_return = {
         "active_users": json.dumps(active_users),
+        "all_users": json.dumps(all_users),
         "total_actifs": total_actifs,
         "total_allergies": total_allergies,
         "total_pathologie_respiratoire": total_pathologie_respiratoire,
