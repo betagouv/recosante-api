@@ -162,10 +162,6 @@ def import_(task, newsletters, overhead=0):
     if current_app.config['ENV'] == 'production':
         r = email_campaign_api.create_email_campaign(
             sib_api_v3_sdk.CreateEmailCampaign(
-                sender = sib_api_v3_sdk.CreateEmailCampaignSender(
-                    name="L'équipe Recosanté",
-                    email="newsletter@recosante.beta.gouv.fr"
-                ),
                 name = f'{now}',
                 template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 425),
                 subject = "Vos recommandations Recosanté",
