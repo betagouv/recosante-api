@@ -165,7 +165,10 @@ def import_(task, newsletters, overhead=0):
         template = transactional_api.get_smtp_template(int(template_id))
         r = email_campaign_api.create_email_campaign(
             sib_api_v3_sdk.CreateEmailCampaign(
-                sender=sib_api_v3_sdk.CreateEmailCampaignSender(id=template.sender['id']),
+                sender=sib_api_v3_sdk.CreateEmailCampaignSender(
+                    email=template.sender.email,
+                    name=template.email.name
+                ),
                 name = f'{now}',
                 template_id = template_id,
                 subject = template.subject,
