@@ -158,14 +158,18 @@ def import_(task, newsletters, overhead=0):
         db.session.add(nl)
     db.session.commit()
 
-    email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
     if current_app.config['ENV'] == 'production':
+        template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 425),
+        email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
+        transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
+        template = transactional_api.get_smtp_template(template_id)
         r = email_campaign_api.create_email_campaign(
             sib_api_v3_sdk.CreateEmailCampaign(
+                sender=sib_api_v3_sdk.CreateEmailCampaignSender(id=template.sender['id']),
                 name = f'{now}',
-                template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 425),
-                subject = "Vos recommandations Recosanté",
-                reply_to = "newsletter@recosante.beta.gouv.fr",
+                template_id = template_id,
+                subject = template.subject,
+                reply_to = template.reply_to,
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
                     list_ids=[mail_list_id]
                 ),
