@@ -167,12 +167,12 @@ def import_(task, newsletters, overhead=0):
             sib_api_v3_sdk.CreateEmailCampaign(
                 sender=sib_api_v3_sdk.CreateEmailCampaignSender(
                     email=template.sender.email,
-                    name=template.email.name
+                    name=template.sender.name
                 ),
                 name = f'{now}',
                 template_id = template_id,
                 subject = template.subject,
-                reply_to = template.reply_to,
+                reply_to = "newsletter@recosante.beta.gouv.fr",
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
                     list_ids=[mail_list_id]
                 ),
