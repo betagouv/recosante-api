@@ -89,6 +89,7 @@ class FormAdd(BaseForm):
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
+    montrer_dans_le_widget = OuiNonField("Montrer dans le widget")
     objectif = SelectField(
         "Objectif",
         choices=[
