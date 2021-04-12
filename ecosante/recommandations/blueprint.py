@@ -98,7 +98,7 @@ def make_query(form):
         query = query.filter(Recommandation.status!='deleted')
     for categorie in form.categories.data:
         attr = getattr(Recommandation, categorie)
-        if str(attr.type) == "VARCHAR[]":
+        if attr.type.python_type == list:
             query = query.filter(func.cardinality(attr) > 0)
         else:
             query = query.filter(attr.is_(True))
