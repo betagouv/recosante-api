@@ -19,7 +19,7 @@ from .forms import FormAdd, FormEdit, FormSearch
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from ecosante.utils.funcs import generate_line
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 bp = Blueprint(
     "recommandations",
@@ -97,9 +97,12 @@ def make_query(form):
     else:
         query = query.filter(Recommandation.status!='deleted')
     for categorie in form.categories.data:
-        query = query.filter(
-            getattr(Recommandation, categorie).is_(True)
-        )
+        attr = getattr(Recommandation, categorie)
+        if str(attr.type) == "VARCHAR[]":
+            query = query.filter(func.cardinality(attr) > 0)
+        else:
+            query = query.filter(attr.is_(True))
+
     if form.objectif.data is not None and form.objectif.data != "None":
         query = query.filter(Recommandation.objectif==form.objectif.data)
     if form.type.data is not None and form.type.data != "None":

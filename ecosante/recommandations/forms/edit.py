@@ -1,7 +1,7 @@
 from jinja2.nodes import Mul
 from wtforms.fields.core import SelectField
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
-from wtforms import TextAreaField, HiddenField, validators
+from wtforms import TextAreaField, HiddenField
 
 
 class FormAdd(BaseForm):
@@ -76,7 +76,14 @@ class FormAdd(BaseForm):
             ("voiture", "Voiture")
         ]
     )
-    chauffage_a_bois = OuiNonField("Chauffage à bois")
+    chauffage = MultiCheckboxField(
+        "Chauffage",
+        choices=[
+            ("bois", "Une cheminée ou poêle à bois"),
+            ("chaudiere", "Une chaudière au gaz, fioul ou électrique"),
+            ("appoint", "Un chauffage mobile d'appoint"),
+        ]
+    )
     animal_de_compagnie = OuiNonField("Animal de compagnie")
     lien_qa_pollen = OuiNonField("Lien Qualité de l’air pollen", description="Cette recommandation sera accompagnée d’une phrase faisant le lien entre QA et pollen")
     autres_conditions = TextAreaField("Autres conditions")

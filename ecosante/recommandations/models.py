@@ -1,18 +1,18 @@
+from ecosante.extensions import db
 from dataclasses import dataclass, asdict
 from ecosante.inscription.models import Inscription
 from flask.globals import current_app
-from .. import db
-import sqlalchemy.types as types
+from sqlalchemy.dialects import postgresql
 import uuid
 import random
-from datetime import date
+from typing import List
 
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
     ("qa_bonne", "👍", "Qualité de l’air bonne"),
     ("menage", "🧹", "Ménage"),
     ("bricolage", "🔨", "Bricolage"),
-    ("chauffage_a_bois", "🔥", "Chauffage à bois"),
+    ("chauffage", "🔥", "Chauffage"),
     ("jardinage", "🌳", "Jardinage"),
     ("velo_trott_skate", "🚴", "Vélo, trotinette, skateboard"),
     ("transport_en_commun", "🚇", "Transport en commun"),
@@ -46,7 +46,7 @@ class Recommandation(db.Model):
     qa_bonne: bool = db.Column(db.Boolean, nullable=True)
     menage: bool = db.Column(db.Boolean)
     bricolage: bool = db.Column(db.Boolean)
-    chauffage_a_bois: bool = db.Column(db.Boolean)
+    chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
     animal_de_compagnie: bool = db.Column(db.Boolean)
     jardinage: bool = db.Column(db.Boolean)
     balcon_terasse: bool = db.Column(db.Boolean)
@@ -178,6 +178,8 @@ class Recommandation(db.Model):
     def is_relevant(self, inscription: Inscription, qualif, polluants, raep, date_):
         #Inscription
         if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
+            return False
+        if set(self.chauffage).isdisjoint(set(inscription.chauffage)) and self.chauffage:
             return False
         if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.has_enfants):
             return False

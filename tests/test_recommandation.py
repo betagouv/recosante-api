@@ -215,3 +215,20 @@ def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais(db_session):
         #On veut envoyer le mercredi et le samedi
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(i, "bon", [], 6, date_) == (date_.weekday() in [2, 5])
+
+def test_chauffage(db_session):
+    r = Recommandation(chauffage=[])
+    i = Inscription(chauffage=[])
+    assert r.is_relevant(i, "bon", [], 0, date.today())
+
+    r = Recommandation(chauffage=[])
+    i = Inscription(chauffage=["bois"])
+    assert r.is_relevant(i, "bon", [], 0, date.today())
+
+    r = Recommandation(chauffage=["bois"])
+    i = Inscription(chauffage=[""])
+    assert not r.is_relevant(i, "bon", [], 0, date.today())
+
+    r = Recommandation(chauffage=["bois"])
+    i = Inscription(chauffage=["bois"])
+    assert r.is_relevant(i, "bon", [], 0, date.today())
