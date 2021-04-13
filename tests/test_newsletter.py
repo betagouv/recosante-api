@@ -29,7 +29,7 @@ def test_formatted_polluants_generale_pm10(client):
     assert nl.polluants_symbols == ['pm10']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10'
 
-def test_formatted_polluants_generale_pm10_no2():
+def test_formatted_polluants_generale_pm10_no2(client):
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
@@ -43,7 +43,7 @@ def test_formatted_polluants_generale_pm10_no2():
     assert nl.polluants_symbols == ['pm10', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=no2'
 
-def test_formatted_polluants_generale_tous():
+def test_formatted_polluants_generale_tous(client):
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
@@ -59,7 +59,7 @@ def test_formatted_polluants_generale_tous():
     assert nl.polluants_symbols == ['so2', 'pm10', 'o3', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=so2&polluants=pm10&polluants=o3&polluants=no2'
 
-def test_formatted_polluants_generale_pm10_o3_no2():
+def test_formatted_polluants_generale_pm10_o3_no2(client):
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
