@@ -1,31 +1,8 @@
 from ecosante.inscription.models import Inscription
-from datetime import datetime
-
-def test_inscription(client):
-    data = {
-        'ville_entree': 'Marcillé-la-ville',
-        'mail': 'lala@example.com',
-        'diffusion': 'mail',
-        'frequence': 'quotidien',
-        'rgpd': 'true'
-    }
-    response = client.post('/inscription/', data=data)
-    assert response.status_code == 302
-    assert response.location == 'http://localhost:5000/inscription/personnalisation'
-
-    data = {
-        "deplacement": "velo",
-        "activites": ["jardinage"],
-        "enfants": "true",
-        "pathologie_respiratoire": "true",
-        "allergie_pollens": "true",
-    }
-    response = client.post('/inscription/personnalisation', data=data)
-    assert response.status_code == 302
-    assert response.location == 'http://localhost:5000/inscription/reussie'
+from datetime import date, datetime, timedelta
 
 def premiere_etape(client):
-    mail = f'dodo-{datetime.timestamp(datetime.now())}@example.com'
+    mail = f'dodo-{int(datetime.timestamp(datetime.now()))}@beta.gouv.fr'
     data = {'mail': mail}
     response = client.post('/inscription/premiere-etape', data=data)
     assert response.status_code == 201
@@ -79,7 +56,7 @@ def test_errors(client):
     assert 'ville_insee' in response.json
 
 def test_json(client):
-    data = {'mail': f'dodo-{datetime.timestamp(datetime.now())}@example.com'}
+    data = {'mail': f'dodo-{int(datetime.timestamp(datetime.now()))}@beta.gouv.fr'}
     response = client.post('/inscription/premiere-etape', json=data)
     assert response.status_code == 201
 
