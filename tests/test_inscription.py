@@ -154,3 +154,36 @@ def test_changement_ville(client):
     response = client.post(f'/inscription/{uid}/', json={"ville_insee": "53144"})
     assert response.status_code == 200
     assert response.json['ville_nom'] == 'Marcillé-la-Ville'
+
+
+def test_query_inactive_accounts(db_session):
+    i = Inscription(mail='test@test.com')
+    db_session.add(i)
+    db_session.commit()
+    assert Inscription.query_inactive_accounts().count() == 0
+
+    i = Inscription(mail='test1@test.com', deactivation_date=(date.today() - timedelta(days=29)))
+    db_session.add(i)
+    db_session.commit()
+    assert Inscription.query_inactive_accounts().count() == 0
+
+    i = Inscription(mail='test2@test.com', deactivation_date=(date.today() - timedelta(days=31)))
+    db_session.add(i)
+    db_session.commit()
+    assert Inscription.query_inactive_accounts().count() == 1
+
+def test_deactivate_accounts(db_session):
+    i = Inscription(mail='test@test.com')
+    db_session.add(i)
+    i = Inscription(mail='test1@test.com', deactivation_date=(date.today() - timedelta(days=29)))
+    db_session.add(i)
+    i = Inscription(mail='test2@test.com', deactivation_date=(date.today() - timedelta(days=31)))
+    db_session.add(i)
+    i = Inscription(mail=None, deactivation_date=(date.today() - timedelta(days=31)))
+    db_session.add(i)
+    db_session.commit()
+
+    assert db_session.query(Inscription).count() == 4
+    assert db_session.query(Inscription).filter(Inscription.mail==None).count() == 1
+    assert Inscription.deactivate_accounts() == 1
+    assert db_session.query(Inscription).filter(Inscription.mail==None).count() == 2

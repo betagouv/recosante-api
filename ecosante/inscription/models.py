@@ -274,3 +274,19 @@ class Inscription(db.Model):
                 for i in cls.active_query().all()
             ]
         }
+
+    @classmethod
+    def query_inactive_accounts(cls):
+        return db.session.query(cls)\
+            .filter(
+                cls.deactivation_date != None,
+                cls.deactivation_date <= (date.today() - timedelta(days=30))
+            )
+
+    @classmethod
+    def deactivate_accounts(cls):
+        r = cls.query_inactive_accounts()\
+            .filter(cls.mail != None)\
+            .update({"mail": None})
+        db.session.commit()
+        return r
