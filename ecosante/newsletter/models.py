@@ -256,6 +256,7 @@ class Newsletter:
             return preposition
         return ""
 
+@dataclass
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
 
