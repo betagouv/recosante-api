@@ -19,12 +19,12 @@ from indice_pollution import bulk, today, forecast as get_forecast, episodes as 
 
 @dataclass
 class Newsletter:
-    date: datetime
-    recommandation: Recommandation
-    inscription: Inscription
-    forecast: dict
-    episodes: list
-    raep: int
+    date: datetime = date.today()
+    recommandation: Recommandation = None
+    inscription: Inscription = None
+    forecast: dict = None
+    episodes: list = None
+    raep: int = None
 
     def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None, date_=None):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
