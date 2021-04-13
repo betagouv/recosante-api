@@ -232,3 +232,7 @@ def test_chauffage(db_session):
     r = Recommandation(chauffage=["bois"])
     i = Inscription(chauffage=["bois"])
     assert r.is_relevant(i, "bon", [], 0, date.today())
+
+    r = Recommandation(chauffage=None)
+    i = Inscription(chauffage=None)
+    assert r.is_relevant(i, "bon", [], 0, date.today())

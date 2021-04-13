@@ -179,9 +179,9 @@ class Recommandation(db.Model):
 
     def is_relevant(self, inscription: Inscription, qualif, polluants, raep, date_):
         #Inscription
-        if self.criteres.isdisjoint(inscription.criteres) and self.criteres != set():
+        if self.criteres and self.criteres.isdisjoint(inscription.criteres):
             return False
-        if set(self.chauffage).isdisjoint(set(inscription.chauffage)) and self.chauffage:
+        if self.chauffage and set(self.chauffage).isdisjoint(set(inscription.chauffage or [])):
             return False
         if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.has_enfants):
             return False
