@@ -249,7 +249,7 @@ class Newsletter:
     @property
     def departement_preposition(self):
         commune = Commune.get(self.inscription.ville_insee)
-        if commune and commune.departement:
+        if commune and commune.departement and commune.departement.preposition:
             preposition = commune.departement.preposition
             if preposition[-1].isalpha():
                 return preposition + " "
