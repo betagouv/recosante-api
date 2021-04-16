@@ -4,7 +4,6 @@ from flask import (
     request,
     jsonify,
     stream_with_context,
-    make_response
 )
 from .models import Inscription, db
 from .forms import FormPremiereEtape, FormDeuxiemeEtape
@@ -18,7 +17,6 @@ from flask.wrappers import Response
 from flask_cors import cross_origin
 from datetime import datetime
 from email_validator import validate_email
-import json
 
 bp = Blueprint("inscription", __name__)
 
