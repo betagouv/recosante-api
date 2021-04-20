@@ -243,7 +243,7 @@ class Inscription(db.Model):
             'date_inscription',
             'deactivation_date'
         ])
-        for inscription in cls.query.all():
+        for inscription in cls.active_query().all():
             yield inscription.csv_line()
     
     def csv_line(self):
