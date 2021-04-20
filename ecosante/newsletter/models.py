@@ -23,10 +23,11 @@ class Newsletter:
     recommandation: Recommandation = None
     inscription: Inscription = None
     forecast: dict = None
-    episodes: list = None
+    episodes: List[dict] = None
     raep: int = None
+    allergenes: List[str] = None
 
-    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None, date_=None):
+    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None, allergenes=None, date_=None):
         recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
         self.date = date_ or today()
         self.inscription = inscription
@@ -41,7 +42,7 @@ class Newsletter:
         except KeyError as e:
             current_app.logger.error(f'Unable to find region for {self.inscription.ville_name} ({self.inscription.ville_insee})')
             current_app.logger.error(e)
-            self.episodes = dict()
+            self.episodes = [dict()]
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
@@ -73,6 +74,12 @@ class Newsletter:
         else:
             current_app.logger.error(f'No RAEP for {inscription.mail}')
             self.raep = 0
+
+        if allergenes:
+            self.allergenes = allergenes
+        else:
+            current_app.logger.error(f'No allergenes for {inscription.mail}')
+            self.allergenes = []
 
         self.recommandation =\
              Recommandation.query.get(recommandation_id) or\
@@ -127,7 +134,7 @@ class Newsletter:
         except (TypeError, ValueError, StopIteration) as e:
             current_app.logger.error(f'Unable to get episodes for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
             current_app.logger.error(e)
-            return dict()
+            return [dict()]
 
     @property
     def qualif(self):
@@ -171,7 +178,8 @@ class Newsletter:
                 recommandations=recommandations,
                 forecast=insee_forecast[inscription.ville_insee].get("forecast"),
                 episodes=insee_forecast[inscription.ville_insee].get("episode"),
-                raep=insee_forecast[inscription.ville_insee].get("raep")
+                raep=insee_forecast[inscription.ville_insee].get("raep"),
+                allergenes=insee_forecast[inscription.ville_insee].get("allergenes")
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
@@ -267,33 +275,40 @@ class NewsletterDB(db.Model, Newsletter):
     )
     inscription_id: int = db.Column(db.Integer, db.ForeignKey('inscription.id'))
     inscription: Inscription = db.relationship("Inscription", backref="inscription")
+    lien_aasqa: str = db.Column(db.String())
+    nom_aasqa: str = db.Column(db.String())
     recommandation_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
     recommandation: Recommandation = db.relationship("Recommandation")
     date: date = db.Column(db.Date())
-    qai: int = db.Column(db.Integer())
     qualif: str = db.Column(db.String())
+    label: str = db.Column(db.String())
+    couleur: str = db.Column(db.String())
     appliquee: bool = db.Column(db.Boolean())
     avis: str = db.Column(db.String())
     polluants: List[str] = db.Column(postgresql.ARRAY(db.String()))
     raep: int = db.Column(db.Integer())
+    allergenes: List[str] = db.Column(postgresql.ARRAY(db.String()))
 
     def __init__(self, newsletter):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
+        self.lien_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('website') or ""
+        self.nom_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or ""
         self.recommandation = newsletter.recommandation
         self.recommandation_id = newsletter.recommandation.id
         self.date = newsletter.date
         self.qualif = newsletter.qualif
-        self.forecast = newsletter.forecast
-        self.episodes = newsletter.episodes
+        self.label = newsletter.label
+        self.couleur = newsletter.couleur
         self.polluants = newsletter.polluants
         self.raep = int(newsletter.raep)
+        self.allergenes = newsletter.allergenes
 
     def attributes(self):
         to_return = {
             'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
-            'LIEN_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('website') or "",
-            'NOM_AASQA': self.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or "",
+            'LIEN_AASQA': self.lien_aasqa,
+            'NOM_AASQA': self.nom_aasqa,
             'PRECISIONS': self.recommandation.precisions or "",
             'QUALITE_AIR': self.label or "",
             'VILLE': self.inscription.ville_nom or "",
@@ -307,7 +322,8 @@ class NewsletterDB(db.Model, Newsletter):
             'USER_UID': self.inscription.uid,
             'DEPARTEMENT': self.inscription.departement.get('nom') or "",
             'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
-            "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False
+            "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
+            "ALLERGENES": oxford_comma(self.allergenes) or ""
         }
         return to_return
 
