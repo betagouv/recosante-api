@@ -231,6 +231,7 @@ class Inscription(db.Model):
     @classmethod
     def generate_csv(cls):
         yield generate_line([
+            'region',
             'ville',
             'deplacement',
             'activites',
@@ -248,6 +249,7 @@ class Inscription(db.Model):
     
     def csv_line(self):
         return generate_line([
+            self.region_name,
             self.ville_nom,
             self.deplacement,
             self.activites,
