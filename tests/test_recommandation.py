@@ -1,5 +1,8 @@
+from sqlalchemy.sql.operators import notendswith_op
 from ecosante.recommandations.models import Recommandation
 from ecosante.inscription.models import Inscription
+from ecosante.newsletter.models import NewsletterDB, Newsletter
+from ecosante.extensions import db
 from datetime import date, timedelta
 
 def help_activites(nom_activite):
@@ -236,3 +239,50 @@ def test_chauffage(db_session):
     r = Recommandation(chauffage=None)
     i = Inscription(chauffage=None)
     assert r.is_relevant(i, "bon", [], 0, date.today())
+
+def test_get_relevant_recent(db_session):
+    r1 = Recommandation()
+    r2 = Recommandation(ordre=0)
+    i = Inscription()
+    db_session.add_all([r1, r2, i])
+    db_session.commit()
+    nl1 = NewsletterDB(Newsletter(
+        i,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=[r1, r2]
+    ))
+    assert nl1.recommandation.ordre == 0
+    db_session.add(nl1)
+    db_session.commit()
+    nl2 = NewsletterDB(Newsletter(
+        i,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=[r1, r2]
+    ))
+
+    assert nl1.recommandation_id != nl2.recommandation_id
+
+def test_get_relevant_last_criteres(db_session):
+    r1 = Recommandation(menage=True)
+    r2 = Recommandation(menage=True)
+    r3 = Recommandation(velo_trott_skate=True)
+    i = Inscription(activites=["menage"], deplacement=["velo"])
+    db_session.add_all([r1, r2, r3, i])
+    db_session.commit()
+    nl1 = NewsletterDB(Newsletter(
+        i,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=[r1, r2, r3]
+    ))
+    db_session.add(nl1)
+    db_session.commit()
+    nl2 = NewsletterDB(Newsletter(
+        i,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=[r1, r2, r3]
+    ))
+    assert nl1.recommandation.criteres != nl2.recommandation.criteres

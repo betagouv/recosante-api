@@ -2,13 +2,16 @@ from indice_pollution import today
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
 from datetime import date, timedelta
 
-def test_episode_passe(client):
+def test_episode_passe(db_session):
     yesterday = date.today() - timedelta(days=1)
+    recommandations = [Recommandation(particules_fines=True), Recommandation(recommandation="ça va en fait")]
+    db_session.add_all(recommandations)
+    db_session.commit()
     nl = NewsletterDB(Newsletter(
         Inscription(diffusion='mail', ville_insee='38185'),
         forecast={"data": []},
         episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(yesterday)}]},
-        recommandations=[Recommandation(particules_fines=True), Recommandation(recommandation="ça va en fait")]
+        recommandations=recommandations
     ))
     assert nl.polluants_formatted == None
     assert nl.polluants_symbols == []
@@ -18,18 +21,24 @@ def test_episode_passe(client):
     assert nl.attributes()['RECOMMANDATION'] == 'ça va en fait'
     assert nl.attributes()['DEPARTEMENT'] == 'Isère'
 
-def test_formatted_polluants_generale_pm10(client):
+def test_formatted_polluants_generale_pm10(db_session):
+    recommandations = [Recommandation(particules_fines=True)]
+    db_session.add_all(recommandations)
+    db_session.commit()
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
         episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]},
-        recommandations=[Recommandation(particules_fines=True)]
+        recommandations=recommandations
     )
     assert nl.polluants_formatted == "aux particules fines"
     assert nl.polluants_symbols == ['pm10']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10'
 
-def test_formatted_polluants_generale_pm10_no2(client):
+def test_formatted_polluants_generale_pm10_no2(db_session):
+    recommandations = [Recommandation(particules_fines=True)]
+    db_session.add_all(recommandations)
+    db_session.commit()
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
@@ -37,13 +46,16 @@ def test_formatted_polluants_generale_pm10_no2(client):
             {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
-        recommandations=[Recommandation(particules_fines=True)]
+        recommandations=recommandations
     )
     assert nl.polluants_formatted == "aux particules fines et au dioxyde d’azote"
     assert nl.polluants_symbols == ['pm10', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=no2'
 
-def test_formatted_polluants_generale_tous(client):
+def test_formatted_polluants_generale_tous(db_session):
+    recommandations = [Recommandation(particules_fines=True)]
+    db_session.add_all(recommandations)
+    db_session.commit()
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
@@ -53,13 +65,16 @@ def test_formatted_polluants_generale_tous(client):
             {"code_pol": "7", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
-        recommandations=[Recommandation(particules_fines=True)]
+        recommandations=recommandations
     )
     assert nl.polluants_formatted == "au dioxyde de soufre, aux particules fines, à l’ozone, et au dioxyde d’azote"
     assert nl.polluants_symbols == ['so2', 'pm10', 'o3', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=so2&polluants=pm10&polluants=o3&polluants=no2'
 
-def test_formatted_polluants_generale_pm10_o3_no2(client):
+def test_formatted_polluants_generale_pm10_o3_no2(db_session):
+    recommandations = [Recommandation(particules_fines=True)]
+    db_session.add_all(recommandations)
+    db_session.commit()
     nl = Newsletter(
         Inscription(),
         forecast={"data": []},
@@ -69,30 +84,41 @@ def test_formatted_polluants_generale_pm10_o3_no2(client):
             {"code_pol": "7", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
-        recommandations=[Recommandation(particules_fines=True)]
+        recommandations=recommandations
     )
     assert nl.polluants_formatted == "aux particules fines, à l’ozone, et au dioxyde d’azote"
     assert nl.polluants_symbols == ['pm10', 'o3', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=o3&polluants=no2'
 
 
-def test_formatted_polluants_vulnerable_no2(client):
+def test_formatted_polluants_vulnerable_no2(db_session):
+    recommandations=[
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+    ]
+    db_session.add_all(recommandations)
+    db_session.commit()
     nl = Newsletter(
         Inscription(pathologie_respiratoire=True),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
         ]},
-        recommandations=[
-            Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
-            Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
-        ]
+        recommandations=recommandations
     )
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=vulnerable&polluants=no2'
     assert nl.recommandation.personnes_sensibles == True
 
 
-def test_pollens(client):
+def test_pollens(db_session):
+    recommandations=[
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+        Recommandation(personne_allergique=True),
+        Recommandation(personne_allergique=False)
+    ]
+    db_session.add_all(recommandations)
+    db_session.commit()
     for episodes in [[], [{"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]]:
         for raep in [0, 2, 6]:
             for allergie_pollens in [True, False]:
@@ -107,14 +133,9 @@ def test_pollens(client):
                             Inscription(allergie_pollens=allergie_pollens),
                             forecast={"data": [{"date": date_, "indice": indice}]},
                             episodes={"data": episode},
-                            recommandations=[
-                                Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
-                                Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
-                                Recommandation(personne_allergique=True),
-                                Recommandation(personne_allergique=False)
-                            ],
                             raep=raep,
-                            date_=date_
+                            date_=date_,
+                            recommandations=recommandations
                         )
 
                         if episode:

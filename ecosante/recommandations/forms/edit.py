@@ -1,5 +1,5 @@
 from jinja2.nodes import Mul
-from wtforms.fields.core import SelectField
+from wtforms.fields.core import IntegerField, SelectField
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
 from wtforms import TextAreaField, HiddenField
 
@@ -90,6 +90,7 @@ class FormAdd(BaseForm):
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
     montrer_dans_le_widget = OuiNonField("Montrer dans le widget")
+    ordre = IntegerField("Ordre", description="Si renseigné, une recommandation avec un ordre plus petit sera donnée à l’utilisateur avant celle d’un ordre plus grand. Si pour une journée deux recommandations avec le même ordre sont possibles, l’une ou l’autre sera donnée.")
     objectif = SelectField(
         "Objectif",
         choices=[

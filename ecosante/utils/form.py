@@ -1,4 +1,4 @@
-from wtforms import widgets, SelectMultipleField, SelectField
+from wtforms import widgets, SelectMultipleField, SelectField, IntegerField as BaseIntegerField
 from markupsafe import Markup
 from flask_wtf import FlaskForm
 
@@ -72,3 +72,8 @@ class OuiNonField(SelectMultipleField):
     def pre_validate(self, form):
         if self.data not in (True, False, None):
             raise ValueError(self.gettext("'%(value)s' is not a valid choice for this field") % dict(value=d))
+
+class IntegerField(BaseIntegerField):
+    def process_formdata(self, valuelist):
+        if valuelist and valuelist[0]:
+            super(BaseIntegerField).process_formdata(self, valuelist)

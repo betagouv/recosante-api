@@ -82,15 +82,8 @@ class Newsletter:
             self.allergenes = []
 
         self.recommandation =\
-             Recommandation.query.get(recommandation_id) or\
-             Recommandation.get_relevant(
-                recommandations,
-                inscription,
-                self.qualif,
-                self.polluants,
-                self.raep,
-                self.date
-            )
+            Recommandation.query.get(recommandation_id) or\
+            self.get_recommandation(recommandations)
 
     @property
     def polluants_formatted(self):
@@ -168,7 +161,7 @@ class Newsletter:
         try:
             insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True)
         except requests.exceptions.HTTPError as e:
-            print(e)
+            current_app.logger.error(e)
             raise e
         for inscription in query.all():
             if inscription.ville_insee not in insee_forecast:
@@ -184,6 +177,35 @@ class Newsletter:
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
             yield newsletter
+
+    def get_recommandation(self, recommandations):
+        query_nl = NewsletterDB.query\
+            .join(Inscription)\
+            .filter(Inscription.mail==self.inscription.mail)
+        sorted_recommandation_ids = db.session.query(Recommandation.id)\
+            .join(query_nl.subquery("nl"), isouter=True)\
+            .group_by(Recommandation.id)\
+            .order_by(text("max(nl.date) nulls first"), Recommandation.ordre)\
+            .all()
+        last_nl = query_nl.order_by(text("date DESC")).first()
+        eligible_recommandations = filter(
+            lambda r: r.is_relevant(self.inscription, self.qualif, self.polluants, self.raep, self.date), 
+            sorted(
+                recommandations,
+                key=lambda r: sorted_recommandation_ids.index((r.id,))
+            )
+        )
+        if not last_nl:
+            return next(eligible_recommandations)
+        else:
+            to_send = None
+            last_criteres = last_nl.recommandation.criteres
+            for reco in eligible_recommandations:
+                if reco.criteres != last_criteres:
+                    return reco
+                to_send = to_send or reco # On veut envoyer la plus haute dans la liste
+            return to_send
+
 
     def csv_line(self):
         return generate_line([
@@ -274,7 +296,7 @@ class NewsletterDB(db.Model, Newsletter):
         server_default=text("generate_random_id('public', 'newsletter', 'short_id', 8)")
     )
     inscription_id: int = db.Column(db.Integer, db.ForeignKey('inscription.id'))
-    inscription: Inscription = db.relationship("Inscription", backref="inscription")
+    inscription: Inscription = db.relationship(Inscription)
     lien_aasqa: str = db.Column(db.String())
     nom_aasqa: str = db.Column(db.String())
     recommandation_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))

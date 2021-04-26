@@ -1,3 +1,4 @@
+from datetime import date
 from ecosante.extensions import db
 from dataclasses import dataclass, asdict
 from ecosante.inscription.models import Inscription
@@ -75,6 +76,7 @@ class Recommandation(db.Model):
     personne_allergique: bool = db.Column(db.Boolean, nullable=True)
     lien_qa_pollen: bool = db.Column(db.Boolean, nullable=True)
     montrer_dans_le_widget: bool = db.Column(db.Boolean, nullable=True)
+    ordre: int = db.Column(db.Integer, nullable=True)
 
     @property
     def velo(self) -> bool:
@@ -177,7 +179,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription, qualif, polluants, raep, date_):
+    def is_relevant(self, inscription: Inscription, qualif: str, polluants: List[str], raep: int, date_: date):
         #Inscription
         if self.criteres and self.criteres.isdisjoint(inscription.criteres):
             return False
@@ -246,38 +248,6 @@ class Recommandation(db.Model):
         if preferred_reco:
             recommandations = [cls.query.get(preferred_reco)] + recommandations
         return recommandations
-
-    @classmethod
-    def get_relevant(cls, recommandations, inscription, qualif, polluants, raep, date_):
-        copy_recommandations = []
-        same_criteres_recommandations = []
-        last_month_newsletters = inscription.last_month_newsletters()
-        recent_recommandation_ids = [
-            nl.recommandation_id
-            for nl in last_month_newsletters
-        ]
-        recent_recommandations = []
-        last_criteres = "" if not last_month_newsletters else last_month_newsletters[0].recommandation.criteres
-        for recommandation in recommandations:
-            if not recommandation.id in recent_recommandation_ids:
-                if recommandation.criteres == last_criteres:
-                    same_criteres_recommandations.append(recommandation)
-                else:
-                    copy_recommandations.append(recommandation)
-            else:
-                recent_recommandations.append(recommandation)
-        copy_recommandations.extend(same_criteres_recommandations)
-        copy_recommandations.extend(recent_recommandations)
-
-        try:
-            return next(filter(lambda r: r.is_relevant(inscription, qualif, polluants, raep, date_), copy_recommandations))
-        except StopIteration as e:
-            current_app.logger.error(f"Unable to get recommandation for {inscription.mail} and '{qualif}'")
-            raise e
-
-    @classmethod
-    def get_one(cls, inscription, qai, polluants):
-        return cls.get_relevant(cls.shuffled(), inscription, qai, polluants)
 
     def delete(self):
         self.status = "deleted"
