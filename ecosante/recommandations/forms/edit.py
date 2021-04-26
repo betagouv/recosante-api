@@ -1,6 +1,6 @@
 from jinja2.nodes import Mul
 from wtforms.fields.core import IntegerField, SelectField
-from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField
+from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField, IntegerField
 from wtforms import TextAreaField, HiddenField
 
 
@@ -97,7 +97,10 @@ class FormAdd(BaseForm):
             ("", "(sans)"),
             ("Améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
             ("Contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
-            ("Profiter du plein air", "Profiter du plein air")
+            ("Profiter du plein air", "Profiter du plein air"),
+            ("Limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
+            ("Vos activités physiques", "Vos activités physiques"),
+            ("Vos déplacements", "Vos déplacements")
         ]
     )
 
