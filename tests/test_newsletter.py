@@ -1,4 +1,3 @@
-from indice_pollution import today
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
 from datetime import date, timedelta
 
@@ -108,6 +107,56 @@ def test_formatted_polluants_vulnerable_no2(db_session):
     )
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=vulnerable&polluants=no2'
     assert nl.recommandation.personnes_sensibles == True
+
+
+def test_avis_oui(db_session, client):
+    recommandations=[
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+    ]
+    db_session.add_all(recommandations)
+    db_session.commit()
+    nl = Newsletter(
+        Inscription(pathologie_respiratoire=True),
+        forecast={"data": []},
+        episodes={"data": [
+            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+        ]},
+        recommandations=recommandations
+    )
+    nldb = NewsletterDB(nl)
+    db_session.add(nldb)
+    db_session.commit()
+    response = client.post(f'/newsletter/{nldb.short_id}/avis?appliquee=oui')
+    assert response.status_code == 200
+    nldb2 = NewsletterDB.query.get(nldb.id)
+    assert nldb2.appliquee == True
+
+
+def test_avis_non(db_session, client):
+    recommandations=[
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+    ]
+    db_session.add_all(recommandations)
+    db_session.commit()
+    nl = Newsletter(
+        Inscription(pathologie_respiratoire=True),
+        forecast={"data": []},
+        episodes={"data": [
+            {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
+        ]},
+        recommandations=recommandations
+    )
+    nldb = NewsletterDB(nl)
+    db_session.add(nldb)
+    db_session.commit()
+    avis = "Je ne suis pas concerné !"
+    response = client.post(f'/newsletter/{nldb.short_id}/avis?appliquee=non', data={"avis": avis}, headers={"Accept": "application/json"})
+    assert response.status_code == 200
+    nldb2 = NewsletterDB.query.get(nldb.id)
+    assert nldb2.appliquee == False
+    assert nldb2.avis == avis
 
 
 def test_pollens(db_session):

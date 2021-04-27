@@ -1,5 +1,6 @@
 from flask import (
     abort,
+    jsonify,
     render_template,
     request,
     redirect,
@@ -21,18 +22,32 @@ def avis(short_id):
     nl = db.session.query(NewsletterDB).filter_by(short_id=short_id).first()
     if not nl:
         abort(404)
-    nl.appliquee = request.args.get('avis') == 'oui'
-    form = FormAvis(request.form, obj=nl)
+    nl.appliquee = request.args.get('avis') == 'oui' or request.args.get('appliquee') == 'oui'
+    form = FormAvis(request.form or request.json, obj=nl)
     if request.method=='POST' and form.validate_on_submit():
         form.populate_obj(nl)
         db.session.add(nl)
         db.session.commit()
+        if not request.accept_mimetypes.accept_html:
+            return {
+                "short_id": nl.short_id,
+                "avis": nl.avis,
+                "recommandation": nl.recommandation,
+                "appliquee": nl.appliquee
+            }
         return redirect(
             url_for('newsletter.avis_enregistre', short_id=short_id)
         )
     db.session.add(nl)
     db.session.commit()
 
+    if not request.accept_mimetypes.accept_html:
+        return {
+            "short_id": nl.short_id,
+            "avis": nl.avis,
+            "recommandation": nl.recommandation,
+            "appliquee": nl.appliquee
+        }
     return render_template(
         'avis.html',
         nl=nl,
