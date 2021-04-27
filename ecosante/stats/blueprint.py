@@ -20,6 +20,13 @@ def get_month_name(month_no, locale):
 
 bp = Blueprint("stats", __name__)
 
+
+def first_day_last_day_of_week(d):
+    year, week, _ = d.isocalendar()
+    first_day = datetime.fromisocalendar(year, week, 1)
+    last_day = datetime.fromisocalendar(year, week, 7)
+    return f'{first_day.strftime("%d/%m/%Y")} au {last_day.strftime("%d/%m/%Y")}'
+
 @bp.route('/')
 def stats():
     func_count_id = func.count(Inscription.id)
@@ -37,13 +44,13 @@ def stats():
     last_month = (datetime.now() - timedelta(weeks=5)).date()
     g_sub = func.date_trunc('week', Inscription.date_inscription)
     inscriptions = {
-        v[0].isocalendar()[1]: v[1]
+        first_day_last_day_of_week(v[0]): v[1]
         for v in
         db.session.query(g_sub, func_count_id).filter(Inscription.date_inscription >= last_month).group_by(g_sub).order_by(g_sub).all()
     }
     g_unsub = func.date_trunc('week', Inscription.deactivation_date)
     desinscriptions = {
-        v[0].isocalendar()[1]: v[1]
+        first_day_last_day_of_week(v[0]): v[1]
         for v in
         db.session.query(g_unsub, func_count_id).filter(Inscription.deactivation_date >= last_month).group_by(g_unsub).order_by(g_unsub).all()
     }
