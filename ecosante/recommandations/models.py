@@ -180,6 +180,8 @@ class Recommandation(db.Model):
                 if getattr(self, critere)])
 
     def is_relevant(self, inscription: Inscription, qualif: str, polluants: List[str], raep: int, date_: date):
+        if not inscription:
+            return self.montrer_dans_le_widget
         #Inscription
         if self.criteres and self.criteres.isdisjoint(inscription.criteres):
             return False
