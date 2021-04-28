@@ -75,6 +75,8 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
             )
         )
     )
+    db.session.add_all(newsletters)
+    db.session.commit()
     task.update_state(
         state='STARTED',
         meta={

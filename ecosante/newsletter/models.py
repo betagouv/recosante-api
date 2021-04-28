@@ -327,7 +327,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.allergenes = newsletter.allergenes
 
     def attributes(self):
-        to_return = {
+        return {
             'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
             'LIEN_AASQA': self.lien_aasqa,
             'NOM_AASQA': self.nom_aasqa,
@@ -347,8 +347,6 @@ class NewsletterDB(db.Model, Newsletter):
             "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
             "ALLERGENES": oxford_comma(self.allergenes) or ""
         }
-        return to_return
-
 
     @classmethod
     def generate_csv_avis(cls):
