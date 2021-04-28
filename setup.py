@@ -16,7 +16,7 @@ DEPENDENCIES = [
     'Flask-SQLAlchemy',
     'Flask-WTF',
     'wtforms[email]',
-    'indice_pollution==0.11.0',
+    'indice_pollution==0.11.1',
     'sib-api-v3-sdk',
     'requests',
     'icalevents',
