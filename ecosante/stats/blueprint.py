@@ -44,16 +44,21 @@ def stats():
     last_month = (datetime.now() - timedelta(weeks=5)).date()
     g_sub = func.date_trunc('week', Inscription.date_inscription)
     inscriptions = {
-        first_day_last_day_of_week(v[0]): v[1]
+        v[0]: v[1]
         for v in
         db.session.query(g_sub, func_count_id).filter(Inscription.date_inscription >= last_month).group_by(g_sub).order_by(g_sub).all()
     }
     g_unsub = func.date_trunc('week', Inscription.deactivation_date)
     desinscriptions = {
-        first_day_last_day_of_week(v[0]): v[1]
+        v[0]: v[1]
         for v in
         db.session.query(g_unsub, func_count_id).filter(Inscription.deactivation_date >= last_month).group_by(g_unsub).order_by(g_unsub).all()
     }
+    inscriptions_desinscriptions = [
+        [first_day_last_day_of_week(v[0]), [v[1], desinscriptions[v[0]]]]
+        for v in inscriptions.items()
+        if v[0] in desinscriptions
+    ]
     decouverte_labels = {v[0]: v[1] for v in Form.decouverte.kwargs["choices"]}
     decouverte_unnest_query = db.session.query(func.unnest(Avis.decouverte).label('d')).subquery()
     decouverte_col = decouverte_unnest_query.c.d
@@ -109,8 +114,7 @@ def stats():
         "decouverte": json.dumps(decouverte),
         "ouvertures": json.dumps(dict(ouvertures)),
         "ouverture_veille": ouverture_veille,
-        "inscriptions": inscriptions,
-        "desinscriptions": desinscriptions,
+        "inscriptions_desinscriptions": inscriptions_desinscriptions,
         "total_reponses": total_reponses,
         "total_satisfaits": total_satisfaits,
         "total_inscriptions": total_inscriptions,
