@@ -163,8 +163,8 @@ def test_pollens(db_session):
     recommandations=[
         Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
         Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
-        Recommandation(personne_allergique=True),
-        Recommandation(personne_allergique=False)
+        Recommandation(type_="pollens"),
+        Recommandation(type_="generale")
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -197,14 +197,14 @@ def test_pollens(db_session):
                             elif 0 < raep < 4:
                                 if allergie_pollens:
                                     assert nl.show_raep == True
-                                    assert nl.recommandation.personne_allergique == (date_.weekday() in [2, 5])
+                                    assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
                                 else:
                                     assert nl.show_raep == False
-                                    assert not nl.recommandation.personne_allergique
+                                    assert nl.recommandation.type_ != "pollens"
                             else:
                                 if allergie_pollens:
                                     assert nl.show_raep == True
-                                    assert nl.recommandation.personne_allergique == (date_.weekday() in [2, 5])
+                                    assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
                                 else:
                                     assert nl.show_raep == True
-                                    assert not nl.recommandation.personne_allergique
+                                    assert nl.recommandation.type_ != "pollens"

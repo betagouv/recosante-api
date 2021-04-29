@@ -206,7 +206,7 @@ class Recommandation(db.Model):
             if not self.is_relevant_qualif(qualif):
                 return False
         # Pollens
-        if self.personne_allergique:
+        if self.type_ == "pollens":
             if raep == 0:
                 return False
             if 0 < raep < 4: #RAEP Faible

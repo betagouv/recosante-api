@@ -1,3 +1,4 @@
+from re import A
 from sqlalchemy.sql.operators import notendswith_op
 from ecosante.recommandations.models import Recommandation
 from ecosante.inscription.models import Inscription
@@ -23,19 +24,19 @@ def help_deplacement(nom_deplacement, nom_deplacement_inscription=None):
     i = Inscription(deplacement=[])
     assert not r.is_relevant(i, None, [], 0, date.today())
 
-def test_is_relevant_menage(db_session):
+def test_is_relevant_menage():
     help_activites('menage')
 
-def test_is_relevant_bricolage(db_session):
+def test_is_relevant_bricolage():
     help_activites('bricolage')
 
-def test_is_relevant_jardinage(db_session):
+def test_is_relevant_jardinage():
     help_activites('jardinage')
 
-def test_is_relevant_sport(db_session):
+def test_is_relevant_sport():
     help_activites('sport')
 
-def test_is_relevant_velo(db_session):
+def test_is_relevant_velo():
     r = Recommandation(velo_trott_skate=True)
     i = Inscription(deplacement=["velo"])
     assert r.is_relevant(i, None, [], 0, date.today())
@@ -44,13 +45,13 @@ def test_is_relevant_velo(db_session):
     i = Inscription(deplacement=[])
     assert not r.is_relevant(i, None, [], 0, date.today())
 
-def test_is_relevant_transport_en_commun(db_session):
+def test_is_relevant_transport_en_commun():
     help_deplacement("transport_en_commun", "tec")
 
 def test_is_relevant_voiture(db_session):
     help_deplacement("voiture")
 
-def test_is_relevant_enfants(db_session):
+def test_is_relevant_enfants():
     r = Recommandation(enfants=True)
     i = Inscription(enfants='oui')
     assert r.is_relevant(i, None, [], 0, date.today())
@@ -59,32 +60,32 @@ def test_is_relevant_enfants(db_session):
     i = Inscription(enfants='non')
     assert not r.is_relevant(i, None, [], 0, date.today())
 
-def test_is_qualite_mauvaise(db_session):
+def test_is_qualite_mauvaise():
     r = Recommandation(qa_mauvaise=True)
     i = Inscription()
     assert r.is_relevant(i, "mauvais", [], 0, date.today())
     assert not r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_is_qualite_tres_mauvaise(db_session):
+def test_is_qualite_tres_mauvaise():
     r = Recommandation(qa_mauvaise=True)
     i = Inscription()
     assert r.is_relevant(i, "tres_mauvais", [], 0, date.today())
     assert not r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_is_qualite_extrement_mauvaise(db_session):
+def test_is_qualite_extrement_mauvaise():
     r = Recommandation(qa_mauvaise=True)
     i = Inscription()
     assert r.is_relevant(i, "extrement_mauvais", [], 0, date.today())
     assert not r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_is_qualite_bonne(db_session):
+def test_is_qualite_bonne():
     r = Recommandation(qa_bonne=True)
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today())
     assert r.is_relevant(i, "moyen", [], 0, date.today())
     assert not r.is_relevant(i, "extrement_mauvais", [], 0, date.today())
 
-def test_is_qualite_bonne_mauvaise(db_session):
+def test_is_qualite_bonne_mauvaise():
     r = Recommandation(qa_bonne=True, qa_mauvaise=True)
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today())
@@ -92,7 +93,7 @@ def test_is_qualite_bonne_mauvaise(db_session):
     assert r.is_relevant(i, "degrade", [], 0, date.today())
     assert r.is_relevant(i, "extrement_mauvais", [], 0, date.today())
 
-def test_is_relevant_ozone(db_session):
+def test_is_relevant_ozone():
     r = Recommandation(ozone=True)
     i = Inscription()
     assert r.is_relevant(i, "bon", ["ozone"], 0, date.today())
@@ -100,7 +101,7 @@ def test_is_relevant_ozone(db_session):
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
     assert not r.is_relevant(i, "degrade", ["particules_fines"], 0, date.today())
 
-def test_is_relevant_particules_fines(db_session):
+def test_is_relevant_particules_fines():
     r = Recommandation(particules_fines=True)
     i = Inscription()
     assert r.is_relevant(i, "degrade", ["particules_fines"], 0, date.today())
@@ -108,7 +109,7 @@ def test_is_relevant_particules_fines(db_session):
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
-def test_is_relevant_dioxyde_azote(db_session):
+def test_is_relevant_dioxyde_azote():
     r = Recommandation(dioxyde_azote=True)
     i = Inscription()
     assert r.is_relevant(i, "degrade", ["dioxyde_azote"], 0, date.today())
@@ -116,7 +117,7 @@ def test_is_relevant_dioxyde_azote(db_session):
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
-def test_is_relevant_dioxyde_soufre(db_session):
+def test_is_relevant_dioxyde_soufre():
     r = Recommandation(dioxyde_soufre=True)
     i = Inscription()
     assert r.is_relevant(i, "degrade", ["dioxyde_soufre"], 0, date.today())
@@ -124,7 +125,7 @@ def test_is_relevant_dioxyde_soufre(db_session):
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
-def test_qualite_air_bonne_menage_bricolage(db_session):
+def test_qualite_air_bonne_menage_bricolage():
     r = Recommandation(menage=True, bricolage=True, qa_bonne=True)
 
     i = Inscription(activites=["menage"])
@@ -137,8 +138,8 @@ def test_qualite_air_bonne_menage_bricolage(db_session):
     assert r.is_relevant(i, "bon", [], 0, date.today())
 
 
-def test_reco_pollen_pollution(db_session):
-    r = Recommandation(personne_allergique=True)
+def test_reco_pollen_pollution():
+    r = Recommandation(type_="pollens")
 
     i = Inscription(allergie_pollens=False)
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
@@ -146,7 +147,7 @@ def test_reco_pollen_pollution(db_session):
     i = Inscription(allergie_pollens=True)
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
-    r = Recommandation(personne_allergique=False)
+    r = Recommandation(type_="generale")
 
     i = Inscription(allergie_pollens=False)
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
@@ -154,8 +155,8 @@ def test_reco_pollen_pollution(db_session):
     i = Inscription(allergie_pollens=True)
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
-def test_reco_pollen_pas_pollution_raep_nul(db_session):
-    r = Recommandation(personne_allergique=True)
+def test_reco_pollen_pas_pollution_raep_nul():
+    r = Recommandation(type_="pollens")
 
     i = Inscription(allergie_pollens=False)
     assert not r.is_relevant(i, "bon", [], 0, date.today())
@@ -163,7 +164,7 @@ def test_reco_pollen_pas_pollution_raep_nul(db_session):
     i = Inscription(allergie_pollens=True)
     assert not r.is_relevant(i, "bon", [], 0, date.today())
 
-    r = Recommandation(personne_allergique=False)
+    r = Recommandation(type_="generale")
 
     i = Inscription(allergie_pollens=False)
     assert r.is_relevant(i, "bon", [], 0, date.today())
@@ -171,8 +172,8 @@ def test_reco_pollen_pas_pollution_raep_nul(db_session):
     i = Inscription(allergie_pollens=True)
     assert r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(db_session):
-    r = Recommandation(personne_allergique=True)
+def test_reco_pollen_pas_pollution_raep_faible_atmo_bon():
+    r = Recommandation(type_="pollens")
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -183,8 +184,8 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(db_session):
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(i, "bon", [], 1, date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais(db_session):
-    r = Recommandation(personne_allergique=True)
+def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais():
+    r = Recommandation(type_="pollens")
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -195,8 +196,8 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais(db_session):
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(i, "bon", [], 1, date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon(db_session):
-    r = Recommandation(personne_allergique=True)
+def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon():
+    r = Recommandation(type_="pollens")
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -207,8 +208,8 @@ def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon(db_session):
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(i, "bon", [], 6, date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais(db_session):
-    r = Recommandation(personne_allergique=True)
+def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais():
+    r = Recommandation(type_="pollens")
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -219,7 +220,7 @@ def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais(db_session):
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(i, "bon", [], 6, date_) == (date_.weekday() in [2, 5])
 
-def test_chauffage(db_session):
+def test_chauffage():
     r = Recommandation(chauffage=[])
     i = Inscription(chauffage=[])
     assert r.is_relevant(i, "bon", [], 0, date.today())
@@ -286,3 +287,9 @@ def test_get_relevant_last_criteres(db_session):
         recommandations=[r1, r2, r3]
     ))
     assert nl1.recommandation.criteres != nl2.recommandation.criteres
+
+
+def test_min_raep():
+    r = Recommandation(type_="pollens", min_raep=4)
+    i = Inscription()
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
