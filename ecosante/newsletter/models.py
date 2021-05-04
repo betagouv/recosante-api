@@ -328,24 +328,26 @@ class NewsletterDB(db.Model, Newsletter):
 
     def attributes(self):
         return {
-            'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
-            'LIEN_AASQA': self.lien_aasqa,
-            'NOM_AASQA': self.nom_aasqa,
-            'PRECISIONS': self.recommandation.precisions or "",
-            'QUALITE_AIR': self.label or "",
-            'VILLE': self.inscription.ville_nom or "",
-            'BACKGROUND_COLOR': self.couleur or "",
-            'SHORT_ID': self.short_id or "",
-            'POLLUANT': self.polluants_formatted or "",
-            'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
-            'SHOW_RAEP': self.show_raep or False,
-            'RAEP': self.qualif_raep or "",
-            'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
-            'USER_UID': self.inscription.uid,
-            'DEPARTEMENT': self.inscription.departement.get('nom') or "",
-            'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
-            "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
-            "ALLERGENES": oxford_comma(self.allergenes) or ""
+            **{
+                'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
+                'LIEN_AASQA': self.lien_aasqa,
+                'NOM_AASQA': self.nom_aasqa,
+                'PRECISIONS': self.recommandation.precisions or "",
+                'QUALITE_AIR': self.label or "",
+                'VILLE': self.inscription.ville_nom or "",
+                'BACKGROUND_COLOR': self.couleur or "",
+                'SHORT_ID': self.short_id or "",
+                'POLLUANT': self.polluants_formatted or "",
+                'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
+                'SHOW_RAEP': self.show_raep or False,
+                'RAEP': self.qualif_raep or "",
+                'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
+                'USER_UID': self.inscription.uid,
+                'DEPARTEMENT': self.inscription.departement.get('nom') or "",
+                'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
+                "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
+            },
+            **{f'ALLERGENE_{a[0]}': int(a[1]) for a in self.allergenes.items()}
         }
 
     @classmethod
