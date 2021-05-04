@@ -178,7 +178,7 @@ class Newsletter:
                 continue
             yield newsletter
 
-    def get_recommandation(self, recommandations):
+    def get_recommandation(self, recommandations: List[Recommandation]):
         query_nl = NewsletterDB.query\
             .join(Inscription)\
             .filter(Inscription.mail==self.inscription.mail)
@@ -200,8 +200,9 @@ class Newsletter:
         else:
             to_send = None
             last_criteres = last_nl.recommandation.criteres
+            last_type = last_nl.recommandation.type_
             for reco in eligible_recommandations:
-                if reco.criteres != last_criteres:
+                if reco.criteres != last_criteres and reco.type_ != last_type:
                     return reco
                 to_send = to_send or reco # On veut envoyer la plus haute dans la liste
             return to_send
