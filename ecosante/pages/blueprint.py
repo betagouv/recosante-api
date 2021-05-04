@@ -1,6 +1,5 @@
 from ecosante.tasks.inscriptions_patients import inscription_patients_task
 from flask import (
-    jsonify,
     redirect,
     render_template,
     request
@@ -11,7 +10,7 @@ from ecosante.utils.decorators import admin_capability_url, webhook_capability_u
 from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB, Recommandation
 from sentry_sdk import capture_event
-from indice_pollution import forecast, episodes, raep
+from indice_pollution import forecast, episodes, raep, availability
 
 bp = Blueprint("pages", __name__, url_prefix='/')
 
@@ -19,13 +18,16 @@ bp = Blueprint("pages", __name__, url_prefix='/')
 def index():
     return redirect('https://recosante.beta.gouv.fr/', code=301)
 
+
 @bp.route('/changement-indice-atmo')
 def changement_atmo():
     return render_template("changement-atmo.html")
 
+
 @bp.route('/donnees-personnelles')
 def donnees_personnelles():
     return render_template("donnees-personnelles.html")
+
 
 @bp.route('/admin/<secret_slug>')
 @bp.route('/admin/')
@@ -42,6 +44,7 @@ def admin():
             NewsletterDB.date==date.today())\
         .count()
     return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
+
 
 @bp.route('/recommandation-episodes-pollution')
 def recommandation_episode_pollution():
@@ -65,6 +68,7 @@ def sib_error(secret_slug):
     capture_event(request.json)
     return {"body": "ok"}
 
+
 @bp.route('/inscription-patients', methods=['POST'])
 def inscription_patients():
     inscription_patients_task.delay(
@@ -72,6 +76,14 @@ def inscription_patients():
         request.json['mails']
     )
     return '"ok"'
+
+
+@bp.route('/city-availability')
+def city_availability():
+    insee = request.args.get('insee')
+    if not insee:
+        {"availability": False}, 404
+    return {"availability": availability(insee)}
 
 
 @bp.route('/data')
