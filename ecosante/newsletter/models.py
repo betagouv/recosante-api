@@ -172,7 +172,7 @@ class Newsletter:
                 forecast=insee_forecast[inscription.ville_insee].get("forecast"),
                 episodes=insee_forecast[inscription.ville_insee].get("episode"),
                 raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
-                allergenes=insee_forecast[inscription.ville_insee].get("raep", {}).get("liste_allergenes")
+                allergenes=insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes")
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
