@@ -310,7 +310,7 @@ class NewsletterDB(db.Model, Newsletter):
     avis: str = db.Column(db.String())
     polluants: List[str] = db.Column(postgresql.ARRAY(db.String()))
     raep: int = db.Column(db.Integer())
-    allergenes: List[str] = db.Column(postgresql.ARRAY(db.String()))
+    allergenes: dict = db.Column(postgresql.JSONB)
 
     def __init__(self, newsletter):
         self.inscription = newsletter.inscription
@@ -348,7 +348,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
             },
-            **{f'ALLERGENE_{a[0]}': int(a[1]) for a in self.allergenes.items()}
+            **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
         }
 
     @classmethod
