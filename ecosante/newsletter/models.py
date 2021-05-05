@@ -79,7 +79,7 @@ class Newsletter:
             self.allergenes = allergenes
         else:
             current_app.logger.error(f'No allergenes for {inscription.mail}')
-            self.allergenes = []
+            self.allergenes = {}
 
         self.recommandation =\
             Recommandation.query.get(recommandation_id) or\
