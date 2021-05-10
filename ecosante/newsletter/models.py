@@ -347,6 +347,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'DEPARTEMENT': self.inscription.departement.get('nom') or "",
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
+                "OBJECTIF": self.recommandation.objectif
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
         }
