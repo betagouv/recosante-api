@@ -149,7 +149,7 @@ class Newsletter:
                 episodes=insee_forecast[inscription.ville_insee].get("episode"),
                 raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
                 allergenes=insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes"),
-                validite_raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite"),
+                validite_raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite", {}),
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
@@ -224,6 +224,8 @@ class Newsletter:
     def show_raep(self):
         #On envoie pas en cas de polluants
         #ni en cas de risque faible à un personne non-allergique
+        if type(self.raep) != int:
+            return False
         if self.polluants:
             return False
         if self.raep == 0:
@@ -303,7 +305,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.label = newsletter.label
         self.couleur = newsletter.couleur
         self.polluants = newsletter.polluants
-        self.raep = int(newsletter.raep)
+        self.raep = int(newsletter.raep) if newsletter.raep else None
         self.allergenes = newsletter.allergenes
         self.raep_debut_validite = newsletter.validite_raep.get('debut')
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
