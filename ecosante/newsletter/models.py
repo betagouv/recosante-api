@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 from datetime import datetime, date
 from flask.helpers import url_for
@@ -19,34 +19,23 @@ from indice_pollution import bulk, today, forecast as get_forecast, episodes as 
 
 @dataclass
 class Newsletter:
-    date: datetime = date.today()
-    recommandation: Recommandation = None
-    inscription: Inscription = None
-    forecast: dict = None
-    episodes: List[dict] = None
-    raep: int = None
-    allergenes: List[str] = None
+    date: datetime = field(default_factory=date.today, init=True)
+    recommandation: Recommandation = field(default=None, init=True)
+    recommandations: List[Recommandation] = field(default=None, init=True)
+    user_seed: str = field(default=None, init=True)
+    inscription: Inscription = field(default=None, init=True)
+    forecast: dict = field(default_factory=dict, init=True)
+    episodes: List[dict] = field(default_factory=lambda: [dict()], init=True)
+    raep: int = field(default=0, init=True)
+    allergenes: dict = field(default_factory=dict, init=True)
+    validite_raep: dict = field(default_factory=dict, init=True)
 
-    def __init__(self, inscription, seed=None, preferred_reco=None, recommandations=None, forecast=None, recommandation_id=None, episodes=None, raep=None, allergenes=None, date_=None):
-        recommandations = recommandations or Recommandation.shuffled(user_seed=seed, preferred_reco=preferred_reco)
-        self.date = date_ or today()
-        self.inscription = inscription
-        try:
-            self.forecast = forecast or get_forecast(self.inscription.ville_insee, self.date, True)
-        except KeyError as e:
-            current_app.logger.error(f'Unable to find region for {self.inscription.ville_name} ({self.inscription.ville_insee})')
-            current_app.logger.error(e)
-            self.forecast = dict()
-        try:
-            self.episodes = episodes or get_episodes(self.inscription.ville_insee, self.date)
-        except KeyError as e:
-            current_app.logger.error(f'Unable to find region for {self.inscription.ville_name} ({self.inscription.ville_insee})')
-            current_app.logger.error(e)
-            self.episodes = [dict()]
+
+    def __post_init__(self):
         if not 'label' in self.today_forecast:
-            current_app.logger.error(f'No label for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
+            current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
-            current_app.logger.error(f'No couleur for forecast for inscription: id: {inscription.id} insee: {inscription.ville_insee}')
+            current_app.logger.error(f'No couleur for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
         self.polluants = [
             {
                 '1': 'dioxyde_soufre',
@@ -59,31 +48,18 @@ class Newsletter:
                and 'date' in e\
                and e['date'] == str(self.date)
         ]
-
-        if raep:
+        if self.raep:
             try:
-                self.raep = int(raep)
+                self.raep = int(self.raep)
             except ValueError as e:
-                current_app.logger.error(f"Parsing error for raep of {inscription.mail}")
+                current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
                 current_app.logger.error(e)
-                self.raep = 0
-            except TypeError:
-                current_app.logger.error(f"Parsing error for raep of {inscription.mail}")
+            except TypeError as e:
+                current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
                 current_app.logger.error(e)
-                self.raep = 0
-        else:
-            current_app.logger.error(f'No RAEP for {inscription.mail}')
-            self.raep = 0
-
-        if allergenes:
-            self.allergenes = allergenes
-        else:
-            current_app.logger.error(f'No allergenes for {inscription.mail}')
-            self.allergenes = dict()
-
-        self.recommandation =\
-            Recommandation.query.get(recommandation_id) or\
-            self.get_recommandation(recommandations)
+        self.recommandations = self.recommandations or Recommandation.shuffled(user_seed=self.user_seed)
+        self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
+    
 
     @property
     def polluants_formatted(self):
@@ -167,12 +143,13 @@ class Newsletter:
             if inscription.ville_insee not in insee_forecast:
                 continue
             newsletter = cls(
-                inscription,
+                inscription=inscription,
                 recommandations=recommandations,
                 forecast=insee_forecast[inscription.ville_insee].get("forecast"),
                 episodes=insee_forecast[inscription.ville_insee].get("episode"),
                 raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
-                allergenes=insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes")
+                allergenes=insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes"),
+                validite_raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite"),
             )
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
@@ -311,8 +288,10 @@ class NewsletterDB(db.Model, Newsletter):
     polluants: List[str] = db.Column(postgresql.ARRAY(db.String()))
     raep: int = db.Column(db.Integer())
     allergenes: dict = db.Column(postgresql.JSONB)
+    raep_debut_validite = db.Column(db.Date())
+    raep_fin_validite = db.Column(db.Date())
 
-    def __init__(self, newsletter):
+    def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
         self.lien_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('website') or ""
@@ -326,6 +305,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.polluants = newsletter.polluants
         self.raep = int(newsletter.raep)
         self.allergenes = newsletter.allergenes
+        self.raep_debut_validite = newsletter.validite_raep.get('debut')
+        self.raep_fin_validite = newsletter.validite_raep.get('fin')
 
     def attributes(self):
         return {
@@ -347,7 +328,9 @@ class NewsletterDB(db.Model, Newsletter):
                 'DEPARTEMENT': self.inscription.departement.get('nom') or "",
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
-                "OBJECTIF": self.recommandation.objectif
+                "OBJECTIF": self.recommandation.objectif,
+                "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
+                "RAEP_FIN_VALIDITE": self.raep_fin_validite
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
         }

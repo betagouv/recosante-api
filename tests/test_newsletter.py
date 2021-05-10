@@ -7,7 +7,7 @@ def test_episode_passe(db_session):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = NewsletterDB(Newsletter(
-        Inscription(diffusion='mail', ville_insee='38185'),
+        inscription=Inscription(diffusion='mail', ville_insee='38185'),
         forecast={"data": []},
         episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(yesterday)}]},
         recommandations=recommandations
@@ -25,7 +25,7 @@ def test_formatted_polluants_generale_pm10(db_session):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(),
+        inscription=Inscription(),
         forecast={"data": []},
         episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]},
         recommandations=recommandations
@@ -39,7 +39,7 @@ def test_formatted_polluants_generale_pm10_no2(db_session):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(),
+        inscription=Inscription(),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
@@ -56,7 +56,7 @@ def test_formatted_polluants_generale_tous(db_session):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(),
+        inscription=Inscription(),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "1", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
@@ -75,7 +75,7 @@ def test_formatted_polluants_generale_pm10_o3_no2(db_session):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(),
+        inscription=Inscription(),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "1", "etat": "PAS DE DEPASSEMENT", "date": str(date.today())},
@@ -98,7 +98,7 @@ def test_formatted_polluants_vulnerable_no2(db_session):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(pathologie_respiratoire=True),
+        inscription=Inscription(pathologie_respiratoire=True),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
@@ -117,7 +117,7 @@ def test_avis_oui(db_session, client):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(pathologie_respiratoire=True),
+        inscription=Inscription(pathologie_respiratoire=True),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
@@ -141,7 +141,7 @@ def test_avis_non(db_session, client):
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
-        Inscription(pathologie_respiratoire=True),
+        inscription=Inscription(pathologie_respiratoire=True),
         forecast={"data": []},
         episodes={"data": [
             {"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())},
@@ -179,11 +179,11 @@ def test_pollens(db_session):
                         else:
                             episode = []
                         nl = Newsletter(
-                            Inscription(allergie_pollens=allergie_pollens),
+                            inscription=Inscription(allergie_pollens=allergie_pollens),
                             forecast={"data": [{"date": date_, "indice": indice}]},
                             episodes={"data": episode},
                             raep=raep,
-                            date_=date_,
+                            date=date_,
                             recommandations=recommandations
                         )
 

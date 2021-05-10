@@ -248,7 +248,7 @@ def test_get_relevant_recent(db_session):
     db_session.add_all([r1, r2, i])
     db_session.commit()
     nl1 = NewsletterDB(Newsletter(
-        i,
+        inscription=i,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2]
@@ -257,7 +257,7 @@ def test_get_relevant_recent(db_session):
     db_session.add(nl1)
     db_session.commit()
     nl2 = NewsletterDB(Newsletter(
-        i,
+        inscription=i,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2]
@@ -273,7 +273,7 @@ def test_get_relevant_last_criteres(db_session):
     db_session.add_all([r1, r2, r3, i])
     db_session.commit()
     nl1 = NewsletterDB(Newsletter(
-        i,
+        inscription=i,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2, r3]
@@ -281,7 +281,7 @@ def test_get_relevant_last_criteres(db_session):
     db_session.add(nl1)
     db_session.commit()
     nl2 = NewsletterDB(Newsletter(
-        i,
+        inscription=i,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2, r3]
