@@ -32,6 +32,8 @@ class Newsletter:
 
 
     def __post_init__(self):
+        self.forecast = self.forecast or get_forecast(self.inscription.ville_insee)
+        self.episodes = self.episodes or get_episodes(self.inscription.ville_insee)
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
@@ -331,8 +333,8 @@ class NewsletterDB(db.Model, Newsletter):
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
                 "OBJECTIF": self.recommandation.objectif,
-                "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
-                "RAEP_FIN_VALIDITE": self.raep_fin_validite
+                "RAEP_DEBUT_VALIDITE": datetime.strptime(self.raep_debut_validite, "%d/%m%Y").date(),
+                "RAEP_FIN_VALIDITE": datetime.strptime(self.raep_fin_validite, "%d/%m/%Y").date()
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
         }

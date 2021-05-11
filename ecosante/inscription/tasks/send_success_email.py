@@ -26,7 +26,7 @@ def send_success_email(inscription_id):
             )
             raise e
 
-    newsletter = NewsletterDB(Newsletter(inscription))
+    newsletter = NewsletterDB(Newsletter(inscription=inscription))
     sleep(0.5)
     try:
         contact_api.update_contact(
