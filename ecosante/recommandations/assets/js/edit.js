@@ -34,4 +34,13 @@ document.addEventListener('DOMContentLoaded', _ => {
             })
         }
     )
+    document.getElementsByName("qa").forEach(
+        i => {
+            i.addEventListener("change", e => {
+                document.querySelectorAll(`#${e.target.id}`).forEach(
+                    q => q.checked = e.target.checked
+                )
+            })
+        }
+    )
 })
