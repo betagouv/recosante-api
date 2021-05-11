@@ -340,7 +340,8 @@ class NewsletterDB(db.Model, Newsletter):
                 "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
                 "OBJECTIF": self.recommandation.objectif,
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
-                "RAEP_FIN_VALIDITE": self.raep_fin_validite
+                "RAEP_FIN_VALIDITE": self.raep_fin_validite,
+                "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y")
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
         }
