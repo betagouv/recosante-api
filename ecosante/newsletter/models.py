@@ -17,6 +17,8 @@ from ecosante.utils.funcs import (
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes
 
+FR_DATE_FORMAT = '%d/%m/%Y'
+
 @dataclass
 class Newsletter:
     date: datetime = field(default_factory=date.today, init=True)
@@ -292,8 +294,8 @@ class NewsletterDB(db.Model, Newsletter):
     polluants: List[str] = db.Column(postgresql.ARRAY(db.String()))
     raep: int = db.Column(db.Integer())
     allergenes: dict = db.Column(postgresql.JSONB)
-    raep_debut_validite = db.Column(db.Date())
-    raep_fin_validite = db.Column(db.Date())
+    raep_debut_validite = db.Column(db.String())
+    raep_fin_validite = db.Column(db.String())
 
     def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
@@ -333,8 +335,8 @@ class NewsletterDB(db.Model, Newsletter):
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "LIEN_QA_POLLEN": self.recommandation.lien_qa_pollen or False,
                 "OBJECTIF": self.recommandation.objectif,
-                "RAEP_DEBUT_VALIDITE": datetime.strptime(self.raep_debut_validite, "%d/%m%Y").date(),
-                "RAEP_FIN_VALIDITE": datetime.strptime(self.raep_fin_validite, "%d/%m/%Y").date()
+                "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
+                "RAEP_FIN_VALIDITE": self.raep_fin_validite
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
         }
