@@ -15,27 +15,27 @@ from ecosante.utils.funcs import (
     oxford_comma
 )
 from ecosante.extensions import db
-from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes
+from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
 @dataclass
 class Newsletter:
-    date: datetime = field(default_factory=date.today, init=True)
+    date: datetime = field(default_factory=today, init=True)
     recommandation: Recommandation = field(default=None, init=True)
     recommandations: List[Recommandation] = field(default=None, init=True)
     user_seed: str = field(default=None, init=True)
     inscription: Inscription = field(default=None, init=True)
     forecast: dict = field(default_factory=dict, init=True)
-    episodes: List[dict] = field(default_factory=lambda: [dict()], init=True)
+    episodes: List[dict] = field(default=None, init=True)
     raep: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
 
 
     def __post_init__(self):
-        self.forecast = self.forecast or get_forecast(self.inscription.ville_insee)
-        self.episodes = self.episodes or get_episodes(self.inscription.ville_insee)
+        self.forecast = self.forecast or get_forecast(self.inscription.ville_insee, self.date, True)
+        self.episodes = self.episodes or get_episodes(self.inscription.ville_insee, self.date)
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
@@ -52,15 +52,19 @@ class Newsletter:
                and 'date' in e\
                and e['date'] == str(self.date)
         ]
-        if self.raep:
-            try:
-                self.raep = int(self.raep)
-            except ValueError as e:
-                current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
-                current_app.logger.error(e)
-            except TypeError as e:
-                current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
-                current_app.logger.error(e)
+        if not self.raep and not self.allergenes and not self.validite_raep:
+            raep = get_raep(self.inscription.ville_insee).get('data')
+            self.raep = raep['total']
+            self.allergenes = raep['allergenes']
+            self.validite_raep = raep['periode_validite']
+        try:
+            self.raep = int(self.raep)
+        except ValueError as e:
+            current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
+            current_app.logger.error(e)
+        except TypeError as e:
+            current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
+            current_app.logger.error(e)
         self.recommandations = self.recommandations or Recommandation.shuffled(user_seed=self.user_seed)
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
     
