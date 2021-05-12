@@ -54,9 +54,10 @@ class Newsletter:
         ]
         if not self.raep and not self.allergenes and not self.validite_raep:
             raep = get_raep(self.inscription.ville_insee).get('data')
-            self.raep = raep['total']
-            self.allergenes = raep['allergenes']
-            self.validite_raep = raep['periode_validite']
+            if raep:
+                self.raep = raep['total']
+                self.allergenes = raep['allergenes']
+                self.validite_raep = raep['periode_validite']
         try:
             self.raep = int(self.raep)
         except ValueError as e:
