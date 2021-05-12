@@ -207,7 +207,7 @@ class Recommandation(db.Model):
                 return False
         # Pollens
         if self.type_ == "pollens":
-            if raep == 0:
+            if raep == None or raep == 0:
                 return False
             if 0 < raep < 4: #RAEP Faible
                 if inscription.allergie_pollens:
