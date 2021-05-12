@@ -161,7 +161,7 @@ def import_(task, newsletters, overhead=0):
     db.session.commit()
 
     if current_app.config['ENV'] == 'production':
-        template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 425)
+        template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 526)
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         template = transactional_api.get_smtp_template(int(template_id))
