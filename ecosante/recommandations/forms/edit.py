@@ -95,12 +95,13 @@ class FormAdd(BaseForm):
         "Objectif",
         choices=[
             ("", "(sans)"),
-            ("Améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
-            ("Contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
-            ("Profiter du plein air", "Profiter du plein air"),
-            ("Limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
-            ("Vos activités physiques", "Vos activités physiques"),
-            ("Vos déplacements", "Vos déplacements")
+            ("améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
+            ("contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
+            ("profiter du plein air", "Profiter du plein air"),
+            ("limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
+            ("vos activités physiques", "Vos activités physiques"),
+            ("vos déplacements", "Vos déplacements"),
+            ("limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé")
         ]
     )
 
