@@ -4,6 +4,7 @@ from celery import Celery
 from .extensions import db, migrate, assets_env, celery, sib, cors
 from werkzeug.urls import url_encode
 import logging
+from kombu import Queue
 
 
 def configure_celery(flask_app):
@@ -21,6 +22,16 @@ def configure_celery(flask_app):
         if key.startswith('CELERY_')
     }
     celery.conf.update(celery_conf)
+    celery.conf.task_queues = (
+        Queue("default", routing_key='task.#'),
+        Queue("save_indices", routing_key='save_indices.#'),
+        Queue("send_newsletter", routing_key='send_newsletter.#'),
+        Queue("send_email", routing_key='send_email.#'),
+    )
+    celery.conf.task_default_exchange = 'tasks'
+    celery.conf.task_default_exchange_type = 'topic'
+    celery.conf.task_default_routing_key = 'task.default'
+
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):

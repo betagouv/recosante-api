@@ -72,6 +72,8 @@ def confirm(uid):
     celery.send_task(
         "ecosante.inscription.tasks.send_success_email.send_success_email",
         (inscription.id,),
+        queue='send_email',
+        routing_key='send_email.subscribe'
     )
     return jsonify({"result": "ok"})
 

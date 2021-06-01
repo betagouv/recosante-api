@@ -225,7 +225,9 @@ class Inscription(db.Model):
         db.session.commit()
         send_unsubscribe.apply_async(
             (self.mail,),
-            link_error=send_unsubscribe_error.s()
+            link_error=send_unsubscribe_error.s(),
+            queue='send_email',
+            routing_key='send_email.unsubscribe'
         )
 
     @classmethod
