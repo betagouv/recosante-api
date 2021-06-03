@@ -16,12 +16,12 @@ def save_indice():
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    #sender.add_periodic_task(
-    #    crontab(minute='0', hour='*/1'),
-    #    save_indice.s(),
-    #    queue='save_indices',
-    #    routing_key='save_indices.nl_export'
-    #)
+    sender.add_periodic_task(
+        crontab(minute='0', hour='*/1'),
+        save_indice.s(),
+        queue='save_indices',
+        routing_key='save_indices.nl_export'
+    )
     sender.add_periodic_task(
         crontab(minute='0', hour='5', day_of_week='*/1'),
         import_send_and_report.s(),
