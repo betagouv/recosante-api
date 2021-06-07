@@ -24,7 +24,6 @@ def configure_celery(flask_app):
     celery.conf.update(celery_conf)
     celery.conf.task_queues = (
         Queue("default", routing_key='task.#'),
-        Queue("save_indices", routing_key='save_indices.#'),
         Queue("send_newsletter", routing_key='send_newsletter.#'),
         Queue("send_email", routing_key='send_email.#'),
     )
