@@ -136,7 +136,7 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None):
         query = Inscription.active_query()
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
@@ -144,22 +144,25 @@ class Newsletter:
         inscriptions = query.distinct(Inscription.ville_insee)
         insee_region = {i.ville_insee: i.region_name for i in inscriptions}
         try:
-            insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True)
+            insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True, date_=date_)
         except requests.exceptions.HTTPError as e:
             current_app.logger.error(e)
             raise e
         for inscription in query.all():
             if inscription.ville_insee not in insee_forecast:
                 continue
-            newsletter = cls(
-                inscription=inscription,
-                recommandations=recommandations,
-                forecast=insee_forecast[inscription.ville_insee].get("forecast"),
-                episodes=insee_forecast[inscription.ville_insee].get("episode"),
-                raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
-                allergenes=insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes"),
-                validite_raep=insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite", {}),
-            )
+            init_dict = {
+                "inscription": inscription,
+                "recommandations": recommandations,
+                "forecast": insee_forecast[inscription.ville_insee].get("forecast"),
+                "episodes": insee_forecast[inscription.ville_insee].get("episode"),
+                "raep": insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
+                "allergenes": insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes"),
+                "validite_raep": insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite", {}),
+            }
+            if date_:
+                init_dict['date'] = date_
+            newsletter = cls(**init_dict)
             if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
                 continue
             yield newsletter
