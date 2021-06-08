@@ -42,3 +42,11 @@ class FormSearch(BaseForm):
             ("pollens", "Pollens")
         ]
     )
+
+    order = SelectField(
+        "Ordre",
+        choices=[
+            ('random', 'Aléatoire'),
+            ('id', 'Chronologique')
+        ]
+    )

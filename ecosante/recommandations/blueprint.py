@@ -4,6 +4,7 @@ from ecosante.pages.blueprint import admin
 from flask import (
     render_template,
     abort,
+    jsonify,
     request,
     url_for,
     redirect,
@@ -25,6 +26,13 @@ bp = Blueprint(
     "recommandations",
     __name__,
 )
+
+@bp.route('_list')
+def list_recommandations():
+    form = FormSearch(request.args)
+    query = make_query(form)
+    return jsonify(query.filter(Recommandation.status=="published").all())
+
 
 @bp.route('<secret_slug>/add', methods=['GET', 'POST'])
 @bp.route('add', methods=['GET', 'POST'])
@@ -107,7 +115,10 @@ def make_query(form):
         query = query.filter(Recommandation.objectif==form.objectif.data)
     if form.type.data is not None and form.type.data != "None":
         query = query.filter(Recommandation.type_==form.type.data)
-    return query.order_by(Recommandation.id)
+    if form.order.data == 'random':
+        return query.order_by(func.random())
+    else:
+        return query.order_by(Recommandation.id)
 
 @bp.route('<secret_slug>/', methods=["GET", "POST"])
 @bp.route('/', methods=["GET", "POST"])
