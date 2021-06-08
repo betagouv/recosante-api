@@ -8,6 +8,7 @@ from  sqlalchemy.sql.expression import func
 import uuid
 import random
 from typing import List
+from bs4 import BeautifulSoup
 
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
@@ -39,6 +40,8 @@ RECOMMANDATION_FILTERS = [
 
 @dataclass(repr=True)
 class Recommandation(db.Model):
+    recommandation_sanitized: str
+    precisions_sanitized: str
     id: int = db.Column(db.Integer, primary_key=True)
     status: str = db.Column(db.String)
     recommandation: str = db.Column(db.String)
@@ -264,3 +267,24 @@ class Recommandation(db.Model):
 
     def to_dict(self):
         return asdict(self)
+
+    def sanitizer(self, s):
+        soup = BeautifulSoup(s, 'html.parser')
+        for link in  soup.find_all('a'):
+            link['target'] = '_blank'
+        result = str(soup)
+        for punc in ['?', '!', ';', ':']:
+            result = result.replace(f' {punc}', f' {punc}')
+        for punc in [';', ':']:
+            result = result.replace(f'{punc} ', f'{punc} ')
+        return result.replace("'", '’')
+
+
+    @property
+    def recommandation_sanitized(self) -> str:
+        return self.sanitizer(self.recommandation)
+
+    @property
+    def precisions_sanitized(self) -> str:
+        return self.sanitizer(self.precisions)
+
