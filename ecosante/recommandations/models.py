@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict
 from ecosante.inscription.models import Inscription
 from flask.globals import current_app
 from sqlalchemy.dialects import postgresql
+from  sqlalchemy.sql.expression import func
 import uuid
 import random
 from typing import List
@@ -181,6 +182,9 @@ class Recommandation(db.Model):
 
     def is_relevant(self, inscription: Inscription, qualif: str, polluants: List[str], raep: int, date_: date):
         if not inscription:
+            if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
+                if not self.is_relevant_qualif(qualif):
+                    return False
             return self.montrer_dans_le_widget
         #Inscription
         if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -256,7 +260,7 @@ class Recommandation(db.Model):
 
     @classmethod
     def published_query(cls):
-        return cls.query.filter_by(status="published").order_by(cls.id)
+        return cls.query.filter_by(status="published").order_by(func.random())
 
     def to_dict(self):
         return asdict(self)

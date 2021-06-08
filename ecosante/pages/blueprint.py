@@ -107,9 +107,9 @@ def data():
     ]
     reco = [
         v
-        for v in Recommandation.published_query()
+        for v in Recommandation.published_query().all()
         if v.is_relevant(None, f['data'][0]['indice'], polluants, 0, d)
-    ] if f['data'] and ep['data'] else []
+    ] if f['data'] else []
     return {
         "forecast": f['data'][0] if f['data'] else [],
         "episode": ep['data'][0] if ep['data'] else [],
