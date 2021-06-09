@@ -15,6 +15,7 @@ DEPENDENCIES = [
     'Flask-Migrate',
     'Flask-SQLAlchemy',
     'Flask-WTF',
+    'Flask-Manage-Webpack',
     'wtforms[email]',
     'indice_pollution==0.16.1',
     'sib-api-v3-sdk',
