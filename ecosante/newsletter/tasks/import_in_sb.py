@@ -129,7 +129,7 @@ def import_(task, newsletters, overhead=0):
         if nl.label is None:
             errors.append({
                 "type": "no_air_quality",
-                "nl": nl,
+                "nl_id": nl.id,
                 "region": nl.inscription.cache_api_commune['region']['nom'],
                 "ville": nl.inscription.ville_nom,
                 "insee": nl.inscription.ville_insee
