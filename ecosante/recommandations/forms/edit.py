@@ -20,7 +20,8 @@ class FormAdd(BaseForm):
         choices=[
             ("generale", "Indice ATMO"),
             ("episode_pollution", "Épisode de pollution"),
-            ("pollens", "Pollens")
+            ("pollens", "Pollens"),
+            ("radon", "Radon")
         ]
     )
     saison = MultiCheckboxField("Montrer la recommandation que durant les saisons :",

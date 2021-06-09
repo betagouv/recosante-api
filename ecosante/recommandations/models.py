@@ -189,6 +189,8 @@ class Recommandation(db.Model):
                 if not self.is_relevant_qualif(qualif):
                     return False
             return self.montrer_dans_le_widget
+        if self.type_ == "radon":
+            return False
         #Inscription
         if self.criteres and self.criteres.isdisjoint(inscription.criteres):
             return False

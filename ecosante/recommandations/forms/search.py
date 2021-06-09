@@ -39,7 +39,8 @@ class FormSearch(BaseForm):
             (None, 'Tous les types'),
             ("generale", "Générale"),
             ("episode_pollution", "Épisode de pollution"),
-            ("pollens", "Pollens")
+            ("pollens", "Pollens"),
+            ("radon", "Radon")
         ]
     )
 
