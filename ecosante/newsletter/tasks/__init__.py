@@ -1,12 +1,9 @@
 from ecosante.extensions import celery
 from ecosante.newsletter.models import Newsletter
 from ecosante.extensions import db
-from flask import current_app
 from celery.schedules import crontab
 
-from .import_in_sb import import_and_send, import_send_and_report #noqa
-from indice_pollution import save_all
-
+from .import_in_sb import import_send_and_report #noqa
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
