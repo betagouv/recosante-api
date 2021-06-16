@@ -17,7 +17,7 @@ DEPENDENCIES = [
     'Flask-WTF',
     'Flask-Manage-Webpack',
     'wtforms[email]',
-    'indice_pollution==0.16.6',
+    'indice_pollution==0.16.7',
     'sib-api-v3-sdk',
     'requests',
     'icalevents',
