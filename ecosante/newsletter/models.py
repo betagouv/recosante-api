@@ -7,6 +7,7 @@ import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from flask import current_app
+from sqlalchemy.sql.functions import func
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 from ecosante.utils.funcs import (
@@ -67,6 +68,8 @@ class Newsletter:
             current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
             current_app.logger.error(e)
         self.recommandations = self.recommandations or Recommandation.shuffled(user_seed=self.user_seed)
+        if type(self.recommandations) == list:
+            self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
     
 
@@ -168,33 +171,30 @@ class Newsletter:
             yield newsletter
 
     def get_recommandation(self, recommandations: List[Recommandation]):
-        query_nl = NewsletterDB.query\
+        query_nl = db.session.query(NewsletterDB.recommandation_id, func.max(NewsletterDB.date).label("date"))\
             .join(Inscription)\
-            .filter(Inscription.mail==self.inscription.mail)
-        sorted_recommandation_ids = db.session.query(Recommandation.id)\
-            .join(query_nl.subquery("nl"), isouter=True)\
-            .group_by(Recommandation.id)\
-            .order_by(text("max(nl.date) nulls first"), Recommandation.ordre)\
-            .all()
+            .filter(Inscription.mail==self.inscription.mail)\
+            .group_by(NewsletterDB.recommandation_id)
+        subquery_nl = query_nl.subquery("nl")
         last_nl = query_nl.order_by(text("date DESC")).first()
+
+        sorted_recommandation_ids = db.session.query(subquery_nl.c.date, Recommandation.id)\
+            .join(subquery_nl, isouter=True)\
+            .filter(Recommandation.status == "published")\
+            .order_by(text("nl.date nulls first"), Recommandation.ordre)\
+            .all()
+        last_recommandation = recommandations[last_nl[0]] if last_nl else None
+        last_criteres = last_recommandation.criteres if last_recommandation else set()
+        last_type = last_recommandation.type_ if last_recommandation else ""
+
         eligible_recommandations = filter(
-            lambda r: r.is_relevant(self.inscription, self.qualif, self.polluants, self.raep, self.date), 
+            lambda r: recommandations[r[1]].is_relevant(self.inscription, self.qualif, self.polluants, self.raep, self.date), 
             sorted(
-                recommandations,
-                key=lambda r: sorted_recommandation_ids.index((r.id,))
+                sorted_recommandation_ids,
+                key=lambda r: (r[0] or date.min, len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
             )
         )
-        if not last_nl:
-            return next(eligible_recommandations)
-        else:
-            to_send = None
-            last_criteres = last_nl.recommandation.criteres
-            last_type = last_nl.recommandation.type_
-            for reco in eligible_recommandations:
-                if reco.criteres != last_criteres and reco.type_ != last_type:
-                    return reco
-                to_send = to_send or reco # On veut envoyer la plus haute dans la liste
-            return to_send
+        return recommandations[next(eligible_recommandations)[1]]
 
 
     def csv_line(self):

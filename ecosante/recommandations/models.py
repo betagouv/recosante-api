@@ -7,7 +7,7 @@ from sqlalchemy.dialects import postgresql
 from  sqlalchemy.sql.expression import func
 import uuid
 import random
-from typing import List
+from typing import List, Set
 from bs4 import BeautifulSoup
 
 RECOMMANDATION_FILTERS = [
@@ -177,9 +177,8 @@ class Recommandation(db.Model):
             return False
 
     @property
-    def criteres(self):
-        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport"]
+    def criteres(self) -> Set[str]:
+        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun", "voiture", "sport"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
@@ -271,6 +270,8 @@ class Recommandation(db.Model):
         return asdict(self)
 
     def sanitizer(self, s):
+        if s is None:
+            return s
         soup = BeautifulSoup(s, 'html.parser')
         for link in  soup.find_all('a'):
             link['target'] = '_blank'
