@@ -11,6 +11,7 @@ from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB, Recommandation
 from sentry_sdk import capture_event
 from indice_pollution import forecast, episodes, raep, availability
+from indice_pollution.history.models import PotentielRadon
 
 bp = Blueprint("pages", __name__, url_prefix='/')
 
@@ -115,5 +116,6 @@ def data():
         "episode": ep['data'][0] if ep['data'] else [],
         "recommandation": {k: v for k, v in (asdict(reco[0]) if reco else {}).items() if k in ["precisions", "recommandation"]},
         "raep": r.get('data'),
+        "potentiel_radon": getattr(PotentielRadon.get(insee), 'classe_potentiel'),
         "metadata": f['metadata']
     }
