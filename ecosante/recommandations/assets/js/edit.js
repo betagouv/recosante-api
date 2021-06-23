@@ -1,5 +1,5 @@
 function selectDiv(selectedValue) {
-    ['generale', 'episode_pollution', 'pollens'].forEach(
+    ['generale', 'episode_pollution', 'pollens', 'radon'].forEach(
         v => {
             document.getElementById(v).style.display = ((v == selectedValue) ? 'block' : 'none')
         }

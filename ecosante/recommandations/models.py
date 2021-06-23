@@ -81,6 +81,7 @@ class Recommandation(db.Model):
     lien_qa_pollen: bool = db.Column(db.Boolean, nullable=True)
     montrer_dans_le_widget: bool = db.Column(db.Boolean, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
+    potentiel_radon: int = db.Column(db.Integer, nullable=True)
 
     @property
     def velo(self) -> bool:

@@ -105,6 +105,14 @@ class FormAdd(BaseForm):
             ("limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé")
         ]
     )
+    potentiel_radon = SelectField(
+        "Potentiel Radon associé",
+        choices=[
+            (None, "Aucun"),
+            (1, "Catégorie 1 & 2"),
+            (3, "Catégorie 3")
+        ]
+    )
 
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)
