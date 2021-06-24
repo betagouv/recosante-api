@@ -183,7 +183,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)\
             .all()
-        last_recommandation = recommandations[last_nl[0]] if last_nl else None
+        last_recommandation = recommandations.get(last_nl[0]) if last_nl else None
         last_criteres = last_recommandation.criteres if last_recommandation else set()
         last_type = last_recommandation.type_ if last_recommandation else ""
 
