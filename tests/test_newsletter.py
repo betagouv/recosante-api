@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 def test_episode_passe(db_session):
     yesterday = date.today() - timedelta(days=1)
-    recommandations = [Recommandation(particules_fines=True), Recommandation(recommandation="ça va en fait")]
+    recommandations = [Recommandation(particules_fines=True, status="published"), Recommandation(recommandation="ça va en fait", status="published")]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = NewsletterDB(Newsletter(
@@ -21,7 +21,7 @@ def test_episode_passe(db_session):
     assert nl.attributes()['DEPARTEMENT'] == 'Isère'
 
 def test_formatted_polluants_generale_pm10(db_session):
-    recommandations = [Recommandation(particules_fines=True)]
+    recommandations = [Recommandation(particules_fines=True, status="published")]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -35,7 +35,7 @@ def test_formatted_polluants_generale_pm10(db_session):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10'
 
 def test_formatted_polluants_generale_pm10_no2(db_session):
-    recommandations = [Recommandation(particules_fines=True)]
+    recommandations = [Recommandation(particules_fines=True, status="published")]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -52,7 +52,7 @@ def test_formatted_polluants_generale_pm10_no2(db_session):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=no2'
 
 def test_formatted_polluants_generale_tous(db_session):
-    recommandations = [Recommandation(particules_fines=True)]
+    recommandations = [Recommandation(particules_fines=True, status="published")]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -71,7 +71,7 @@ def test_formatted_polluants_generale_tous(db_session):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=so2&polluants=pm10&polluants=o3&polluants=no2'
 
 def test_formatted_polluants_generale_pm10_o3_no2(db_session):
-    recommandations = [Recommandation(particules_fines=True)]
+    recommandations = [Recommandation(particules_fines=True, status="published")]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -92,8 +92,8 @@ def test_formatted_polluants_generale_pm10_o3_no2(db_session):
 
 def test_formatted_polluants_vulnerable_no2(db_session):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -111,8 +111,8 @@ def test_formatted_polluants_vulnerable_no2(db_session):
 
 def test_avis_oui(db_session, client):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -135,8 +135,8 @@ def test_avis_oui(db_session, client):
 
 def test_avis_non(db_session, client):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -161,10 +161,10 @@ def test_avis_non(db_session, client):
 
 def test_pollens(db_session):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
-        Recommandation(type_="pollens"),
-        Recommandation(type_="generale")
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
+        Recommandation(type_="pollens", status="published"),
+        Recommandation(type_="generale", status="published")
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -208,3 +208,151 @@ def test_pollens(db_session):
                                 else:
                                     assert nl.show_raep == True
                                     assert nl.recommandation.type_ != "pollens"
+
+
+def test_show_radon_polluants(db_session):
+    nl = Newsletter(
+        inscription=Inscription(),
+        forecast={"data": []},
+        episodes={"data": [{"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]},
+        raep=0,
+        recommandations=[]
+    )
+
+    assert nl.show_radon == False
+
+
+def test_show_radon_raep(db_session):
+    today_date = date.today()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=True),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_radon == True
+
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=True),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=4,
+        recommandations=[]
+    )
+    assert nl.show_radon == False
+
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=1,
+        recommandations=[]
+    )
+    assert nl.show_radon == True
+
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=4,
+        recommandations=[]
+    )
+    assert nl.show_radon == False
+
+
+def test_show_radon_indice(db_session):
+    today_date = date.today()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_radon == True
+
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "moyen"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_radon == True
+
+    today_date = date.today()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "degrade"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_radon == False
+
+def test_show_radon_recent(db_session):
+    today_date = date.today()
+    db_session.add(
+        Recommandation(status="published"),
+    )
+    past_nl = NewsletterDB(
+        Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    ))
+    db_session.add(past_nl)
+    db_session.commit()
+
+    today_date = date.today()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[],
+        radon=3
+    )
+    assert nl.show_radon == False
+
+    past_nl.date = today_date - timedelta(days=15)
+    db_session.add(past_nl)
+    db_session.commit()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[],
+        radon=3
+    )
+    assert nl.show_radon == True
+
+    past_nl.date = today_date - timedelta(days=15)
+    db_session.add(past_nl)
+    db_session.commit()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[],
+        radon=2
+    )
+    assert nl.show_radon == False
+
+    past_nl.date = today_date - timedelta(days=30)
+    db_session.add(past_nl)
+    db_session.commit()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[],
+        radon=2
+    )
+    assert nl.show_radon == True

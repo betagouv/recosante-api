@@ -30,6 +30,7 @@ class Newsletter:
     forecast: dict = field(default_factory=dict, init=True)
     episodes: List[dict] = field(default=None, init=True)
     raep: int = field(default=0, init=True)
+    radon: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
 
@@ -171,12 +172,16 @@ class Newsletter:
             yield newsletter
 
     def get_recommandation(self, recommandations: List[Recommandation]):
-        query_nl = db.session.query(NewsletterDB.recommandation_id, func.max(NewsletterDB.date).label("date"))\
-            .join(Inscription)\
-            .filter(Inscription.mail==self.inscription.mail)\
+        if not recommandations:
+            return None
+        query_nl = db.session.query(
+                NewsletterDB.recommandation_id,
+                func.max(NewsletterDB.date).label("date")
+            )\
+            .filter(NewsletterDB.inscription_id==self.inscription.id)\
             .group_by(NewsletterDB.recommandation_id)
         subquery_nl = query_nl.subquery("nl")
-        last_nl = query_nl.order_by(text("date DESC")).first()
+        last_nl = query_nl.order_by(text("date DESC")).limit(1).first()
 
         sorted_recommandation_ids = db.session.query(subquery_nl.c.date, Recommandation.id)\
             .join(subquery_nl, isouter=True)\
@@ -233,20 +238,6 @@ class Newsletter:
             _external=True)
 
     @property
-    def show_raep(self):
-        #On envoie pas en cas de polluants
-        #ni en cas de risque faible à un personne non-allergique
-        if type(self.raep) != int:
-            return False
-        if self.polluants:
-            return False
-        if self.raep == 0:
-            return False
-        elif self.raep < 4 and not self.inscription.allergie_pollens:
-            return False
-        return True
-
-    @property
     def couleur_raep(self):
         return {
             0: "#31bcf0",
@@ -278,6 +269,48 @@ class Newsletter:
             return preposition
         return ""
 
+    @property
+    def show_raep(self):
+        #On envoie pas en cas de polluants
+        #ni en cas de risque faible à un personne non-allergique
+        if type(self.raep) != int:
+            return False
+        if self.polluants:
+            return False
+        if self.raep == 0:
+            return False
+        elif self.raep < 4 and not self.inscription.allergie_pollens:
+            return False
+        return True
+
+
+    @property
+    def show_radon(self):
+        if self.polluants:
+            return False
+        if self.inscription.allergie_pollens and self.raep != 0:
+            return False
+        if not self.inscription.allergie_pollens and self.raep >= 4:
+            return False
+        if self.qualif not in ['bon', 'moyen']:
+            return False
+        last_raep = db.session.query(NewsletterDB.date)\
+            .filter(NewsletterDB.inscription_id == self.inscription.id)\
+            .filter(NewsletterDB.show_radon == True)\
+            .order_by(NewsletterDB.id.desc())\
+            .limit(1)\
+            .first()
+
+        if not last_raep:
+            return True
+        days_since_last_sent = (date.today() - last_raep[0]).days
+        if self.radon == 3 and days_since_last_sent >= 15:
+            return True
+        if self.radon < 3 and days_since_last_sent >= 30:
+            return True
+        return False
+
+
 @dataclass
 class NewsletterDB(db.Model, Newsletter):
     __tablename__ = "newsletter"
@@ -287,7 +320,7 @@ class NewsletterDB(db.Model, Newsletter):
         db.String(),
         server_default=text("generate_random_id('public', 'newsletter', 'short_id', 8)")
     )
-    inscription_id: int = db.Column(db.Integer, db.ForeignKey('inscription.id'))
+    inscription_id: int = db.Column(db.Integer, db.ForeignKey('inscription.id'), index=True)
     inscription: Inscription = db.relationship(Inscription)
     lien_aasqa: str = db.Column(db.String())
     nom_aasqa: str = db.Column(db.String())
@@ -301,9 +334,12 @@ class NewsletterDB(db.Model, Newsletter):
     avis: str = db.Column(db.String())
     polluants: List[str] = db.Column(postgresql.ARRAY(db.String()))
     raep: int = db.Column(db.Integer())
+    radon: int = db.Column(db.Integer())
     allergenes: dict = db.Column(postgresql.JSONB)
     raep_debut_validite = db.Column(db.String())
     raep_fin_validite = db.Column(db.String())
+    show_raep = db.Column(db.Boolean())
+    show_radon = db.Column(db.Boolean())
 
     def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
@@ -321,6 +357,9 @@ class NewsletterDB(db.Model, Newsletter):
         self.allergenes = newsletter.allergenes
         self.raep_debut_validite = newsletter.validite_raep.get('debut')
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
+        self.show_raep = newsletter.show_raep
+        self.show_radon = newsletter.show_radon
+
 
     def attributes(self):
         return {
