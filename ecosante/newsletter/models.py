@@ -288,22 +288,23 @@ class Newsletter:
     def show_radon(self):
         if self.polluants:
             return False
-        if self.inscription.allergie_pollens and self.raep != 0:
-            return False
-        if not self.inscription.allergie_pollens and self.raep >= 4:
-            return False
+        if type(self.raep) == int:
+            if self.inscription.allergie_pollens and self.raep != 0:
+                return False
+            if not self.inscription.allergie_pollens and self.raep >= 4:
+                return False
         if self.qualif not in ['bon', 'moyen']:
             return False
-        last_raep = db.session.query(NewsletterDB.date)\
+        last_radon = db.session.query(NewsletterDB.date)\
             .filter(NewsletterDB.inscription_id == self.inscription.id)\
             .filter(NewsletterDB.show_radon == True)\
             .order_by(NewsletterDB.id.desc())\
             .limit(1)\
             .first()
 
-        if not last_raep:
+        if not last_radon:
             return True
-        days_since_last_sent = (date.today() - last_raep[0]).days
+        days_since_last_sent = (date.today() - last_radon[0]).days
         if self.radon == 3 and days_since_last_sent >= 15:
             return True
         if self.radon < 3 and days_since_last_sent >= 30:
