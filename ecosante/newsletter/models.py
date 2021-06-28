@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 from datetime import datetime, date
+from itertools import chain
 from flask.helpers import url_for
 from indice_pollution.history.models.commune import Commune
 import requests
@@ -36,8 +37,6 @@ class Newsletter:
 
 
     def __post_init__(self):
-        self.forecast = self.forecast or get_forecast(self.inscription.ville_insee, self.date, True)
-        self.episodes = self.episodes or get_episodes(self.inscription.ville_insee, self.date)
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
@@ -125,10 +124,14 @@ class Newsletter:
     @property
     def label(self):
         return self.today_forecast.get('label')
-    
+
     @property
     def couleur(self):
         return self.today_forecast.get('couleur')
+
+    @property
+    def sous_indices(self):
+        return self.today_forecast.get('sous_indices')
 
     @property
     def get_episodes_depassements(self):
@@ -343,6 +346,7 @@ class NewsletterDB(db.Model, Newsletter):
     raep_fin_validite = db.Column(db.String())
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
+    sous_indices: dict = db.Column(postgresql.JSONB)
 
     def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
@@ -362,9 +366,19 @@ class NewsletterDB(db.Model, Newsletter):
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
         self.show_raep = newsletter.show_raep
         self.show_radon = newsletter.show_radon
+        self.sous_indices = newsletter.sous_indices
 
 
     def attributes(self):
+        noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
+        def get_sous_indice(nom):
+            if not self.sous_indices:
+                return {}
+            try:
+                return next(filter(lambda s: s['polluant_name'].lower() == nom.lower(), self.sous_indices))
+            except StopIteration:
+                return {}
+
         return {
             **{
                 'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
@@ -389,7 +403,8 @@ class NewsletterDB(db.Model, Newsletter):
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y")
             },
-            **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()}
+            **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
+            **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label')), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur'))] for si in noms_sous_indices]))
         }
 
     @classmethod

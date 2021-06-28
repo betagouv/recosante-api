@@ -356,3 +356,70 @@ def test_show_radon_recent(db_session):
         radon=2
     )
     assert nl.show_radon == True
+
+
+def test_sous_indice(db_session):
+    recommandations=[
+        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
+        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
+        Recommandation(type_="pollens", status="published"),
+        Recommandation(type_="generale", status="published")
+    ]
+    db_session.add_all(recommandations)
+    db_session.commit()
+    today_date = date.today()
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=recommandations,
+        radon=2
+    )
+    noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
+    nldb = NewsletterDB(nl)
+    for sous_indice in noms_sous_indices:
+        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL'] is None
+        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR'] is None
+
+    forecast = {
+        'couleur': '#50CCAA',
+        'date': str(today_date),
+        'indice': 'moyen',
+        'label': 'Moyen',
+        'sous_indices': [{'couleur': '#50CCAA',
+        'indice': 'moyen',
+        'label': 'Moyen',
+        'polluant_name': 'NO2'},
+        {'couleur': '#50F0E6',
+        'indice': 'bon',
+        'label': 'Bon',
+        'polluant_name': 'SO2'},
+        {'couleur': '#50CCAA',
+        'indice': 'moyen',
+        'label': 'Moyen',
+        'polluant_name': 'O3'},
+        {'couleur': '#50F0E6',
+        'indice': 'bon',
+        'label': 'Bon',
+        'polluant_name': 'PM10'},
+        {'couleur': '#50F0E6',
+        'indice': 'bon',
+        'label': 'Bon',
+        'polluant_name': 'PM25'}],
+        'valeur': 2
+    }
+
+    nl = Newsletter(
+        inscription=Inscription(id=1, allergie_pollens=False),
+        forecast={"data": [forecast]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=recommandations,
+        radon=2
+    )
+    noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
+    nldb = NewsletterDB(nl)
+    for sous_indice in noms_sous_indices:
+        assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL']) == str
+        assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR']) == str
