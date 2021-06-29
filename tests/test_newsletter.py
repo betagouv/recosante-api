@@ -379,8 +379,8 @@ def test_sous_indice(db_session):
     noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
     nldb = NewsletterDB(nl)
     for sous_indice in noms_sous_indices:
-        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL'] is None
-        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR'] is None
+        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL'] == ""
+        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR'] == ""
 
     forecast = {
         'couleur': '#50CCAA',
@@ -421,5 +421,7 @@ def test_sous_indice(db_session):
     noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
     nldb = NewsletterDB(nl)
     for sous_indice in noms_sous_indices:
+        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL'] != ""
         assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL']) == str
+        assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR'] != ""
         assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR']) == str
