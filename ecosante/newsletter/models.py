@@ -381,7 +381,7 @@ class NewsletterDB(db.Model, Newsletter):
                 return next(filter(lambda s: s['polluant_name'].lower() == nom.lower(), self.sous_indices))
             except StopIteration:
                 return {}
-
+        commune = Commune.get(self.inscription.ville_insee)
         return {
             **{
                 'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
@@ -404,7 +404,8 @@ class NewsletterDB(db.Model, Newsletter):
                 "OBJECTIF": self.recommandation.objectif,
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
-                "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y")
+                "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y"),
+                "POLLINARIUM_SENTINELLE": False if not commune.pollinarium_sentinelle else True
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
