@@ -41,18 +41,21 @@ class Newsletter:
             current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
         if not 'couleur' in self.today_forecast:
             current_app.logger.error(f'No couleur for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
-        self.polluants = [
-            {
-                '1': 'dioxyde_soufre',
-                '5': 'particules_fines',
-                '7': 'ozone',
-                '8': 'dioxyde_azote',
-            }.get(str(e['code_pol']), f'erreur: {e["code_pol"]}')
-            for e in self.episodes['data']
-            if e['etat'] != 'PAS DE DEPASSEMENT'\
-               and 'date' in e\
-               and e['date'] == str(self.date)
-        ]
+        if self.episodes and 'data' in self.episodes:
+            self.polluants = [
+                {
+                    '1': 'dioxyde_soufre',
+                    '5': 'particules_fines',
+                    '7': 'ozone',
+                    '8': 'dioxyde_azote',
+                }.get(str(e['code_pol']), f'erreur: {e["code_pol"]}')
+                for e in self.episodes['data']
+                if e['etat'] != 'PAS DE DEPASSEMENT'\
+                and 'date' in e\
+                and e['date'] == str(self.date)
+            ]
+        else:
+            self.polluants = []
         if not self.raep and not self.allergenes and not self.validite_raep:
             raep = get_raep(self.inscription.ville_insee).get('data')
             if raep:
