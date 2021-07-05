@@ -175,8 +175,6 @@ class Newsletter:
             if date_:
                 init_dict['date'] = date_
             newsletter = cls(**init_dict)
-            if inscription.frequence == "pollution" and newsletter.qualif and newsletter.qualif not in ['mauvais', 'tres_mauvais', 'extrement_mauvais']:
-                continue
             yield newsletter
 
     def get_recommandation(self, recommandations: List[Recommandation]):
@@ -438,3 +436,7 @@ class NewsletterDB(db.Model, Newsletter):
             .all()
         for newsletter in newsletters:
             yield newsletter.csv_line()
+
+    @property
+    def something_to_show(self):
+        return self.label or self.polluants_formatted or self.show_radon or self.show_raep

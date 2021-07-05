@@ -30,7 +30,7 @@ def deactivate_contacts():
             continue
         db_contact.unsubscribe()
 
-def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
+def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send=False):
     task.update_state(
         state='STARTED',
         meta={
@@ -84,7 +84,7 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
             "details": "Construction des listes SIB d'envoi"
         }
     )
-    result = import_(task, newsletters, 2)
+    result = import_(task, newsletters, force_send, 2)
     if current_app.config['ENV'] == 'production':
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(result["email_campaign_id"])
@@ -100,7 +100,7 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to):
     db.session.commit()
     return result
 
-def import_(task, newsletters, overhead=0):
+def import_(task, newsletters, force_send=False, overhead=0):
     email_campaign_id = None,
     errors = []
     
@@ -126,7 +126,7 @@ def import_(task, newsletters, overhead=0):
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
-        if nl.label is None:
+        if nl.label is None and not force_send:
             errors.append({
                 "type": "no_air_quality",
                 "nl_id": nl.id,
@@ -135,6 +135,15 @@ def import_(task, newsletters, overhead=0):
                 "insee": nl.inscription.ville_insee
             })
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
+        elif not nl.something_to_show and force_send:
+            errors.append({
+                "type": "nothing_to_show",
+                "nl_id": nl.id,
+                "region": nl.inscription.cache_api_commune['region']['nom'],
+                "ville": nl.inscription.ville_nom,
+                "insee": nl.inscription.ville_insee
+            })
+            current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
             try:
                 if current_app.config['ENV'] == 'production':
@@ -221,7 +230,7 @@ def format_errors(errors):
     return r
 
 @celery.task(bind=True)
-def import_send_and_report(self, only_to=None):
+def import_send_and_report(self, only_to=None, force_send=False):
     current_app.logger.error("Début !")
     new_task_id = str(uuid4())
     self.update_state(
@@ -231,7 +240,7 @@ def import_send_and_report(self, only_to=None):
             "details": f"Lancement de la tache: '{new_task_id}'",
         }
     )
-    result = import_and_send(self, str(uuid4()), None, [], only_to)
+    result = import_and_send(self, str(uuid4()), None, [], only_to, force_send)
     errors = format_errors(result['errors'])
     body = """
 Bonjour,
