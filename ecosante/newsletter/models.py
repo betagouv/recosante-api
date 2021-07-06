@@ -151,7 +151,9 @@ class Newsletter:
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
         query_nl = NewsletterDB.query.filter(NewsletterDB.date==date.today(), NewsletterDB.label != None).with_entities(NewsletterDB.inscription_id).subquery()
-        query = query.filter(Inscription.id.notin_(query_nl))
+        query = query\
+            .filter(Inscription.id.notin_(query_nl))\
+            .filter(Inscription.date_inscription < str(date.today()))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.ville_insee)
         insee_region = {i.ville_insee: i.region_name for i in inscriptions}
