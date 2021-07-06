@@ -15,7 +15,7 @@ def setup_periodic_tasks(sender, **kwargs):
     )
     sender.add_periodic_task(
         crontab(minute='0', hour='10', day_of_week='*/1'),
-        import_send_and_report.s(force_send=True),
+        import_send_and_report.s(force_send=True, report=True),
         queue='send_newsletter',
         routing_key='send_newsletter.import_send_and_report'
     )

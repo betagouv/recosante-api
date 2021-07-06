@@ -230,7 +230,7 @@ def format_errors(errors):
     return r
 
 @celery.task(bind=True)
-def import_send_and_report(self, only_to=None, force_send=False):
+def import_send_and_report(self, only_to=None, force_send=False, report=False):
     current_app.logger.error("Début !")
     new_task_id = str(uuid4())
     self.update_state(
@@ -241,8 +241,9 @@ def import_send_and_report(self, only_to=None, force_send=False):
         }
     )
     result = import_and_send(self, str(uuid4()), None, [], only_to, force_send)
-    errors = format_errors(result['errors'])
-    body = """
+    if report:
+        errors = format_errors(result['errors'])
+        body = """
 Bonjour,
 Il n’y a pas eu d’erreur lors de l’envoi de la newsletter
 Bonne journée !
@@ -252,8 +253,8 @@ Il y a eu des erreurs lors de l’envoi de la newsletter :
 {errors}
 
 Bonne journée
-"""
-    send_log_mail("Rapport d’envoi de la newsletter", body, name="Rapport recosante", email="rapport-envoi@recosante.beta.gouv.fr")
+    """
+        send_log_mail("Rapport d’envoi de la newsletter", body, name="Rapport recosante", email="rapport-envoi@recosante.beta.gouv.fr")
     self.update_state(
         state='SUCESS',
         meta={
