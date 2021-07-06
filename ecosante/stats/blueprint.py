@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from functools import reduce
 from flask import current_app, render_template
 from flask.globals import request
 from ecosante.extensions import db, sib
@@ -12,7 +13,7 @@ import json
 from dateutil.parser import parse, ParserError
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-from itertools import accumulate
+from itertools import accumulate, groupby
 
 def get_month_name(month_no, locale):
     with different_locale(locale):
@@ -96,13 +97,24 @@ def stats():
             ouvertures.append(
                 (
                     date_,
-                    (stats['uniqueViews']/stats['delivered'])*100
+                    (stats['uniqueViews'], stats['delivered'])
                 )
             )
     except ApiException as e:
         current_app.logger.error(e)
     ouvertures.sort(key=lambda v: v[0])
-    ouvertures = [(datetime.strftime(v[0], "%d/%m/%Y"), v[1]) for v in ouvertures]
+    ouvertures = [
+        (v[0].strftime("%d/%m/%Y"), (v[1][0]/v[1][1])*100)
+        for v in
+        [
+            (d, reduce(
+                lambda acc, v: (acc[0] + v[1][0], acc[1] + v[1][1]),
+                values,
+                (0, 0))
+            )
+            for d, values in groupby(ouvertures, lambda v: v[0].date())
+        ]
+    ]
     ouverture_veille = ouvertures[-1] if ouvertures else None
 
     to_return = {
