@@ -77,3 +77,11 @@ class IntegerField(BaseIntegerField):
     def process_formdata(self, valuelist):
         if valuelist and valuelist[0]:
             super(BaseIntegerField).process_formdata(self, valuelist)
+
+def coerce_int(i):
+    if i is None:
+        return i
+    if i == "":
+        return None
+    else:
+        return int(i)

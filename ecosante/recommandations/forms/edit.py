@@ -1,8 +1,7 @@
 from jinja2.nodes import Mul
 from wtforms.fields.core import IntegerField, SelectField
-from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField, IntegerField
+from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField, IntegerField, coerce_int
 from wtforms import TextAreaField, HiddenField
-
 
 class FormAdd(BaseForm):
     status = RadioField(
@@ -108,10 +107,11 @@ class FormAdd(BaseForm):
     potentiel_radon = SelectField(
         "Potentiel Radon associé",
         choices=[
-            (None, "Aucun"),
+            ("", "Aucun"),
             (1, "Catégorie 1 & 2"),
             (3, "Catégorie 3")
-        ]
+        ],
+        coerce=coerce_int
     )
 
     def validate(self, extra_validators=[]):
