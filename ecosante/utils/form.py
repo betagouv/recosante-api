@@ -81,7 +81,7 @@ class IntegerField(BaseIntegerField):
 def coerce_int(i):
     if i is None:
         return i
-    if i == "":
+    elif i == "":
         return None
     else:
         return int(i)

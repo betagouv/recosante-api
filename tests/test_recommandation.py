@@ -293,3 +293,28 @@ def test_min_raep():
     r = Recommandation(type_="pollens", min_raep=4, status="published")
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today()) == False
+
+def test_personne_allergique():
+    r = Recommandation(personne_allergique=None, status="published")
+    i = Inscription()
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
+    i = Inscription(allergie_pollens=True)
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
+    i = Inscription(allergie_pollens=False)
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
+
+    r = Recommandation(personne_allergique=True, status="published")
+    i = Inscription()
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
+    i = Inscription(allergie_pollens=True)
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
+    i = Inscription(allergie_pollens=False)
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
+
+    r = Recommandation(personne_allergique=False, status="published")
+    i = Inscription()
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
+    i = Inscription(allergie_pollens=True)
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
+    i = Inscription(allergie_pollens=False)
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == True

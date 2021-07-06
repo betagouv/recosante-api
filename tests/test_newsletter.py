@@ -369,7 +369,7 @@ def test_sous_indice(db_session):
     db_session.commit()
     today_date = date.today()
     nl = Newsletter(
-        inscription=Inscription(id=1, allergie_pollens=False),
+        inscription=Inscription(id=1, allergie_pollens=False, ville_insee='53130'),
         forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
         episodes={"data": []},
         raep=0,

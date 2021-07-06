@@ -202,6 +202,8 @@ class Recommandation(db.Model):
             return False
         if self.enfants and not inscription.has_enfants:
             return False
+        if self.personne_allergique is not None and self.personne_allergique != inscription.allergie_pollens:
+            return False
         # Environnement
         if polluants:
             for polluant in polluants:
