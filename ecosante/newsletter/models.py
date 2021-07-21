@@ -378,7 +378,7 @@ class NewsletterDB(db.Model, Newsletter):
             if not self.sous_indices:
                 return {}
             try:
-                return next(filter(lambda s: s['polluant_name'].lower() == nom.lower(), self.sous_indices))
+                return next(filter(lambda s: s.get('polluant_name', '').lower() == nom.lower(), self.sous_indices))
             except StopIteration:
                 return {}
         commune = Commune.get(self.inscription.ville_insee)
