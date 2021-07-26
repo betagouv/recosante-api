@@ -75,8 +75,9 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send
             )
         )
     )
-    db.session.add_all(newsletters)
-    db.session.commit()
+    if current_app.config['ENV'] == 'production':
+        db.session.add_all(newsletters)
+        db.session.commit()
     task.update_state(
         state='STARTED',
         meta={
@@ -97,7 +98,8 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send
             }
         )
     result['progress'] = 100
-    db.session.commit()
+    if current_app.config['ENV'] == 'production':
+        db.session.commit()
     return result
 
 def import_(task, newsletters, force_send=False, overhead=0):
@@ -166,8 +168,10 @@ def import_(task, newsletters, force_send=False, overhead=0):
                 "details": f"Mise à jour des contacts {i}/{len(newsletters)}"
             }
         )
-        db.session.add(nl)
-    db.session.commit()
+        if current_app.config['ENV'] == 'production':
+            db.session.add(nl)
+    if current_app.config['ENV'] == 'production':
+        db.session.commit()
 
     if current_app.config['ENV'] == 'production':
         template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 526)

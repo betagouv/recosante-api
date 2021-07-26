@@ -150,7 +150,13 @@ class Newsletter:
         query = Inscription.active_query()
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
-        query_nl = NewsletterDB.query.filter(NewsletterDB.date==date.today(), NewsletterDB.label != None).with_entities(NewsletterDB.inscription_id)
+        query_nl = NewsletterDB.query\
+            .filter(
+                NewsletterDB.date==date.today(),
+                NewsletterDB.label != None)\
+            .with_entities(
+                NewsletterDB.inscription_id
+        )
         query = query\
             .filter(Inscription.id.notin_(query_nl))\
             .filter(Inscription.date_inscription < str(date.today()))
