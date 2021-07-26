@@ -97,13 +97,13 @@ class FormAdd(BaseForm):
         "Objectif",
         choices=[
             ("", "(sans)"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour profiter du plein air", "Profiter du plein air"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour vos activités physiques", "Vos activités physiques"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour vos déplacements", "Vos déplacements"),
-            ("Aujourd’hui votre recommmandation est un conseil pratique pour limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé")
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour profiter du plein air", "Profiter du plein air"),
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour vos activités physiques", "Vos activités physiques"),
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour vos déplacements", "Vos déplacements"),
+            ("Aujourd’hui, votre recommmandation est un conseil pratique pour limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé")
         ]
     )
     potentiel_radon = SelectField(
