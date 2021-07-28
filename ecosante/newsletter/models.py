@@ -197,10 +197,19 @@ class Newsletter:
         subquery_nl = query_nl.subquery("nl")
         last_nl = query_nl.order_by(text("date DESC")).limit(1).first()
 
-        sorted_recommandation_ids = db.session.query(subquery_nl.c.date, Recommandation.id)\
+        sorted_recommandation_ids = db.session.query(
+                """LEAST(
+                    extract(
+                        epoch from (
+                            current_date - coalesce(nl.date, (current_date + interval '1 day'))
+                        )
+                    )/86400,
+                    30) AS d
+                    """,
+                Recommandation.id)\
             .join(subquery_nl, isouter=True)\
             .filter(Recommandation.status == "published")\
-            .order_by(text("nl.date nulls first"), Recommandation.ordre)\
+            .order_by(text("d"), Recommandation.ordre)\
             .all()
         last_recommandation = recommandations.get(last_nl[0]) if last_nl else None
         last_criteres = last_recommandation.criteres if last_recommandation else set()
@@ -210,7 +219,7 @@ class Newsletter:
             lambda r: recommandations[r[1]].is_relevant(self.inscription, self.qualif, self.polluants, self.raep, self.date), 
             sorted(
                 sorted_recommandation_ids,
-                key=lambda r: (r[0] or date.min, len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
+                key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
             )
         )
         return recommandations[next(eligible_recommandations)[1]]
@@ -411,7 +420,7 @@ class NewsletterDB(db.Model, Newsletter):
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y"),
-                "POLLINARIUM_SENTINELLE": False if not commune.pollinarium_sentinelle else True
+                "POLLINARIUM_SENTINELLE": False if not commune or not commune.pollinarium_sentinelle else True
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
