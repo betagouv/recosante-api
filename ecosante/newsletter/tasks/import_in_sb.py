@@ -220,12 +220,15 @@ def format_errors(errors):
     r = ''
     r2 = ''
     regions = dict()
+    errors_types = {
+        "no_air_quality": "Pas de qualité de l’air",
+        "nothing_to_show": "Aucune donnée à montrer"
+    }
     for error in errors:
-        if error['type'] == 'no_air_quality':
-            r += f"Pas de qualité de l’air pour la ville de {error['ville']} ({error['insee']}) région: '{error['region']}'\n"
-            r2 += f"{error['ville']}, {error['insee']}, {error['region']}\n"
-            regions.setdefault(error['region'], 0)
-            regions[error['region']] += 1
+        r += f"{errors_types.get(error['type'], error['type'])} pour la ville de {error['ville']} ({error['insee']}) région: '{error['region']}'\n"
+        r2 += f"{error['ville']}, {error['insee']}, {error['region']}\n"
+        regions.setdefault(error['region'], 0)
+        regions[error['region']] += 1
     r += '\n'
     for region, i in regions.items():
         r += f'La région {region} a eu {i} erreurs\n'
