@@ -4,6 +4,15 @@ from sib_api_v3_sdk.rest import ApiException
 from flask import current_app
 
 def send_log_mail(subject, text_content, name="Technique recosanté", email="technique@recosante.beta.gouv.fr"):
+    if current_app.config['ENV'] != 'production':
+        print(f"""
+        Mail
+        Subject: {subject}
+        content:
+        {text_content}
+        """)
+        return
+
     contact_dict = {
         "name": name,
         "email": email
