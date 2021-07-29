@@ -1,2 +1,3 @@
 .
 celery
+git+git://github.com/jeancochrane/pytest-flask-sqlalchemy@master#egg=pytest-flask-sqlalchemy

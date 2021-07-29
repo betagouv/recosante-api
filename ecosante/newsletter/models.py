@@ -198,14 +198,14 @@ class Newsletter:
         last_nl = query_nl.order_by(text("date DESC")).limit(1).first()
 
         sorted_recommandation_ids = db.session.query(
-                """LEAST(
+                text("""LEAST(
                     extract(
                         epoch from (
                             current_date - coalesce(nl.date, (current_date + interval '1 day'))
                         )
                     )/86400,
                     30) AS d
-                    """,
+                    """),
                 Recommandation.id)\
             .join(subquery_nl, isouter=True)\
             .filter(Recommandation.status == "published")\
