@@ -425,3 +425,60 @@ def test_sous_indice(db_session):
         assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL']) == str
         assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR'] != ""
         assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR']) == str
+
+
+def test_sorted_recommandation_query(db_session):
+    recommandations=[
+        Recommandation(status="published", ordre=1),
+        Recommandation(status="published"),
+        Recommandation(status="published"),
+        Recommandation(status="published")
+    ]
+    inscription = Inscription(id=1, ville_insee='53130')
+    db_session.add_all(recommandations)
+    db_session.commit()
+    today_date = date.today()
+    yesterday_date = today_date - timedelta(days=1)
+    tomorrow_date = today_date + timedelta(days=1)
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [{"date": str(yesterday_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=recommandations,
+        radon=2,
+        date=yesterday_date
+    )
+    db_session.add(NewsletterDB(nl))
+    db_session.commit()
+    yesterday_recommandation = nl.recommandation
+    assert yesterday_recommandation.ordre == 1
+
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=recommandations,
+        radon=2,
+        date=today_date
+    )
+    db_session.add(NewsletterDB(nl))
+    db_session.commit()
+    today_recommandation = nl.recommandation
+    sorted_recommandations =  nl.sorted_recommandations_query.all()
+    next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 1.0
+
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [{"date": str(tomorrow_date), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=recommandations,
+        radon=2,
+        date=tomorrow_date
+    )
+    nl.sorted_recommandations_query.all()[-1][0] == 2.0
+    sorted_recommandations =  nl.sorted_recommandations_query.all()
+    next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 2.0
+    next(filter(lambda a: a[1] == today_recommandation.id, sorted_recommandations))[0] == 2.0

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from itertools import chain
 from flask.helpers import url_for
 from indice_pollution.history.models.commune import Commune
@@ -185,32 +185,29 @@ class Newsletter:
             newsletter = cls(**init_dict)
             yield newsletter
 
-    def get_recommandation(self, recommandations: List[Recommandation]):
-        if not recommandations:
-            return None
-        query_nl = db.session.query(
+    @property
+    def past_nl_query(self):
+        return db.session.query(
                 NewsletterDB.recommandation_id,
                 func.max(NewsletterDB.date).label("date")
             )\
             .filter(NewsletterDB.inscription_id==self.inscription.id)\
             .group_by(NewsletterDB.recommandation_id)
-        subquery_nl = query_nl.subquery("nl")
-        last_nl = query_nl.order_by(text("date DESC")).limit(1).first()
 
-        sorted_recommandation_ids = db.session.query(
-                text("""LEAST(
-                    extract(
-                        epoch from (
-                            current_date - coalesce(nl.date, (current_date + interval '1 day'))
-                        )
-                    )/86400,
-                    30) AS d
-                    """),
-                Recommandation.id)\
+    @property
+    def sorted_recommandations_query(self):
+        subquery_nl = self.past_nl_query.subquery("nl")
+        return db.session.query(func.greatest(subquery_nl.c.date, (date.today() - timedelta(days=30))), Recommandation.id)\
             .join(subquery_nl, isouter=True)\
             .filter(Recommandation.status == "published")\
-            .order_by(text("d"), Recommandation.ordre)\
-            .all()
+            .order_by(text("nl.date nulls first"), Recommandation.ordre)
+
+    def get_recommandation(self, recommandations: List[Recommandation]):
+        if not recommandations:
+            return None
+        last_nl = self.past_nl_query.order_by(text("date DESC")).limit(1).first()
+        sorted_recommandation_ids = self.sorted_recommandations_query.all()
+
         last_recommandation = recommandations.get(last_nl[0]) if last_nl else None
         last_criteres = last_recommandation.criteres if last_recommandation else set()
         last_type = last_recommandation.type_ if last_recommandation else ""
