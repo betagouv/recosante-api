@@ -260,8 +260,8 @@ class Newsletter:
             polluants=self.polluants_symbols,
             _external=True)
 
-    @property
-    def couleur_raep(self):
+    @staticmethod
+    def raep_value_to_couleur(value):
         return {
             0: "#31bcf0",
             1: "#21a84c",
@@ -269,10 +269,14 @@ class Newsletter:
             3: "#f69321",
             4: "#ee6344",
             5: "#d94049"
-        }.get(self.raep)
+        }.get(value)
 
     @property
-    def qualif_raep(self):
+    def couleur_raep(self):
+        return self.raep_value_to_couleur(self.raep)
+
+    @staticmethod
+    def raep_value_to_qualif(value):
         return {
             0: "nul",
             1: "très faible",
@@ -280,7 +284,11 @@ class Newsletter:
             3: "moyen",
             4: "élevé",
             5: "très élevé"
-        }.get(self.raep)
+        }.get(value)
+
+    @property
+    def qualif_raep(self):
+        return self.raep_value_to_qualif(self.raep)
 
     @property
     def departement_preposition(self):
