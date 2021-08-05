@@ -117,6 +117,17 @@ def stats():
     ]
     ouverture_veille = ouvertures[-1] if ouvertures else None
 
+    temps_moyen_inscription = db.session.query(
+        func.sum(
+            func.coalesce(
+                Inscription.deactivation_date,
+                func.current_date()
+            ) - Inscription.date_inscription
+        ) / Inscription.id.count()
+    ).filter(
+        Inscription.date_inscription != None
+    ).one_or_none()
+
     to_return = {
         "active_users": json.dumps(active_users),
         "all_users": json.dumps(all_users),
@@ -130,6 +141,7 @@ def stats():
         "total_reponses": total_reponses,
         "total_satisfaits": total_satisfaits,
         "total_inscriptions": total_inscriptions,
+        "temps_moyen_inscription": temps_moyen_inscription[0] if temps_moyen_inscription else 0
     }
 
     if not request.accept_mimetypes.accept_html:
