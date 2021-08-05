@@ -45,6 +45,7 @@ class Inscription(db.Model):
     #Misc
     deactivation_date: date = db.Column(db.Date)
     connaissance_produit: List[str] = db.Column(postgresql.ARRAY(db.String))
+    ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
