@@ -12,6 +12,6 @@ celery = Celery(__name__)
 assets_env = Environment()
 sib = sib_api_v3_sdk.ApiClient()
 cors = CORS()
-rebart = Rebar()
+rebar = Rebar()
 
 import ecosante.utils.rollup

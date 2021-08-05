@@ -1,7 +1,7 @@
 from flask import Flask, g
 import os
 from celery import Celery
-from .extensions import db, migrate, assets_env, celery, sib, cors
+from .extensions import db, migrate, assets_env, celery, sib, cors, rebar
 from werkzeug.urls import url_encode
 import logging
 from kombu import Queue
@@ -70,6 +70,7 @@ def create_app(testing=False):
         from .stats import blueprint as stats_bp
         from .newsletter import blueprint as newsletter_bp, tasks
         from .pages import blueprint as pages_bp
+        from .api import blueprint as api_bp
         from .utils.funcs import oxford_comma, display_check
 
         app.register_blueprint(inscription_bp.bp)
@@ -84,6 +85,8 @@ def create_app(testing=False):
         app.add_template_global(url_encode, name='url_encode')
         app.add_template_filter(oxford_comma)
         app.add_template_filter(display_check)
+
+    rebar.init_app(app)
 
     @app.before_first_request
     def before_first_request():
