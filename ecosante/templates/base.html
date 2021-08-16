@@ -40,7 +40,7 @@
 <div class="notification full-width" role="alert">Écosanté est en phase de construction, nous informons pour l'instant sur la qualité de l'air.</div>
   <header class="navbar">
     <div class="navbar__container">
-      <a class="navbar__home" href="{{ url_for("pages.index") }}">
+      <a class="navbar__home" href="https://recosante.beta.gouv.fr"
         <img class="navbar__logo" src="{{ url_for('static', filename='images/Republique_Francaise.png') }}"
           alt="ecosante.beta.gouv.fr" />
         <img class="navbar__logo_right" src="{{ url_for('static', filename='images/logo.svg') }}"
@@ -77,7 +77,6 @@
     </div>
     <ul class="footer__links">
       <li><a href="mailto:contact@recosante.beta.gouv.fr">Contactez-nous</a></li>
-      <li><a href="{{ url_for("pages.donnees_personnelles") }}">Données personnelles</a></li>
       <li><a href="{{ url_for("stats.stats") }}">Statistiques</a></li>
     </ul>
   </div>
