@@ -87,3 +87,18 @@ def data():
         "potentiel_radon": getattr(PotentielRadon.get(insee), 'classe_potentiel'),
         "metadata": f['metadata']
     }
+
+@bp.route('/recommandation-episodes-pollution')
+def recommandation_episode_pollution():
+    nom_polluants = {
+        "o3": "à l’Ozone (O3)",
+        "pm10": "aux particules fines (PM10)",
+        "no2": "au dioxyde d’azote (NO2)",
+        "so2": "au dioxyde de soufre (SO2)"
+    }
+    polluants = [nom_polluants.get(p.lower(), p) for p in request.args.getlist('polluants')]
+    return render_template(
+        "recommandation-episodes-pollution.html",
+        population=request.args.get('population'),
+        polluants=polluants
+    )
