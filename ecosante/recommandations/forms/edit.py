@@ -87,7 +87,6 @@ class FormAdd(BaseForm):
         ]
     )
     animal_de_compagnie = OuiNonField("Animal de compagnie")
-    lien_qa_pollen = OuiNonField("Lien Qualité de l’air pollen", description="Cette recommandation sera accompagnée d’une phrase faisant le lien entre QA et pollen")
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")

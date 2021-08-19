@@ -33,7 +33,6 @@ RECOMMANDATION_FILTERS = [
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
     ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
     ("episode_pollution", "⚠️", "Épisode de pollution"),
-    ("lien_qa_pollen", "🔗", "Lien QA/pollen"),
     ("montrer_dans_le_widget", "ℹ", "Montrer dans le widget")
     #("min_raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
@@ -78,7 +77,6 @@ class Recommandation(db.Model):
     episode_pollution: bool = db.Column(db.Boolean, nullable=True)
     min_raep: int = db.Column(db.Integer, nullable=True)
     personne_allergique: bool = db.Column(db.Boolean, nullable=True)
-    lien_qa_pollen: bool = db.Column(db.Boolean, nullable=True)
     montrer_dans_le_widget: bool = db.Column(db.Boolean, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: int = db.Column(db.Integer, nullable=True)
