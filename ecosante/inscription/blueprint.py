@@ -39,7 +39,7 @@ def premiere_etape():
 @cross_origin(origins='*')
 def deuxieme_etape(uid):
     inscription = db.session.query(Inscription).filter_by(uid=uid).first()
-    form = FormDeuxiemeEtape(obj=inscription, data=request.json)
+    form = FormDeuxiemeEtape(data=request.json)
     if request.method == 'POST':
         if not inscription:
             abort(404)

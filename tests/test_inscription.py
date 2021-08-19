@@ -187,3 +187,17 @@ def test_deactivate_accounts(db_session):
     assert db_session.query(Inscription).filter(Inscription.mail==None).count() == 1
     assert Inscription.deactivate_accounts() == 1
     assert db_session.query(Inscription).filter(Inscription.mail==None).count() == 2
+
+
+def test_partial_update_same_mail(db_session, client):
+    i = Inscription(mail='test@test.com')
+    db_session.add(i)
+    db_session.commit()
+
+    mail, uid = premiere_etape(client)
+
+    data = {
+        'mail': 'test@test.com',
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 400
