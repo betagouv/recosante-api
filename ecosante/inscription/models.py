@@ -46,6 +46,8 @@ class Inscription(db.Model):
     deactivation_date: date = db.Column(db.Date)
     connaissance_produit: List[str] = db.Column(postgresql.ARRAY(db.String))
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
+    recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
+    notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())

@@ -47,6 +47,8 @@ class FormDeuxiemeEtape(BaseForm):
     ])
     population = MultiCheckboxField(choices=[('pathologie_respiratoire', ''), ('allergie_pollens', ''), ('aucun', '')])
     enfants = SelectField(choices=['oui', 'non', 'aucun', None], coerce=lambda v: None if v is None else str(v))
+    recommandations = MultiCheckboxField(choices=[('quotidien', ''), ('hebdomadaire', '')])
+    notifications = MultiCheckboxField(choices=[('quotidien', ''), ('aucun', '')])
 
     def validate_ville_insee(form, field):
         r = requests.get(f'https://geo.api.gouv.fr/communes/{field.data}')

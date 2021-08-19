@@ -201,3 +201,53 @@ def test_partial_update_same_mail(db_session, client):
     }
     response = client.post(f'/inscription/{uid}/', data=data)
     assert response.status_code == 400
+
+def test_recommandations_field(db_session, client):
+    mail, uid = premiere_etape(client)
+
+    data = {
+        "recommandations": ["hebdomadaire"]
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v
+
+    data = {
+        "recommandations": ["quotidien"]
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v
+
+    data = {
+        "recommandations": ["faux"]
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 400
+
+def test_notifications_field(db_session, client):
+    mail, uid = premiere_etape(client)
+
+    data = {
+        "notifications": ["aucun"]
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v
+
+    data = {
+        "notifications": ["quotidien"]
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v
+
+    data = {
+        "notifications": ["faux"]
+    }
+    response = client.post(f'/inscription/{uid}/', data=data)
+    assert response.status_code == 400
