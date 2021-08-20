@@ -1,3 +1,4 @@
+from wtforms.fields.core import SelectMultipleField
 from ecosante.utils.form import BaseForm, MultiCheckboxField
 from wtforms.widgets.html5 import SearchInput
 from wtforms.fields import StringField, SelectField
@@ -49,5 +50,13 @@ class FormSearch(BaseForm):
         choices=[
             ('random', 'Aléatoire'),
             ('id', 'Chronologique')
+        ]
+    )
+
+    montrer_dans = SelectMultipleField(
+        "Montrée dans",
+        choices=[
+            ('widget', 'Widget'),
+            ('newsletter', 'Newsletter')
         ]
     )

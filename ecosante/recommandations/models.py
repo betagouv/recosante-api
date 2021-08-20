@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 from ecosante.inscription.models import Inscription
 from flask.globals import current_app
 from sqlalchemy.dialects import postgresql
-from  sqlalchemy.sql.expression import func
+from  sqlalchemy.sql.expression import func, nullslast
 import uuid
 import random
 from typing import List, Set
@@ -33,7 +33,6 @@ RECOMMANDATION_FILTERS = [
     ("dioxyde_azote", "🐮", "Dioxyde d’azote"),
     ("dioxyde_soufre", "🛢️", "Dioxyde de soufre"),
     ("episode_pollution", "⚠️", "Épisode de pollution"),
-    ("montrer_dans_le_widget", "ℹ", "Montrer dans le widget")
     #("min_raep", "🤧", "Risque allergique lié à l’exposition des pollens")
 ]
 
@@ -77,9 +76,9 @@ class Recommandation(db.Model):
     episode_pollution: bool = db.Column(db.Boolean, nullable=True)
     min_raep: int = db.Column(db.Integer, nullable=True)
     personne_allergique: bool = db.Column(db.Boolean, nullable=True)
-    montrer_dans_le_widget: bool = db.Column(db.Boolean, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: int = db.Column(db.Integer, nullable=True)
+    montrer_dans: List[str] = db.Column(postgresql.ARRAY(db.String, dimensions=1), nullable=True)
 
     @property
     def velo(self) -> bool:
@@ -186,7 +185,7 @@ class Recommandation(db.Model):
             if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
                 if not self.is_relevant_qualif(qualif):
                     return False
-            return self.montrer_dans_le_widget
+            return 'widget' in self.montrer_dans
         if self.type_ == "radon":
             return False
         #Inscription

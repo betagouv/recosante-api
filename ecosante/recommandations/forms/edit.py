@@ -90,7 +90,6 @@ class FormAdd(BaseForm):
     autres_conditions = TextAreaField("Autres conditions")
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
-    montrer_dans_le_widget = OuiNonField("Montrer dans le widget")
     ordre = IntegerField("Ordre", description="Si renseigné, une recommandation avec un ordre plus petit sera donnée à l’utilisateur avant celle d’un ordre plus grand. Si pour une journée deux recommandations avec le même ordre sont possibles, l’une ou l’autre sera donnée.")
     objectif = SelectField(
         "Objectif",
@@ -113,6 +112,13 @@ class FormAdd(BaseForm):
             (3, "Catégorie 3")
         ],
         coerce=coerce_int
+    )
+    montrer_dans = MultiCheckboxField(
+        "Montrer dans:",
+        choices=[
+            ('widget', 'Widget'),
+            ('newsletter', 'Newsletter')
+        ]
     )
 
     def validate(self, extra_validators=[]):
