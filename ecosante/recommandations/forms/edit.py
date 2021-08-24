@@ -116,8 +116,9 @@ class FormAdd(BaseForm):
     montrer_dans = MultiCheckboxField(
         "Montrer dans:",
         choices=[
+            ('newsletter', 'Newsletter'),
             ('widget', 'Widget'),
-            ('newsletter', 'Newsletter')
+            ('dashboard', 'Dashboard')
         ]
     )
 
