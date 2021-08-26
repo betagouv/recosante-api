@@ -8,6 +8,11 @@ def premiere_etape(client):
     assert response.status_code == 201
     return mail, response.json['uid']
 
+def data_tester(response, data):
+    assert response.status_code == 200
+    for k, v in data.items():
+        assert response.json[k] == v
+
 def test_inscription_multi_etapes(client):
     mail, uid = premiere_etape(client)
 
@@ -18,9 +23,7 @@ def test_inscription_multi_etapes(client):
         'population': ['pathologie_respiratoire', 'allergie_pollens']
     }
     response = client.post(f'/inscription/{uid}/', data=data)
-    assert response.status_code == 200
-    for k, v in data.items():
-        assert response.json[k] == v
+    data_tester(response, data)
 
     inscription = Inscription.query.filter_by(uid=uid).first()
 
@@ -209,17 +212,17 @@ def test_recommandations_field(db_session, client):
         "recommandations": ["hebdomadaire"]
     }
     response = client.post(f'/inscription/{uid}/', data=data)
-    assert response.status_code == 200
-    for k, v in data.items():
-        assert response.json[k] == v
+    data_tester(response, data)
+    response = client.get(f'/inscription/{uid}/', data=data)
+    data_tester(response, data)
 
     data = {
         "recommandations": ["quotidien"]
     }
     response = client.post(f'/inscription/{uid}/', data=data)
-    assert response.status_code == 200
-    for k, v in data.items():
-        assert response.json[k] == v
+    data_tester(response, data)
+    response = client.get(f'/inscription/{uid}/', data=data)
+    data_tester(response, data)
 
     data = {
         "recommandations": ["faux"]
@@ -233,18 +236,19 @@ def test_notifications_field(db_session, client):
     data = {
         "notifications": ["aucun"]
     }
+    response = client.get(f'/inscription/{uid}/', data=data)
     response = client.post(f'/inscription/{uid}/', data=data)
-    assert response.status_code == 200
-    for k, v in data.items():
-        assert response.json[k] == v
+    data_tester(response, data)
+    response = client.get(f'/inscription/{uid}/', data=data)
+    data_tester(response, data)
 
     data = {
         "notifications": ["quotidien"]
     }
     response = client.post(f'/inscription/{uid}/', data=data)
-    assert response.status_code == 200
-    for k, v in data.items():
-        assert response.json[k] == v
+    data_tester(response, data)
+    response = client.get(f'/inscription/{uid}/', data=data)
+    data_tester(response, data)
 
     data = {
         "notifications": ["faux"]

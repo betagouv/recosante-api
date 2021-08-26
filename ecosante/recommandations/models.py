@@ -162,6 +162,8 @@ class Recommandation(db.Model):
             return "mauvais"
 
     def is_relevant_qualif(self, qualif):
+        if not qualif and self.qa_bonne is None and self.qa_mauvaise is None:
+            return True
         # Si la qualité de l’air est bonne
         # que la reco concerne la qualité de l’air bonne
         if self.qualif_categorie(qualif) == "bon" and self.qa_bonne:
@@ -180,12 +182,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription, qualif: str, polluants: List[str], raep: int, date_: date):
-        if not inscription:
-            if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
-                if not self.is_relevant_qualif(qualif):
-                    return False
-            return 'widget' in self.montrer_dans
+    def is_relevant(self, inscription: Inscription, qualif, polluants: List[str], raep: int, date_: date, media = 'newsletter', type_ = "generale"):
         if self.type_ == "radon":
             return False
         #Inscription
@@ -238,7 +235,8 @@ class Recommandation(db.Model):
             return False
         elif self.automne and season != 4:
             return False
-        return True
+
+        return media in self.montrer_dans and self.type_ == type_
 
     def format(self, inscription):
         return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS

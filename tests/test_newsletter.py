@@ -1,27 +1,35 @@
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
 from datetime import date, timedelta
 
+def published_recommandation(**kw):
+    kw.setdefault('type_', 'generale')
+    kw.setdefault('montrer_dans', ['newsletter'])
+    kw.setdefault('status', 'published')
+    return Recommandation(**kw)
+
 def test_episode_passe(db_session):
     yesterday = date.today() - timedelta(days=1)
-    recommandations = [Recommandation(particules_fines=True, status="published"), Recommandation(recommandation="ça va en fait", status="published")]
+    recommandations = [published_recommandation(particules_fines=True), published_recommandation(recommandation="ça va en fait")]
     db_session.add_all(recommandations)
     db_session.commit()
-    nl = NewsletterDB(Newsletter(
+    nl = Newsletter(
         inscription=Inscription(diffusion='mail', ville_insee='38185'),
         forecast={"data": []},
         episodes={"data": [{"code_pol": "5", "etat": "INFORMATION ET RECOMMANDATION", "date": str(yesterday)}]},
-        recommandations=recommandations
-    ))
-    assert nl.polluants_formatted == None
-    assert nl.polluants_symbols == []
-    assert nl.lien_recommandations_alerte == None
-    assert nl.attributes()['POLLUANT'] == ""
-    assert nl.attributes()['LIEN_RECOMMANDATIONS_ALERTE'] == ""
-    assert nl.attributes()['RECOMMANDATION'] == 'ça va en fait'
-    assert nl.attributes()['DEPARTEMENT'] == 'Isère'
+        recommandations=recommandations,
+        raep=1
+    )
+    nldb = NewsletterDB(nl)
+    assert nldb.polluants_formatted == None
+    assert nldb.polluants_symbols == []
+    assert nldb.lien_recommandations_alerte == None
+    assert nldb.attributes()['POLLUANT'] == ""
+    assert nldb.attributes()['LIEN_RECOMMANDATIONS_ALERTE'] == ""
+    assert nldb.attributes()['RECOMMANDATION'] == 'ça va en fait'
+    assert nldb.attributes()['DEPARTEMENT'] == 'Isère'
 
 def test_formatted_polluants_generale_pm10(db_session):
-    recommandations = [Recommandation(particules_fines=True, status="published")]
+    recommandations = [published_recommandation(particules_fines=True)]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -35,7 +43,7 @@ def test_formatted_polluants_generale_pm10(db_session):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10'
 
 def test_formatted_polluants_generale_pm10_no2(db_session):
-    recommandations = [Recommandation(particules_fines=True, status="published")]
+    recommandations = [published_recommandation(particules_fines=True)]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -52,7 +60,7 @@ def test_formatted_polluants_generale_pm10_no2(db_session):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=no2'
 
 def test_formatted_polluants_generale_tous(db_session):
-    recommandations = [Recommandation(particules_fines=True, status="published")]
+    recommandations = [published_recommandation(particules_fines=True)]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -71,7 +79,7 @@ def test_formatted_polluants_generale_tous(db_session):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=so2&polluants=pm10&polluants=o3&polluants=no2'
 
 def test_formatted_polluants_generale_pm10_o3_no2(db_session):
-    recommandations = [Recommandation(particules_fines=True, status="published")]
+    recommandations = [published_recommandation(particules_fines=True)]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -92,8 +100,8 @@ def test_formatted_polluants_generale_pm10_o3_no2(db_session):
 
 def test_formatted_polluants_vulnerable_no2(db_session):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
+        published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -111,8 +119,8 @@ def test_formatted_polluants_vulnerable_no2(db_session):
 
 def test_avis_oui(db_session, client):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
+        published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -135,8 +143,8 @@ def test_avis_oui(db_session, client):
 
 def test_avis_non(db_session, client):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
+        published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -161,10 +169,10 @@ def test_avis_non(db_session, client):
 
 def test_pollens(db_session):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
-        Recommandation(type_="pollens", status="published"),
-        Recommandation(type_="generale", status="published")
+        published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+        published_recommandation(type_="pollens"),
+        published_recommandation(type_="generale")
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -294,7 +302,7 @@ def test_show_radon_indice(db_session):
 def test_show_radon_recent(db_session):
     today_date = date.today()
     db_session.add(
-        Recommandation(status="published"),
+        published_recommandation(),
     )
     past_nl = NewsletterDB(
         Newsletter(
@@ -360,10 +368,10 @@ def test_show_radon_recent(db_session):
 
 def test_sous_indice(db_session):
     recommandations=[
-        Recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, status="published"),
-        Recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, status="published"),
-        Recommandation(type_="pollens", status="published"),
-        Recommandation(type_="generale", status="published")
+        published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True),
+        published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True),
+        published_recommandation(type_="pollens"),
+        published_recommandation(type_="generale")
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -429,10 +437,10 @@ def test_sous_indice(db_session):
 
 def test_sorted_recommandation_query(db_session):
     recommandations=[
-        Recommandation(status="published", ordre=1),
-        Recommandation(status="published"),
-        Recommandation(status="published"),
-        Recommandation(status="published")
+        published_recommandation(ordre=1),
+        published_recommandation(),
+        published_recommandation(),
+        published_recommandation()
     ]
     inscription = Inscription(id=1, ville_insee='53130')
     db_session.add_all(recommandations)
