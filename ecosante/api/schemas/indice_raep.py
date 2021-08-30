@@ -26,14 +26,16 @@ class IndiceRAEPSchema(NestedIndiceRAEPSchema):
 
 class IndiceRAEP(FullIndiceSchema):
     indice = fields.Nested(IndiceRAEPSchema)
+
     @pre_dump
     def load_indice_raep(self, data, many, **kwargs):
         date_format = "%d/%m/%Y"
         return {
-            "indice": data["data"],
+            "indice": data["indice"]["data"],
             "validity": {
-                "start": datetime.strptime(data["data"]["periode_validite"]["debut"], date_format),
-                "end": datetime.strptime(data["data"]["periode_validite"]["fin"], date_format),
-                "area": data["departement"]["nom"]
-            }
+                "start": datetime.strptime(data["indice"]["data"]["periode_validite"]["debut"], date_format),
+                "end": datetime.strptime(data["indice"]["data"]["periode_validite"]["fin"], date_format),
+                "area": data["indice"]["departement"]["nom"]
+            },
+            "advice": data['advice']
         }

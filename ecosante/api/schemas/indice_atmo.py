@@ -26,16 +26,17 @@ class IndiceATMO(FullIndiceSchema):
     @pre_dump
     def load_indice_atmo(self, data, many, **kwargs):
         return {
-            "indice": data.dict(),
+            "indice": data["indice"].dict(),
             "validity": {
-                "start": data.date_ech,
-                "end": data.date_ech + timedelta(1) - timedelta(seconds=1),
-                "area": data.commune.nom
+                "start": data["indice"].date_ech,
+                "end": data["indice"].date_ech + timedelta(1) - timedelta(seconds=1),
+                "area": data["indice"].commune.nom
             },
             "sources": [
                 {
-                   "label":  data.region.Service.nom_aasqa,
-                   "url": data.region.Service.website
+                   "label":  data["indice"].region.Service.nom_aasqa,
+                   "url": data["indice"].region.Service.website
                 }
-            ]
+            ],
+            "advice": data['advice']
         }

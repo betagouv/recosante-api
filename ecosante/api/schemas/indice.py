@@ -12,14 +12,14 @@ class IndiceDetailsSchema(Schema):
     indice = fields.Nested(NestedIndiceSchema)
 
 class AdviceSchema(Schema):
-    main = fields.String()
-    details = fields.String()
+    main = fields.String(attribute='recommandation_sanitized')
+    details = fields.String(attribute='precisions_sanitized')
 
 class IndiceSchema(NestedIndiceSchema):
     details = fields.List(fields.Nested(IndiceDetailsSchema))
 
 class FullIndiceSchema(Schema):
     indice = fields.Nested(IndiceSchema)
-    advice = fields.Nested(AdviceSchema)
+    advice = fields.Nested(AdviceSchema, allow_none=True)
     validity = fields.Nested(ValiditySchema)
     sources = fields.List(fields.Nested(SourceSchema))
