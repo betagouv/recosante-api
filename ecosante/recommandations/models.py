@@ -182,48 +182,50 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription, qualif, polluants: List[str], raep: int, date_: date, media = 'newsletter', type_ = "generale"):
-        if self.type_ == "radon":
-            return False
+    def is_relevant(self, inscription: Inscription, qualif, polluants: List[str], raep: int, date_: date, media: str = 'newsletter', types: List[str] = ["generale", "episode_pollution", "pollens"]):
         #Inscription
-        if self.criteres and self.criteres.isdisjoint(inscription.criteres):
-            return False
-        if self.chauffage and set(self.chauffage).isdisjoint(set(inscription.chauffage or [])):
-            return False
-        if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.has_enfants):
-            return False
-        if self.autres and inscription.personne_sensible:
-            return False
-        if self.enfants and not inscription.has_enfants:
-            return False
-        if self.personne_allergique is not None and self.personne_allergique != inscription.allergie_pollens:
-            return False
+        if inscription:
+            if self.criteres and self.criteres.isdisjoint(inscription.criteres):
+                return False
+            if self.chauffage and set(self.chauffage).isdisjoint(set(inscription.chauffage or [])):
+                return False
+            if self.personnes_sensibles and (not inscription.personne_sensible and not inscription.has_enfants):
+                return False
+            if self.autres and inscription.personne_sensible:
+                return False
+            if self.enfants and not inscription.has_enfants:
+                return False
+            if self.personne_allergique is not None and self.personne_allergique != inscription.allergie_pollens:
+                return False
         # Environnement
-        if polluants:
-            for polluant in polluants:
-                if getattr(self, polluant):
-                    return True
-            return False
-        else:
-            if self.polluants:
+        if "episode_pollution" in types:
+            if polluants:
+                for polluant in polluants:
+                    if getattr(self, polluant):
+                        return True
                 return False
-        if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
-            if not self.is_relevant_qualif(qualif):
-                return False
+            else:
+                if self.polluants:
+                    return False
+        if "generale" in types:
+            if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
+                if not self.is_relevant_qualif(qualif):
+                    return False
         # Pollens
-        if self.type_ == "pollens":
-            if raep == None or raep == 0:
-                return False
-            if 0 < raep < 4: #RAEP Faible
-                if inscription.allergie_pollens:
-                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
-                else:
+        if "pollens" in types:
+            if self.type_ == "pollens":
+                if raep == None or raep == 0:
                     return False
-            if raep >= 4:
-                if inscription.allergie_pollens:
-                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
-                else:
-                    return False
+                if 0 < raep < 4: #RAEP Faible
+                    if inscription and inscription.allergie_pollens:
+                        return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
+                    else:
+                        return False
+                if raep >= 4:
+                    if inscription and inscription.allergie_pollens:
+                        return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
+                    else:
+                        return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
         season = date_.month%12//3 + 1
@@ -236,7 +238,7 @@ class Recommandation(db.Model):
         elif self.automne and season != 4:
             return False
 
-        return media in self.montrer_dans and self.type_ == type_
+        return media in self.montrer_dans and self.type_ in types
 
     def format(self, inscription):
         return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS
