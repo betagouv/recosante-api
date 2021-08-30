@@ -57,6 +57,7 @@ class FormSearch(BaseForm):
         "Montrée dans",
         choices=[
             ('widget', 'Widget'),
-            ('newsletter', 'Newsletter')
+            ('newsletter', 'Newsletter'),
+            ('dashboard', 'Dashboard')
         ]
     )
