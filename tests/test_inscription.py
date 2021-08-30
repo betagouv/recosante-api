@@ -37,7 +37,7 @@ def test_inscription_multi_etapes(client):
     assert inscription.population == ['pathologie_respiratoire', 'allergie_pollens']
 
 def test_partial_updates(client):
-    _mail, uid = premiere_etape(client)
+    mail, uid = premiere_etape(client)
 
     data = {
         'ville_insee': '53130',
@@ -50,6 +50,11 @@ def test_partial_updates(client):
         response = client.post(f'/inscription/{uid}/', data={k: v})
         assert response.status_code == 200
         assert response.json[k] == v
+
+    data = {"mail": mail}
+    response = client.post(f'/inscription/{uid}/', data={k: v})
+    assert response.status_code == 200
+    assert response.json[k] == v
 
 def test_errors(client):
     _mail, uid = premiere_etape(client)
