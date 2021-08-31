@@ -77,7 +77,40 @@ def stats():
     total_allergies = Inscription.active_query().filter(Inscription.population.any("allergie_pollens")).count()
     total_pathologie_respiratoire = Inscription.active_query().filter(Inscription.population.any("pathologie_respiratoire")).count()
 
-    ouvertures = []
+
+    temps_moyen_inscription = db.session.query(
+        func.sum(
+            func.coalesce(
+                Inscription.deactivation_date,
+                func.current_date()
+            ) - Inscription.date_inscription
+        ) / func.count(Inscription.id)
+    ).filter(
+        Inscription.date_inscription != None
+    ).one_or_none()
+
+    to_return = {
+        "active_users": json.dumps(active_users),
+        "all_users": json.dumps(all_users),
+        "total_actifs": total_actifs,
+        "total_allergies": total_allergies,
+        "total_pathologie_respiratoire": total_pathologie_respiratoire,
+        "decouverte": json.dumps(decouverte),
+        "inscriptions_desinscriptions": inscriptions_desinscriptions,
+        "total_reponses": total_reponses,
+        "total_satisfaits": total_satisfaits,
+        "total_inscriptions": total_inscriptions,
+        "temps_moyen_inscription": temps_moyen_inscription[0] if temps_moyen_inscription else 0
+    }
+
+    if not request.accept_mimetypes.accept_html:
+        return to_return
+    return render_template('stats.html', **to_return)
+
+
+@bp.route('/openings/')
+def openings():
+    openings = []
     api_instance = sib_api_v3_sdk.EmailCampaignsApi(sib)
     try:
         api_response = api_instance.get_email_campaigns(
@@ -94,7 +127,7 @@ def stats():
             stats = campaign['statistics']['globalStats']
             if stats['delivered'] == 0:
                 continue
-            ouvertures.append(
+            openings.append(
                 (
                     date_,
                     (stats['uniqueViews'], stats['delivered'])
@@ -102,8 +135,8 @@ def stats():
             )
     except ApiException as e:
         current_app.logger.error(e)
-    ouvertures.sort(key=lambda v: v[0])
-    ouvertures = [
+    openings.sort(key=lambda v: v[0])
+    openings = [
         (v[0].strftime("%d/%m/%Y"), (v[1][0]/v[1][1])*100)
         for v in
         [
@@ -112,39 +145,11 @@ def stats():
                 values,
                 (0, 0))
             )
-            for d, values in groupby(ouvertures, lambda v: v[0].date())
+            for d, values in groupby(openings, lambda v: v[0].date())
         ]
     ]
-    ouverture_veille = ouvertures[-1] if ouvertures else None
-
-    temps_moyen_inscription = db.session.query(
-        func.sum(
-            func.coalesce(
-                Inscription.deactivation_date,
-                func.current_date()
-            ) - Inscription.date_inscription
-        ) / Inscription.id.count()
-    ).filter(
-        Inscription.date_inscription != None
-    ).one_or_none()
-
-    to_return = {
-        "active_users": json.dumps(active_users),
-        "all_users": json.dumps(all_users),
-        "total_actifs": total_actifs,
-        "total_allergies": total_allergies,
-        "total_pathologie_respiratoire": total_pathologie_respiratoire,
-        "decouverte": json.dumps(decouverte),
-        "ouvertures": json.dumps(dict(ouvertures)),
-        "ouverture_veille": ouverture_veille,
-        "inscriptions_desinscriptions": inscriptions_desinscriptions,
-        "total_reponses": total_reponses,
-        "total_satisfaits": total_satisfaits,
-        "total_inscriptions": total_inscriptions,
-        "temps_moyen_inscription": temps_moyen_inscription[0] if temps_moyen_inscription else 0
+    opening_yesterday = openings[-1] if openings else None
+    return {
+        "openings": json.dumps(dict(openings)),
+        "opening_yesterday": opening_yesterday,
     }
-
-    if not request.accept_mimetypes.accept_html:
-        return to_return
-    return render_template('stats.html', **to_return)
-
