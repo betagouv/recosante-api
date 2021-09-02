@@ -1,5 +1,6 @@
 from ecosante.tasks.inscriptions_patients import inscription_patients_task
 from flask import (
+    redirect,
     render_template,
     request
 )
@@ -13,6 +14,10 @@ from indice_pollution import forecast, episodes, raep, availability
 from indice_pollution.history.models import PotentielRadon
 
 bp = Blueprint("pages", __name__, url_prefix='/')
+
+@bp.route('/')
+def redirection_index():
+    return redirect("https://recosante.beta.gouv.fr/", code=301)
 
 
 @bp.route('/admin/<secret_slug>')
