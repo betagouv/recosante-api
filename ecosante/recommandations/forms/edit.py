@@ -105,7 +105,7 @@ class FormAdd(BaseForm):
             ("", "Prévenir la présence de radon dans l’air intérieur de votre logement.")
         ]
     )
-    potentiel_radon = SelectField(
+    potentiel_radon = MultiCheckboxField(
         "Potentiel Radon associé",
         choices=[
             ("", "Aucun"),

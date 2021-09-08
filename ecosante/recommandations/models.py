@@ -77,7 +77,7 @@ class Recommandation(db.Model):
     min_raep: int = db.Column(db.Integer, nullable=True)
     personne_allergique: bool = db.Column(db.Boolean, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
-    potentiel_radon: int = db.Column(db.Integer, nullable=True)
+    potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
     montrer_dans: List[str] = db.Column(postgresql.ARRAY(db.String, dimensions=1), nullable=True)
 
     @property
