@@ -101,7 +101,8 @@ class FormAdd(BaseForm):
             ("Aujourd’hui, votre recommandation est un conseil pratique pour limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
             ("Aujourd’hui, votre recommandation est un conseil pratique pour vos activités physiques", "Vos activités physiques"),
             ("Aujourd’hui, votre recommandation est un conseil pratique pour vos déplacements", "Vos déplacements"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé")
+            ("Aujourd’hui, votre recommandation est un conseil pratique pour limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé"),
+            ("", "Prévenir la présence de radon dans l’air intérieur de votre logement.")
         ]
     )
     potentiel_radon = SelectField(
