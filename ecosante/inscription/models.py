@@ -17,10 +17,8 @@ from sqlalchemy.orm.attributes import flag_modified
 @dataclass
 class Inscription(db.Model):
     ville_insee: str
-    sport: bool
 
-
-    id: int = db.Column(db.Integer, primary_key=True)
+    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uid: str = db.Column(
         db.String(),
         server_default=text("generate_random_id('public', 'inscription', 'uid', 8)")
@@ -29,12 +27,11 @@ class Inscription(db.Model):
     ville_name: str = db.Column(db.String)
     _ville_insee: str = db.Column("ville_insee", db.String)
     diffusion: str = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
-    _telephone: str = db.Column("telephone", db.String)
+    telephone: str = db.Column(db.String)
     mail: str = db.Column(db.String)
     frequence: str = db.Column(db.Enum("quotidien", "pollution", name="frequence_enum"), default="quotidien")
     #Habitudes
     deplacement: str = db.Column(postgresql.ARRAY(db.String))
-    _sport: bool = db.Column("sport", db.Boolean)
     apa: bool = db.Column(db.Boolean)
     activites: List[str] = db.Column(postgresql.ARRAY(db.String))
     enfants: str = db.Column("enfants", db.String)
@@ -74,6 +71,15 @@ class Inscription(db.Model):
     def has_activite(self, activite):
         return self.activites and activite in self.activites
 
+    def activite_setter(self, activite, value):
+        if type(self.activites) != list:
+            self.activites = []
+        if value and activite not in self.activites:
+            self.activites.append(activite)
+        elif not value and activite in self.activites:
+            self.activites.remove(activite)
+        flag_modified("activites")
+
     @property
     def criteres(self):
         liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
@@ -81,21 +87,33 @@ class Inscription(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    @property
+    @hybrid_property
     def bricolage(self):
         return self.has_activite("bricolage")
+    @bricolage.setter
+    def bricolage(self, value):
+        return self.activite_setter("bricolage", value)
 
-    @property
+    @hybrid_property
     def menage(self):
         return self.has_activite("menage")
+    @menage.setter
+    def menage(self, value):
+        return self.activite_setter("menage", value)
 
-    @property
+    @hybrid_property
     def jardinage(self):
         return self.has_activite("jardinage")
+    @jardinage.setter
+    def jardinage(self, value):
+        return self.activite_setter("jardinage", value)
 
-    @property
+    @hybrid_property
     def sport(self):
         return self.has_activite("sport")
+    @sport.setter
+    def sport(self, value):
+        return self.activite_setter("sport", value)
 
     @property
     def personne_sensible(self):
@@ -149,13 +167,17 @@ class Inscription(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    @property
+    @hybrid_property
     def cache_api_commune(self):
         if not self.ville_insee:
             return {}
         if not self._cache_api_commune:
             self.set_cache_api_commune()
         return self._cache_api_commune
+    @cache_api_commune.setter
+    def cache_api_commune(self, value):
+        self._cache_api_commune = value
+
 
     def cache_api_commune_get(self, key, default_value=None):
         if self._cache_api_commune and not key in self._cache_api_commune:

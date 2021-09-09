@@ -9,6 +9,7 @@ DEPENDENCIES = [
     'celery==5.0.3',
     'celery[redis]',
     'email_validator',
+    'Faker',
     'Flask',
     'Flask-Assets',
     'flask-cors',
