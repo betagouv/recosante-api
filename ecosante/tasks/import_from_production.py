@@ -86,7 +86,7 @@ def import_indices_generic(last_week, prod_session, model, date_col):
 
 def import_indices(prod_session):
     last_week = datetime.combine(
-        (datetime.now() - timedelta(weeks=1)),
+        (datetime.now() - timedelta(days=3)),
         datetime.min.time()
     )
 
