@@ -109,7 +109,8 @@ class FormAdd(BaseForm):
         "Potentiel Radon associé",
         choices=[
             ("", "Aucun"),
-            (1, "Catégorie 1 & 2"),
+            (1, "Catégorie 1"),
+            (2, "Catégorie 2"),
             (3, "Catégorie 3")
         ],
         coerce=coerce_int
