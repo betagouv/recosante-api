@@ -22,6 +22,7 @@ def configure_celery(flask_app):
         if key.startswith('CELERY_')
     }
     celery.conf.update(celery_conf)
+    celery.conf.env = flask_app.config['ENV']
     queues = [
         Queue("default", routing_key='task.#'),
         Queue("send_newsletter", routing_key='send_newsletter.#'),

@@ -12,7 +12,7 @@ def deactivate_accounts():
 
 @celery.on_after_configure.connect
 def setup_periodic_inscriptions_tasks(sender, **kwargs):
-    if current_app.config['ENV'] != 'production':
+    if sender.conf.env != 'production':
         return
     sender.add_periodic_task(
         crontab(minute='0', hour='6', day_of_week='*/1'),
