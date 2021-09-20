@@ -23,13 +23,14 @@ def configure_celery(flask_app):
     }
     celery.conf.update(celery_conf)
     celery.conf.env = flask_app.config['ENV']
-    queues = [
-        Queue("default", routing_key='task.#'),
-        Queue("send_newsletter", routing_key='send_newsletter.#'),
-        Queue("send_email", routing_key='send_email.#'),
-    ]
     if flask_app.config['ENV'] == 'staging':
-        queues.append(Queue("staging"), routing_key='staging.#')
+        queues = [Queue("staging", routing_key='staging.#')]
+    else:
+	    queues = [
+            Queue("default", routing_key='task.#'),
+            Queue("send_newsletter", routing_key='send_newsletter.#'),
+            Queue("send_email", routing_key='send_email.#'),
+        ]
     celery.conf.task_queues = tuple(queues)
     celery.conf.task_default_exchange = 'tasks'
     celery.conf.task_default_exchange_type = 'topic'
