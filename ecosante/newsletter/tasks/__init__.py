@@ -1,9 +1,5 @@
 from ecosante.extensions import celery
-from ecosante.newsletter.models import Newsletter
-from ecosante.extensions import db
 from celery.schedules import crontab
-from flask import current_app
-
 from .import_in_sb import import_send_and_report #noqa
 
 @celery.on_after_configure.connect

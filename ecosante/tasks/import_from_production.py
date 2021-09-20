@@ -1,16 +1,14 @@
-from flask import current_app
-import click
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
-from ecosante.newsletter.models import Newsletter, NewsletterDB
-from ecosante.extensions import db
+from ecosante.newsletter.models import NewsletterDB
+from ecosante.extensions import db, celery
 from faker import Faker
 import os
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine, inspect, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
-from indice_pollution.history.models import PotentielRadon, IndiceATMO, EpisodePollution
+from indice_pollution.history.models import IndiceATMO, EpisodePollution
 
 
 def clone_data(model, model_b=None, **kwargs):
@@ -94,7 +92,7 @@ def import_indices(prod_session):
     import_indices_generic(last_week, prod_session, EpisodePollution, EpisodePollution.date_dif)
     import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date)
 
-
+@celery.task
 def import_from_production():
     prod_url = os.getenv('SQLALCHEMY_PROD_DATABASE_URI')
     if not prod_url:
