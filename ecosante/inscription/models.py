@@ -1,3 +1,4 @@
+from indice_pollution.history.models import Commune
 from ecosante.extensions import db
 from ecosante.utils.funcs import generate_line
 from sqlalchemy.dialects import postgresql
@@ -26,6 +27,8 @@ class Inscription(db.Model):
     ville_entree: str = db.Column(db.String)
     ville_name: str = db.Column(db.String)
     _ville_insee: str = db.Column("ville_insee", db.String)
+    commune_id: int = db.Column(db.Integer, db.ForeignKey(Commune.id))
+    commune: Commune = db.relationship(Commune)
     diffusion: str = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     telephone: str = db.Column(db.String)
     mail: str = db.Column(db.String)
@@ -205,6 +208,14 @@ class Inscription(db.Model):
         return self.cache_api_commune_get('codesPostaux')
 
     @property
+    def ville(self):
+        return {
+            "nom": self.ville_nom,
+            "code": self.ville_insee,
+            "codes_postaux": self.ville_codes_postaux
+        }
+
+    @property
     def region_name(self):
         return self.cache_api_commune_get('region', {}).get('nom')
 
@@ -319,3 +330,21 @@ class Inscription(db.Model):
             .update({"mail": None})
         db.session.commit()
         return r
+
+    @property
+    def diffusion_liste(self):
+        if self.diffusion:
+            return [self.diffusion]
+        else:
+            return self.diffusion
+
+    @diffusion_liste.setter
+    def diffusion_liste(self, value):
+        self.liste_setter(value, 'diffusion')
+
+    def liste_setter(self, value, attribute):
+        if type(value) == list:
+            if len(value) >= 1:
+                setattr(self, attribute, value[0])
+                return
+        self.diffusion = None

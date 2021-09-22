@@ -14,7 +14,6 @@ DEPENDENCIES = [
     'Flask-Assets',
     'flask-cors',
     'Flask-Migrate',
-    'flask-rebar',
     'Flask-SQLAlchemy',
     'Flask-WTF',
     'Flask-Manage-Webpack',

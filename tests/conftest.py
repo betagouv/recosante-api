@@ -1,4 +1,3 @@
-import indice_pollution
 import pytest
 import os
 import sqlalchemy as sa
@@ -6,6 +5,7 @@ import concurrent.futures as cf
 import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
+from ecosante.newsletter.models import NewsletterDB
 
 # Retrieve a database connection string from the shell environment
 try:
@@ -38,14 +38,23 @@ def app(request):
     with app.app_context():
         db = app.extensions['sqlalchemy'].db
         db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
+        db.metadata.bind = db.engine
         with cf.ProcessPoolExecutor() as pool:
             pool.submit(flask_migrate.upgrade)
         yield app
         db.session.remove()  # looks like db.session.close() would work as well
-        db.drop_all()
+        db.metadata.drop_all()
         db_indice_pollution.session.remove()
         db_indice_pollution.drop_all()
 
 @pytest.fixture(scope='function')
 def _db(app):
     return app.extensions['sqlalchemy'].db
+
+@pytest.fixture(scope='function')
+def commune(db_session):
+    from indice_pollution.history.models import Commune
+    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"])
+    db_session.add(commune)
+    db_session.commit()
+    return commune
