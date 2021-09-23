@@ -1,30 +1,41 @@
 from marshmallow import Schema, ValidationError, post_load, pre_dump, validates
 from marshmallow.decorators import pre_load, validates_schema
-from marshmallow.validate import OneOf
-from marshmallow.fields import Boolean, Str, List, Nested, Email 
-import requests
+from marshmallow.validate import OneOf, Length
+from marshmallow.fields import Boolean, Str, List, Nested, Email
 from flask_rebar import ResponseSchema, RequestSchema
 from ecosante.inscription.models import Inscription
 from ecosante.utils.custom_fields import TempList
 from ecosante.api.schemas.commune import CommuneSchema
 from indice_pollution.history.models import Commune as CommuneModel
 
+
+def list_str(choices, max_length=None, **kwargs):
+    return List(
+        Str(validate=OneOf(choices=choices)),
+        required=False,
+        allow_none=True,
+        validate=Length(min=0, max=max_length) if max_length else None,
+        **kwargs
+    )
+
 class User(Schema):
-    commune = Nested(CommuneSchema, required=False, exclude=('departement', ), allow_none=True)
+    commune = Nested(CommuneSchema, required=False, allow_none=True)
     uid = Str(dump_only=True)
-    diffusion = TempList(Str(validate=OneOf(["mail"])), allow_none=True, required=False)
     mail = Email(required=True)
-    frequence = TempList(Str(validate=OneOf(["quotidien", "pollution"])), required=False, allow_none=True)
-    deplacement = List(Str(validate=OneOf(["velo", "tec", "sport", "voiture", "aucun"])), required=False, allow_none=True)
-    apa = Boolean(required=False, allow_none=True)
-    activites = List(Str(validate=OneOf(["jardinage", "bricolage", "menage", "sport", "aucun"])), required=False, allow_none=True)
-    enfants = List(Str(validate=OneOf(["oui", "non", "aucun"])), required=False, allow_none=True)
-    chauffage = List(Str(validate=OneOf(["bois", "chaudiere", "appoint", "aucun"])), required=False, allow_none=True)
-    animaux_domestiques = List(Str(validate=OneOf(["chat", "chien", "aucun"])), required=False, allow_none=True)
-    connaissance_produit = List(Str(validate=OneOf(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "autrement"])), required=False, allow_none=True)
-    population = List(Str(validate=OneOf(["pathologie_respiratoire", "allergie_pollens", "aucun"])), required=False, allow_none=True)
-    recommandations = List(Str(validate=OneOf(["quotidien", "hebdomadaire"])), required=False, allow_none=True)
-    notifications = List(Str(validate=OneOf(["quotidien", "aucun"])), required=False, allow_none=True)
+    deplacement = list_str(["velo", "tec", "sport", "voiture", "aucun"])
+    activites = list_str(["jardinage", "bricolage", "menage", "sport", "aucun"])
+    enfants = list_str(["oui", "non", "aucun"])
+    chauffage = list_str(["bois", "chaudiere", "appoint", "aucun"])
+    animaux_domestiques = list_str(["chat", "chien", "aucun"])
+    connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "autrement"])
+    population = list_str(["pathologie_respiratoire", "allergie_pollens", "aucun"])
+    indicateurs = list_str(["indice_atmo", "raep", "indice_uv", "vigilance_meteorologique"])
+    indicateurs_frequence = list_str(["quotidien", "hebdomadaire", "pollution"], 1)
+    indicateurs_media = list_str(["mail", "notifications_web"])
+    recommandations = list_str(["oui"], 1, attribute='recommandations')
+    recommandations_frequence = list_str(["quotidien", "hebdomadaire", "pollution"], 1)
+    recommandations_media = list_str(["mail", "notifications_web"])
+
 
 class Response(User, ResponseSchema):
     pass

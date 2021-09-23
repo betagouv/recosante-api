@@ -48,6 +48,14 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
+    #Indicateurs
+    indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
+    indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
+    indicateurs_media: List[str] = db.Column(postgresql.ARRAY(db.String))
+    #Recommandations
+    recommandations_actives: List[str] = db.Column(postgresql.ARRAY(db.String))
+    recommandations_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
+    recommandations_media: List[str] = db.Column(postgresql.ARRAY(db.String))
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
