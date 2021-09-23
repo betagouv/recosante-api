@@ -36,6 +36,7 @@ class User(Schema):
     recommandations = list_str(["oui"], 1, attribute='recommandations')
     recommandations_frequence = list_str(["quotidien", "hebdomadaire", "pollution"], 1)
     recommandations_media = list_str(["mail", "notifications_web"])
+    webpush_subscription_info = Str(required=False, allow_none=True)
 
 
 class Response(User, ResponseSchema):

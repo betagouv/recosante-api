@@ -48,6 +48,7 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
+    webpush_subscription_info: str = db.Column(db.String)
     #Indicateurs
     indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
     indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))

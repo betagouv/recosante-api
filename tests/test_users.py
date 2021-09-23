@@ -1,5 +1,6 @@
 from ecosante.inscription.models import Inscription
 from ecosante.users.schemas import User
+import json
 
 def test_no_mail(client):
     data = {
@@ -111,3 +112,21 @@ def test_get_user(commune, client):
     assert response.status_code == 200
     assert response.json['uid'] == uid
     assert response.json['mail'] == data['mail']
+
+def test_webpush_subscription_info(commune, client):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        },
+        "webpush_subscription_info": """{
+            "endpoint": "https://updates.push.services.mozilla.com/push/v1/gAA...",
+            "keys": { "auth": "k8J...", "p256dh": "BOr..." }
+        }"""
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+    jdata = json.loads(data['webpush_subscription_info'])
+    rdata = json.loads(response.json['webpush_subscription_info'])
+    assert jdata['endpoint'] == rdata['endpoint']
+    assert jdata['keys'] == rdata['keys']
