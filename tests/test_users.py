@@ -55,7 +55,7 @@ def validate_choice(client, attribute_name, choice):
 
 def test_list_user(client, commune):
     listes = [
-        'deplacement', 'activites', 'enfants', 'chauffage', 'animaux_domestiques',
+        'deplacement', 'activites', 'chauffage', 'animaux_domestiques',
         'connaissance_produit', 'population',  'indicateurs', 'indicateurs_media', 
         'recommandations', 'recommandations_media']
     for attribute_name in listes:

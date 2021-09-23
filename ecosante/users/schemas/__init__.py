@@ -33,7 +33,7 @@ class User(Schema):
     indicateurs = list_str(["indice_atmo", "raep", "indice_uv", "vigilance_meteorologique"])
     indicateurs_frequence = list_str(["quotidien", "hebdomadaire", "pollution"], 1)
     indicateurs_media = list_str(["mail", "notifications_web"])
-    recommandations = list_str(["oui"], 1, attribute='recommandations')
+    recommandations = list_str(["oui"], 1, attribute='recommandations_actives')
     recommandations_frequence = list_str(["quotidien", "hebdomadaire", "pollution"], 1)
     recommandations_media = list_str(["mail", "notifications_web"])
     webpush_subscription_info = Str(required=False, allow_none=True)
