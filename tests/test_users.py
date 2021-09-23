@@ -95,3 +95,19 @@ def test_enfants(client, commune):
     }
     response = client.post('/users/', json=data)
     assert response.status_code == 201
+
+def test_get_user(commune, client):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        },
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+
+    uid = response.json["uid"]
+    response = client.get(f'/users/{uid}')
+    assert response.status_code == 200
+    assert response.json['uid'] == uid
+    assert response.json['mail'] == data['mail']
