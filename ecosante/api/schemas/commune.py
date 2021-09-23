@@ -1,4 +1,6 @@
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, post_load
+from indice_pollution.history.models import Commune as CommuneModel
+from ecosante.extensions import db
 
 class DepartementSchema(Schema):
     code = fields.String()
