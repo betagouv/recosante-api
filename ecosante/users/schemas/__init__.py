@@ -9,8 +9,9 @@ from ecosante.api.schemas.commune import CommuneSchema
 from indice_pollution.history.models import Commune as CommuneModel
 
 
-def list_str(choices, max_length=None, **kwargs):
-    return List(
+def list_str(choices, max_length=None, temp=False, **kwargs):
+    t = TempList if temp else List
+    return t(
         Str(validate=OneOf(choices=choices)),
         required=False,
         allow_none=True,
@@ -24,7 +25,7 @@ class User(Schema):
     mail = Email(required=True)
     deplacement = list_str(["velo", "tec", "sport", "voiture", "aucun"])
     activites = list_str(["jardinage", "bricolage", "menage", "sport", "aucun"])
-    enfants = list_str(["oui", "non", "aucun"])
+    enfants = list_str(["oui", "non", "aucun"], temp=True)
     chauffage = list_str(["bois", "chaudiere", "appoint", "aucun"])
     animaux_domestiques = list_str(["chat", "chien", "aucun"])
     connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "autrement"])

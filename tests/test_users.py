@@ -1,11 +1,9 @@
 from ecosante.inscription.models import Inscription
 from ecosante.users.schemas import User
-from itertools import permutations
-
 
 def test_no_mail(client):
     data = {
-        "ville": {
+        "commune": {
             "code": "53130"
         },
         'deplacement': ['velo', 'tec'],
@@ -22,9 +20,6 @@ def test_bad_mail(client):
 
 def test_default(client, commune):
     data = {
-        'deplacement': ['velo', 'tec'],
-        'activites': ['jardinage'],
-        'population': ['pathologie_respiratoire', 'allergie_pollens'],
         'mail': 'lebo@tonvelo.com',
         "commune": {
             "code": "53130"
@@ -77,3 +72,26 @@ def test_list_user(client, commune):
             attribute_name: ["cestnul!"]
         })
         assert response.status_code == 400
+
+def test_enfants(client, commune):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        },
+        "enfants": ["aucun"]
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+
+    inscription = Inscription.query.filter_by(mail=data['mail']).first()
+    assert inscription.enfants == data['enfants'][0]
+
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        }
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
