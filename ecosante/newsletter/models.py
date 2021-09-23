@@ -213,7 +213,14 @@ class Newsletter:
         last_type = last_recommandation.type_ if last_recommandation else ""
 
         eligible_recommandations = filter(
-            lambda r: recommandations[r[1]].is_relevant(self.inscription, self.qualif, self.polluants, self.raep, self.date), 
+            lambda r: recommandations[r[1]].is_relevant(
+                inscription=self.inscription,
+                qualif=self.qualif,
+                polluants=self.polluants,
+                raep=self.raep,
+                date_=self.date,
+                media='newsletter'
+            ),
             sorted(
                 sorted_recommandation_ids,
                 key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)

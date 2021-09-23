@@ -1,4 +1,3 @@
-from marshmallow.utils import pprint
 from .indice import FullIndiceSchema, IndiceSchema
 from marshmallow import fields
 

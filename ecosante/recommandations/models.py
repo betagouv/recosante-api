@@ -182,7 +182,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription, qualif, polluants: List[str], raep: int, date_: date, media: str = 'newsletter', types: List[str] = ["generale", "episode_pollution", "pollens"]):
+    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'newsletter', types: List[str] = ["generale", "episode_pollution", "pollens"]):
         #Inscription
         if inscription:
             if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -198,7 +198,9 @@ class Recommandation(db.Model):
             if self.personne_allergique is not None and self.personne_allergique != inscription.allergie_pollens:
                 return False
         # Environnement
-        if "episode_pollution" in types:
+        if polluants and self.type_ != "episode_pollution":
+            return False
+        if self.type_ == "episode_pollution":
             if polluants:
                 for polluant in polluants:
                     if getattr(self, polluant):
@@ -207,15 +209,17 @@ class Recommandation(db.Model):
             else:
                 if self.polluants:
                     return False
-        if "generale" in types:
+        if self.type_ == "generale":
             if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
                 if not self.is_relevant_qualif(qualif):
                     return False
         # Pollens
-        if "pollens" in types:
-            if self.type_ == "pollens":
-                if raep == None or raep == 0:
-                    return False
+        if self.type_ == "pollens":
+            if raep == None or raep == 0:
+                return False
+            if self.min_raep and raep < self.min_raep:
+                return False
+            if "newsletter" in self.montrer_dans:
                 if 0 < raep < 4: #RAEP Faible
                     if inscription and inscription.allergie_pollens:
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
@@ -226,17 +230,22 @@ class Recommandation(db.Model):
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
                     else:
                         return False
+        # Radon
+        if self.type_ == "radon":
+            if potentiel_radon not in self.potentiel_radon:
+                return False
         # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
         # Pour déterminer la saison
-        season = date_.month%12//3 + 1
-        if self.hiver and season != 1:
-            return False
-        elif self.printemps and season != 2:
-            return False
-        elif self.ete and season != 3:
-            return False
-        elif self.automne and season != 4:
-            return False
+        if date_:
+            season = date_.month%12//3 + 1
+            if self.hiver and season != 1:
+                return False
+            elif self.printemps and season != 2:
+                return False
+            elif self.ete and season != 3:
+                return False
+            elif self.automne and season != 4:
+                return False
 
         return media in self.montrer_dans and self.type_ in types
 

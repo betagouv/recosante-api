@@ -6,10 +6,12 @@ from ecosante.recommandations.models import Recommandation
 
 registry = rebar.create_handler_registry(prefix='/v1')
 
-def get_advice(advices, indice_atmo, indice_raep, type_):
+def get_advice(advices, type_, **kwargs):
+    kwargs['types'] = [type_]
+    kwargs['media'] = 'dashboard'
     try:
         return next(filter(
-            lambda r: r.is_relevant(None, indice_atmo.indice, [], int(indice_raep["data"]["total"]), indice_atmo.date_ech, "dashboard", [type_]),
+            lambda r: r.is_relevant(**kwargs),
             advices
         ))
     except StopIteration:
@@ -30,9 +32,9 @@ def index():
     indice_raep = raep(insee)
     potentiel_radon = PotentielRadon.get(insee)
 
-    advice_atmo = get_advice(advices, indice_atmo, indice_raep, "generale")
-    advice_raep = get_advice(advices, indice_atmo, indice_raep, "pollens")
-    advice_radon = get_advice(advices, indice_atmo, indice_raep, "radon")
+    advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice)
+    advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"]))
+    advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
 
     return {
         "commune": indice_atmo.commune,
@@ -42,10 +44,18 @@ def index():
         },
         "raep": {
             "indice": indice_raep,
-            "advice": advice_raep
+            "advice": advice_raep,
+            "sources": [{
+                "label": "Le Réseau National de Surveillance Aérobiologique (R.N.S.A.)",
+                "url": "https://www.pollens.fr/"
+            }]
         },
         "potentiel_radon": {
             "indice": potentiel_radon,
-            "advice": advice_radon
+            "advice": advice_radon,
+            "sources": [{
+                "label": " Institut de radioprotection et de sûreté nucléaire (IRSN) ",
+                "url": "https://www.data.gouv.fr/fr/datasets/connaitre-le-potentiel-radon-de-ma-commune/"
+            }]
         }
     }

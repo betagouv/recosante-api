@@ -2,14 +2,15 @@ from marshmallow.utils import pprint
 from ecosante.api.schemas.indice import FullIndiceSchema, IndiceDetailsSchema, IndiceSchema, NestedIndiceSchema
 from marshmallow import fields, pre_dump
 from datetime import datetime
-from ecosante.newsletter.models import Newsletter
+from ecosante.newsletter.models import Newsletter, Recommandation
 
 class NestedIndiceRAEPSchema(NestedIndiceSchema):
     value = fields.Integer(attribute='total')
 
     @pre_dump
     def load_couleur_qualif(self, data, *args, **kwargs):
-        data['label'] = Newsletter.raep_value_to_qualif(int(data['total']))
+        label = Newsletter.raep_value_to_qualif(int(data['total']))
+        data['label'] = label.capitalize() if label else None
         data['color'] = Newsletter.raep_value_to_couleur(int(data['total']))
         return data
 
@@ -30,6 +31,12 @@ class IndiceRAEP(FullIndiceSchema):
     @pre_dump
     def load_indice_raep(self, data, many, **kwargs):
         date_format = "%d/%m/%Y"
+        advice = next(
+            filter(
+                lambda r: r.is_relevant(types=['pollens'], media='dashboard', raep=int(data['indice']['data']['total'])),
+                Recommandation.published_query().all()
+            )
+        )
         return {
             "indice": data["indice"]["data"],
             "validity": {
@@ -37,5 +44,6 @@ class IndiceRAEP(FullIndiceSchema):
                 "end": datetime.strptime(data["indice"]["data"]["periode_validite"]["fin"], date_format),
                 "area": data["indice"]["departement"]["nom"]
             },
-            "advice": data['advice']
+            "advice": advice,
+            "sources": data.get('sources')
         }

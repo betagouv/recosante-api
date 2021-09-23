@@ -97,15 +97,15 @@ def test_is_qualite_bonne_mauvaise():
     assert r.is_relevant(i, "extrement_mauvais", [], 0, date.today())
 
 def test_is_relevant_ozone():
-    r = published_recommandation(ozone=True)
+    r = published_recommandation(ozone=True, type_="episode_pollution")
     i = Inscription()
-    assert r.is_relevant(i, "bon", ["ozone"], 0, date.today())
-    assert r.is_relevant(i, "moyen", ["ozone", "particules_fines"], 0, date.today())
-    assert not r.is_relevant(i, "degrade", [], 0, date.today())
-    assert not r.is_relevant(i, "degrade", ["particules_fines"], 0, date.today())
+    assert r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
+    assert r.is_relevant(inscription=i, qualif="moyen", polluants=["ozone", "particules_fines"], raep=0, date_=date.today())
+    assert not r.is_relevant(inscription=i, qualif="degrade", polluants=[], raep=0, date_=date.today())
+    assert not r.is_relevant(inscription=i, qualif="degrade", polluants=["particules_fines"], raep=0, date_=date.today())
 
 def test_is_relevant_particules_fines():
-    r = published_recommandation(particules_fines=True)
+    r = published_recommandation(particules_fines=True, type_="episode_pollution")
     i = Inscription()
     assert r.is_relevant(i, "degrade", ["particules_fines"], 0, date.today())
     assert r.is_relevant(i, "moyen", ["ozone", "particules_fines"], 0, date.today())
@@ -113,7 +113,7 @@ def test_is_relevant_particules_fines():
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
 def test_is_relevant_dioxyde_azote():
-    r = published_recommandation(dioxyde_azote=True)
+    r = published_recommandation(dioxyde_azote=True, type_="episode_pollution")
     i = Inscription()
     assert r.is_relevant(i, "degrade", ["dioxyde_azote"], 0, date.today())
     assert r.is_relevant(i, "moyen", ["ozone", "dioxyde_azote"], 0, date.today())
@@ -121,7 +121,7 @@ def test_is_relevant_dioxyde_azote():
     assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
 
 def test_is_relevant_dioxyde_soufre():
-    r = published_recommandation(dioxyde_soufre=True)
+    r = published_recommandation(dioxyde_soufre=True, type_="episode_pollution")
     i = Inscription()
     assert r.is_relevant(i, "degrade", ["dioxyde_soufre"], 0, date.today())
     assert r.is_relevant(i, "moyen", ["ozone", "dioxyde_soufre"], 0, date.today())
@@ -145,18 +145,18 @@ def test_reco_pollen_pollution():
     r = published_recommandation(type_="pollens")
 
     i = Inscription(allergie_pollens=False)
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
     i = Inscription(allergie_pollens=True)
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
     r = published_recommandation(type_="generale")
 
     i = Inscription(allergie_pollens=False)
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
     i = Inscription(allergie_pollens=True)
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
 def test_reco_pollen_pas_pollution_raep_nul():
     r = published_recommandation(type_="pollens")
@@ -181,11 +181,11 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_bon():
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
         i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(i, "bon", [], 1, date_)
+        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_)
 
         #On veut envoyer le mercredi et le samedi
         i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(i, "bon", [], 1, date_) == (date_.weekday() in [2, 5])
+        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_) == (date_.weekday() in [2, 5])
 
 def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais():
     r = published_recommandation(type_="pollens")
@@ -193,11 +193,11 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais():
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
         i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(i, "bon", [], 1, date_)
+        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_)
 
         #On veut envoyer le mercredi et le samedi
         i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(i, "bon", [], 1, date_) == (date_.weekday() in [2, 5])
+        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_) == (date_.weekday() in [2, 5])
 
 def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon():
     r = published_recommandation(type_="pollens")
@@ -205,11 +205,11 @@ def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon():
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
         i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(i, "bon", [], 6, date_)
+        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_)
 
         #On veut envoyer le mercredi et le samedi
         i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(i, "bon", [], 6, date_) == (date_.weekday() in [2, 5])
+        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_) == (date_.weekday() in [2, 5])
 
 def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais():
     r = published_recommandation(type_="pollens")
@@ -217,11 +217,11 @@ def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais():
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
         i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(i, "bon", [], 6, date_)
+        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_)
 
         #On veut envoyer le mercredi et le samedi
         i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(i, "bon", [], 6, date_) == (date_.weekday() in [2, 5])
+        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_) == (date_.weekday() in [2, 5])
 
 def test_chauffage():
     r = published_recommandation(chauffage=[])
@@ -324,8 +324,8 @@ def test_personne_allergique():
 
 def test_widget():
     r = published_recommandation(personne_allergique=None, montrer_dans=['widget'])
-    assert r.is_relevant(None, "bon", [], 0, date.today(), 'widget', 'generale') == True
+    assert r.is_relevant(qualif="bon", media='widget', types=['generale']) == True
 
 def test_dashboard():
     r = published_recommandation(montrer_dans=['dashboard'])
-    assert r.is_relevant(None, "bon", [], 0, date.today(), 'dashboard', 'generale')
+    assert r.is_relevant(qualif="bon", media='dashboard', types=['generale']) == True
