@@ -18,7 +18,6 @@ def post_users():
     db.session.commit()
     return inscription, 201
 
-
 @registry.handles(
     rule='/<uid>',
     method='GET',
