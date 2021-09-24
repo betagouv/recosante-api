@@ -113,7 +113,7 @@ def import_(task, newsletters, force_send=False, overhead=0):
     r = lists_api.create_list(
         sib_api_v3_sdk.CreateList(
             name=f'{now} - mail',
-            folder_id=os.getenv('SIB_FOLDERID', 5)
+            folder_id=int(os.getenv('SIB_FOLDERID', 5))
         )
     )
     mail_list_id = r.id
@@ -174,7 +174,7 @@ def import_(task, newsletters, force_send=False, overhead=0):
         db.session.commit()
 
     if current_app.config['ENV'] == 'production':
-        template_id = os.getenv('SIB_EMAIL_TEMPLATE_ID', 526)
+        template_id = int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 526))
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         template = transactional_api.get_smtp_template(int(template_id))
