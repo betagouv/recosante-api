@@ -15,6 +15,8 @@ class IndiceATMODetailsSchema(IndiceDetailsSchema):
     @pre_dump
     def envelop_data(self, data, **kwargs):
         data['indice'] = {k: v for k, v in data.items() if k != 'polluant_name'}
+        if data.get('polluant_name') == 'PM25':
+            data['polluant_name'] = 'PM2,5'
         return data
 
 class IndiceATMOSchema(NestedIndiceATMOSchema):
