@@ -14,6 +14,7 @@ from datetime import date
 from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.attributes import flag_modified
+import json
 
 @dataclass
 class Inscription(db.Model):
@@ -48,7 +49,7 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
-    webpush_subscription_info: str = db.Column(db.String)
+    _webpush_subscriptions_info: str = db.Column("webpush_subscriptions_info", db.String)
     #Indicateurs
     indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
     indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
@@ -357,3 +358,39 @@ class Inscription(db.Model):
                 setattr(self, attribute, value[0])
                 return
         self.diffusion = None
+
+    @hybrid_property
+    def webpush_subscriptions_info(self):
+        return json.loads(self._webpush_subscriptions_info)
+    @webpush_subscriptions_info.setter
+    def webpush_subscriptions_info(self, value):
+        new_value = self.__class__.make_new_value_webpush_subscriptions_info(self.webpush_subscriptions_info, value)
+        if new_value:
+            self._webpush_subscriptions_info = new_value
+    @classmethod
+    def make_new_value_webpush_subscriptions_info(cls, old_value, new_value):
+        try:
+            j_new_value = json.loads(new_value)
+        except json.JSONDecodeError as e:
+            return None
+        if isinstance(j_new_value, dict):
+            j_new_value = [j_new_value]
+        elif isinstance(j_new_value, list):
+            pass
+        else:
+            return None
+        return_value = []
+        for v in old_value + j_new_value:
+            if any([cls.is_equal_webpush_subcriptions_info(v, w) for w in return_value]):
+                continue
+            return_value.append(v)
+        return return_value
+
+    @classmethod
+    def is_equal_webpush_subcriptions_info(cls, val1, val2):
+        return val1['endpoint'] == val2['endpoint'] and\
+               val1['keys'] == val2['keys']
+
+    @classmethod
+    def is_valid_webpush_subscriptions_info(cls, val):
+        return 'endpoint' in val and 'keys' in val
