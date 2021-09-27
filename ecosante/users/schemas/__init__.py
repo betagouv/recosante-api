@@ -1,12 +1,13 @@
-from marshmallow import Schema, ValidationError, post_load, pre_dump, validates
-from marshmallow.decorators import pre_load, validates_schema
+from dataclasses import field
+from marshmallow import Schema, ValidationError, post_load
 from marshmallow.validate import OneOf, Length
-from marshmallow.fields import Boolean, Str, List, Nested, Email
-from flask_rebar import ResponseSchema, RequestSchema
+from marshmallow.fields import Str, List, Nested, Email
+from flask_rebar import ResponseSchema, RequestSchema, errors
 from ecosante.inscription.models import Inscription
 from ecosante.utils.custom_fields import TempList
 from ecosante.api.schemas.commune import CommuneSchema
 from indice_pollution.history.models import Commune as CommuneModel
+from flask import request
 
 
 def list_str(choices, max_length=None, temp=False, **kwargs):
@@ -43,13 +44,30 @@ class Response(User, ResponseSchema):
     pass
     
 
-class Request(User, RequestSchema):
+class RequestPOST(User, RequestSchema):
     @post_load
     def make_inscription(self, data, **kwargs):
         inscription = Inscription.query.filter_by(mail=data['mail']).first()
         if inscription:
-            for k, v in data.items():
-                setattr(inscription, k, v)
-        else:
-            inscription = Inscription(**data)
+            raise ValidationError('mail already used', field_name='mail')
+        inscription = Inscription(**data)
+        return inscription
+
+class RequestPOSTID(User, RequestSchema):
+    @post_load
+    def make_inscription(self, data, **kwargs):
+        uid = request.view_args.get('uid')
+        if not uid:
+            raise ValidationError('uid is required')
+        inscription = Inscription.query.filter_by(uid=uid).first()
+        if not inscription:
+            raise errors.NotFound('uid unknown')
+        inscription_same_mail = Inscription.query.filter(
+            Inscription.uid != uid,
+            Inscription.mail == data['mail']
+        ).first()
+        if inscription_same_mail:
+            raise errors.Conflict('user with this mail already exists')
+        for k, v in data.items():
+            setattr(inscription, k, v) 
         return inscription

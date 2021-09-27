@@ -19,6 +19,20 @@ def test_bad_mail(client):
     response = client.post('/users/', json=data)
     assert response.status_code == 400
 
+def test_same_mail(client):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        },
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+    response = client.post('/users/', json=data)
+    assert response.status_code == 400
+    assert 'mail' in response.json['errors']
+    assert 'already used' in response.json['errors']['mail']
+
 def test_default(client, commune):
     data = {
         'mail': 'lebo@tonvelo.com',
@@ -44,7 +58,8 @@ def test_default(client, commune):
 
     assert inscription.commune.id == commune.id
 
-def validate_choice(client, attribute_name, choice):
+def validate_choice(db_session, client, attribute_name, choice):
+    db_session.execute('TRUNCATE inscription CASCADE')
     response = client.post('/users/', json={
         'mail': 'lebo@tonvelo.com',
         'commune': {'code': '53130'},
@@ -53,7 +68,7 @@ def validate_choice(client, attribute_name, choice):
     assert response.status_code == 201
     assert response.json[attribute_name] == choice
 
-def test_list_user(client, commune):
+def test_list_user(db_session, client, commune):
     listes = [
         'deplacement', 'activites', 'chauffage', 'animaux_domestiques',
         'connaissance_produit', 'population',  'indicateurs', 'indicateurs_media', 
@@ -63,10 +78,10 @@ def test_list_user(client, commune):
         one_of_validator = next(filter(lambda v: hasattr(v, 'choices'), attribute.inner.validators))
         choices = one_of_validator.choices
 
-        validate_choice(client, attribute_name, [])
-        validate_choice(client, attribute_name, [choices[0]])
-        if len(choices) > 1:
-            validate_choice(client, attribute_name, choices[0:2])
+        validate_choice(db_session, client, attribute_name, [])
+        validate_choice(db_session, client, attribute_name, [choices[0]])
+        if len(choices) > 1 and attribute_name != 'recommandations':
+            validate_choice(db_session, client, attribute_name, choices[0:2])
         
         response = client.post('/users/', json={
             'mail': 'lebo@tonvelo.com',
@@ -88,15 +103,6 @@ def test_enfants(client, commune):
     inscription = Inscription.query.filter_by(mail=data['mail']).first()
     assert inscription.enfants == data['enfants'][0]
 
-    data = {
-        'mail': 'lebo@tonvelo.com',
-        "commune": {
-            "code": "53130"
-        }
-    }
-    response = client.post('/users/', json=data)
-    assert response.status_code == 201
-
 def test_get_user(commune, client):
     data = {
         'mail': 'lebo@tonvelo.com',
@@ -113,20 +119,75 @@ def test_get_user(commune, client):
     assert response.json['uid'] == uid
     assert response.json['mail'] == data['mail']
 
-def test_webpush_subscription_info(commune, client):
+def test_webpush_subscriptions_info(commune, client):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {
             "code": "53130"
         },
-        "webpush_subscription_info": """{
+        "webpush_subscriptions_info": """{
             "endpoint": "https://updates.push.services.mozilla.com/push/v1/gAA...",
             "keys": { "auth": "k8J...", "p256dh": "BOr..." }
         }"""
     }
     response = client.post('/users/', json=data)
     assert response.status_code == 201
-    jdata = json.loads(data['webpush_subscription_info'])
-    rdata = json.loads(response.json['webpush_subscription_info'])
-    assert jdata['endpoint'] == rdata['endpoint']
-    assert jdata['keys'] == rdata['keys']
+    jdata = json.loads(data['webpush_subscriptions_info'])
+    inscription = Inscription.query.filter_by(mail='lebo@tonvelo.com').first()
+    assert inscription.webpush_subscriptions_info[0]['endpoint'] == jdata['endpoint']
+    assert inscription.webpush_subscriptions_info[0]['keys'] == jdata['keys']
+
+
+def test_update_user_bad_uid(commune, client):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        }
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+    uid = response.json['uid'] + 'bad'
+    response = client.post(f'/users/{uid}', json=data)
+    assert response.status_code == 404
+
+
+def test_update_user(commune, client):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        }
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+    inscription = Inscription.query.filter_by(mail=data['mail']).first()
+    assert inscription is not None
+    assert inscription.animaux_domestiques == None
+
+    uid = response.json['uid']
+    data['animaux_domestiques'] = ['chat']
+    response = client.post(f'/users/{uid}', json=data)
+    assert response.status_code == 200
+    inscription = Inscription.query.filter_by(mail=data['mail']).first()
+    assert inscription is not None
+    assert inscription.animaux_domestiques == data['animaux_domestiques']
+
+def test_update_user_with_existing_email(commune, client):
+    data = {
+        'mail': 'lebo@tonvelo.com',
+        "commune": {
+            "code": "53130"
+        }
+    }
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+
+    data['mail'] = 'letrebo@tonvelo.com'
+    response = client.post('/users/', json=data)
+    assert response.status_code == 201
+    uid = response.json['uid']
+
+    data['mail'] = 'lebo@tonvelo.com'
+    response = client.post(f'/users/{uid}', json=data)
+    assert response.status_code == 409

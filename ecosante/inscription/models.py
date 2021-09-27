@@ -359,14 +359,17 @@ class Inscription(db.Model):
                 return
         self.diffusion = None
 
-    @hybrid_property
+    @property
     def webpush_subscriptions_info(self):
+        if self._webpush_subscriptions_info is None:
+            return None
         return json.loads(self._webpush_subscriptions_info)
     @webpush_subscriptions_info.setter
     def webpush_subscriptions_info(self, value):
         new_value = self.__class__.make_new_value_webpush_subscriptions_info(self.webpush_subscriptions_info, value)
         if new_value:
-            self._webpush_subscriptions_info = new_value
+            self._webpush_subscriptions_info = json.dumps(new_value)
+
     @classmethod
     def make_new_value_webpush_subscriptions_info(cls, old_value, new_value):
         try:
@@ -380,6 +383,7 @@ class Inscription(db.Model):
         else:
             return None
         return_value = []
+        old_value = old_value or []
         for v in old_value + j_new_value:
             if any([cls.is_equal_webpush_subcriptions_info(v, w) for w in return_value]):
                 continue
