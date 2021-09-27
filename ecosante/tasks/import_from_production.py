@@ -58,14 +58,17 @@ def import_recommandations(prod_session):
         db.session.add(clone_model(recommandation, staging_recommandations.get(recommandation.id)))
     db.session.commit()
 
-def import_indices_generic(last_week, prod_session, model, date_col):
+def import_indices_generic(last_week, prod_session, model, date_col, staging_inscrpitions=None):
     model.query.filter(date_col <= last_week).delete()
     db.session.commit()
     hours = int(((datetime.today() + timedelta(days=1)) - last_week).days * 24)
     for d in [(last_week + timedelta(hours=i)) for i in range(1, hours)]:
         indices = list()
         for indice in prod_session.query(model).filter(func.date_trunc('hour', date_col)==d).all():
-            indices.append(clone_data(indice))
+            cloned_data = clone_data(indice)
+            if staging_inscrpitions and hasattr(cloned_data, "inscription_id") and cloned_data.inscription_id not in staging_inscrpitions:
+                continue
+            indices.append(cloned_data)
             if len(indices) == 10000:
                 db.session.execute(
                     insert(
@@ -91,7 +94,8 @@ def import_indices(prod_session):
 
     import_indices_generic(last_week, prod_session, IndiceATMO, IndiceATMO.date_dif)
     import_indices_generic(last_week, prod_session, EpisodePollution, EpisodePollution.date_dif)
-    import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date)
+    staging_inscriptions = set([i.id for i in Inscription.query.all()])
+    import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date, staging_inscriptions)
 
 @celery.task
 def import_from_production():
@@ -102,6 +106,9 @@ def import_from_production():
     prod_Session = sessionmaker(prod_engine)
     prod_session = prod_Session()
 
-    import_inscriptions(prod_session)
+    try:
+        import_inscriptions(prod_session)
+    except:
+        pass
     import_recommandations(prod_session)
     import_indices(prod_session)
