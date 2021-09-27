@@ -96,7 +96,7 @@ def import_indices(prod_session):
 @celery.task
 def import_from_production():
     prod_url = os.getenv('SQLALCHEMY_PROD_DATABASE_URI')
-    if not prod_url or current_app.conf['ENV'] not in ('staging', 'dev'):
+    if not prod_url or celery.conf.env not in ('staging', 'dev'):
         return
     prod_engine = create_engine(prod_url)
     prod_Session = sessionmaker(prod_engine)
