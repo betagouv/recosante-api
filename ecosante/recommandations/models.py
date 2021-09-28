@@ -8,7 +8,8 @@ from  sqlalchemy.sql.expression import func, nullslast
 import uuid
 import random
 from typing import List, Set
-from bs4 import BeautifulSoup
+from markdown import markdown
+from markdown_link_attr_modifier import LinkAttrModifierExtension
 
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
@@ -278,19 +279,17 @@ class Recommandation(db.Model):
     def to_dict(self):
         return asdict(self)
 
-    def sanitizer(self, s):
+    @classmethod
+    def sanitizer(cls, s):
         if s is None:
             return s
-        soup = BeautifulSoup(s, 'html.parser')
-        for link in  soup.find_all('a'):
-            link['target'] = '_blank'
-        result = str(soup)
         for punc in ['?', '!', ';', ':']:
-            result = result.replace(f' {punc}', f' {punc}')
+            result = s.replace(f' {punc}', f' {punc}')
         for punc in [';', ':']:
             result = result.replace(f'{punc} ', f'{punc} ')
-        return result.replace("'", '’')
-
+        result = result.replace("'", '’')
+        result = result.replace("  ", " ")
+        return markdown(s, extensions=[LinkAttrModifierExtension(new_tab='on')])
 
     @property
     def recommandation_sanitized(self) -> str:
