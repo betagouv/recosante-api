@@ -60,7 +60,7 @@ def import_recommandations(prod_session):
 def import_indices_generic(last_week, prod_session, model, date_col):
     model.query.filter(date_col <= last_week).delete()
     db.session.commit()
-    hours = int((datetime.today() - last_week).days * 24)
+    hours = int(((datetime.today() + timedelta(days=1)) - last_week).days * 24)
     for d in [(last_week + timedelta(hours=i)) for i in range(1, hours)]:
         indices = list()
         for indice in prod_session.query(model).filter(func.date_trunc('hour', date_col)==d).all():
