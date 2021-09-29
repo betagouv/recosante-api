@@ -173,6 +173,12 @@ def test_update_user(commune, client):
     assert inscription is not None
     assert inscription.animaux_domestiques == data['animaux_domestiques']
 
+    response = client.post(f'/users/{uid}', json={"animaux_domestiques": ["aucun"]})
+    assert response.status_code == 200
+    inscription = Inscription.query.filter_by(mail=data['mail']).first()
+    assert inscription is not None
+    assert inscription.animaux_domestiques == ["aucun"]
+
 def test_update_user_with_existing_email(commune, client):
     data = {
         'mail': 'lebo@tonvelo.com',

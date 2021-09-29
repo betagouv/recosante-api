@@ -54,6 +54,12 @@ class RequestPOST(User, RequestSchema):
         return inscription
 
 class RequestPOSTID(User, RequestSchema):
+    def __init__(self, **kwargs):
+        super_kwargs = dict(kwargs)
+        partial_arg = super_kwargs.pop('partial', ['mail'])
+        super(RequestPOSTID, self).__init__(partial=partial_arg, **super_kwargs)
+
+
     @post_load
     def make_inscription(self, data, **kwargs):
         uid = request.view_args.get('uid')
@@ -62,12 +68,13 @@ class RequestPOSTID(User, RequestSchema):
         inscription = Inscription.query.filter_by(uid=uid).first()
         if not inscription:
             raise errors.NotFound('uid unknown')
-        inscription_same_mail = Inscription.query.filter(
-            Inscription.uid != uid,
-            Inscription.mail == data['mail']
-        ).first()
-        if inscription_same_mail:
-            raise errors.Conflict('user with this mail already exists')
+        if 'mail' in data:
+            inscription_same_mail = Inscription.query.filter(
+                Inscription.uid != uid,
+                Inscription.mail == data['mail']
+            ).first()
+            if inscription_same_mail:
+                raise errors.Conflict('user with this mail already exists')
         for k, v in data.items():
             setattr(inscription, k, v) 
         return inscription
