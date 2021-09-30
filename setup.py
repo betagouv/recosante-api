@@ -59,7 +59,8 @@ setup(
             'pytest',
             'pytest-alembic',
             'pytest-flask-sqlalchemy',
-            'pytest-postgresql'
+            'pytest-postgresql',
+            'requests-mock'
         ]
     },
     setup_requires=['pytest-runner'],
