@@ -68,7 +68,7 @@ def validate_choice(db_session, client, attribute_name, choice):
     assert response.status_code == 201
     assert response.json[attribute_name] == choice
 
-def test_list_user(db_session, client, commune):
+def test_list_user(db_session, client, commune_commited):
     listes = [
         'deplacement', 'activites', 'chauffage', 'animaux_domestiques',
         'connaissance_produit', 'population',  'indicateurs', 'indicateurs_media', 
@@ -89,7 +89,7 @@ def test_list_user(db_session, client, commune):
         })
         assert response.status_code == 400
 
-def test_enfants(client, commune):
+def test_enfants(client, commune_commited):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {
@@ -103,7 +103,7 @@ def test_enfants(client, commune):
     inscription = Inscription.query.filter_by(mail=data['mail']).first()
     assert inscription.enfants == data['enfants'][0]
 
-def test_get_user(commune, client):
+def test_get_user(commune_commited, client):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {
@@ -119,7 +119,7 @@ def test_get_user(commune, client):
     assert response.json['uid'] == uid
     assert response.json['mail'] == data['mail']
 
-def test_webpush_subscriptions_info(commune, client):
+def test_webpush_subscriptions_info(commune_commited, client):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {
@@ -138,7 +138,7 @@ def test_webpush_subscriptions_info(commune, client):
     assert inscription.webpush_subscriptions_info[0]['keys'] == jdata['keys']
 
 
-def test_update_user_bad_uid(commune, client):
+def test_update_user_bad_uid(commune_commited, client):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {
@@ -152,7 +152,7 @@ def test_update_user_bad_uid(commune, client):
     assert response.status_code == 404
 
 
-def test_update_user(commune, client):
+def test_update_user(commune_commited, client):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {
@@ -179,7 +179,7 @@ def test_update_user(commune, client):
     assert inscription is not None
     assert inscription.animaux_domestiques == ["aucun"]
 
-def test_update_user_with_existing_email(commune, client):
+def test_update_user_with_existing_email(commune_commited, client):
     data = {
         'mail': 'lebo@tonvelo.com',
         "commune": {

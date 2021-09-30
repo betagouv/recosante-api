@@ -7,6 +7,7 @@ from indice_pollution.history.models.commune import Commune
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
 from ecosante.inscription.models import Inscription
@@ -158,6 +159,7 @@ class Newsletter:
                 NewsletterDB.inscription_id
         )
         query = query\
+            .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
             .filter(Inscription.id.notin_(query_nl))\
             .filter(Inscription.date_inscription < str(date.today()))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
@@ -169,20 +171,24 @@ class Newsletter:
             current_app.logger.error(e)
             raise e
         for inscription in query.all():
-            if inscription.ville_insee not in insee_forecast:
+            forecast_ville = insee_forecast.get(inscription.ville_insee)
+            if not forecast_ville:
                 continue
             init_dict = {
                 "inscription": inscription,
                 "recommandations": recommandations,
-                "forecast": insee_forecast[inscription.ville_insee].get("forecast"),
-                "episodes": insee_forecast[inscription.ville_insee].get("episode"),
-                "raep": insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
-                "allergenes": insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes"),
-                "validite_raep": insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite", {}),
+                "forecast": forecast_ville.get("forecast"),
+                "episodes": forecast_ville.get("episode"),
+                "raep": forecast_ville.get("raep", {}).get("total"),
+                "allergenes": forecast_ville.get("raep", {}).get("allergenes"),
+                "validite_raep": forecast_ville.get("raep", {}).get("periode_validite", {}),
             }
             if date_:
                 init_dict['date'] = date_
             newsletter = cls(**init_dict)
+            if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
+                if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                    continue
             yield newsletter
 
     @property

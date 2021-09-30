@@ -6,6 +6,8 @@ import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
 from ecosante.newsletter.models import NewsletterDB
+from ecosante.inscription.models import Inscription
+from .utils import published_recommandation
 
 # Retrieve a database connection string from the shell environment
 try:
@@ -53,8 +55,57 @@ def _db(app):
 
 @pytest.fixture(scope='function')
 def commune(db_session):
-    from indice_pollution.history.models import Commune
-    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"])
-    db_session.add(commune)
-    db_session.commit()
+    from indice_pollution.history.models import Commune, Departement, Region, Zone
+    region = Region(nom="Pays de la Loire", code="52")
+    departement = Departement("Mayenne", "53", region.code)
+    zone = Zone(type='commune', code='53130')
+    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], codeDepartement='53', zone=zone)
+    db_session.add_all([region, departement, zone, commune])
     return commune
+
+@pytest.fixture(scope='function')
+def commune_commited(commune, db_session):
+    db_session.commit()
+
+@pytest.fixture(scope='function')
+def inscription(commune):
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28')
+    return inscription
+
+@pytest.fixture(scope='function')
+def inscription_alerte(commune):
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28')
+    inscription.indicateurs_frequence = ["alerte"]
+    return inscription
+
+@pytest.fixture(scope='function')
+def mauvaise_qualite_air(commune, db_session):
+    from indice_pollution.history.models import IndiceATMO
+    from datetime import date
+    indice = IndiceATMO(
+        zone_id=commune.zone_id,
+        date_ech=date.today(),
+        date_dif=date.today(),
+        no2=4, so2=4, o3=4, pm10=5, pm25=6,
+        valeur=6)
+    db_session.add(indice)
+    return indice
+
+@pytest.fixture(scope='function')
+def bonne_qualite_air(commune, db_session):
+    from indice_pollution.history.models import IndiceATMO
+    from datetime import date
+    indice = IndiceATMO(
+        zone_id=commune.zone_id,
+        date_ech=date.today(),
+        date_dif=date.today(),
+        no2=1, so2=1, o3=1, pm10=1, pm25=1,
+        valeur=1)
+    db_session.add(indice)
+    return indice
+
+@pytest.fixture(scope='function')
+def recommandation(db_session):
+    recommandation = published_recommandation()
+    db_session.add(recommandation)
+    return recommandation
