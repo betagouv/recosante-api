@@ -157,6 +157,8 @@ class Recommandation(db.Model):
     @staticmethod
     def qualif_categorie(qualif):
         # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
+        if not isinstance(qualif, str):
+            return None
         if qualif in (['bon', 'moyen'] + ['tres_bon', 'mediocre']):
             return "bon"
         elif qualif in ['degrade', 'mauvais', 'tres_mauvais', 'extrement_mauvais']:
