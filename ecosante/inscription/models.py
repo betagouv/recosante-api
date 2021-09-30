@@ -63,8 +63,8 @@ class Inscription(db.Model):
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
 
     def __init__(self, **kwargs):
+        kwargs.setdefault("date_inscription", date.today())
         super().__init__(**kwargs)
-        self.date_inscription = date.today()
 
     def has_deplacement(self, deplacement):
         return self.deplacement and deplacement in self.deplacement
