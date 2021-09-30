@@ -31,12 +31,15 @@ class IndiceRAEP(FullIndiceSchema):
     @pre_dump
     def load_indice_raep(self, data, many, **kwargs):
         date_format = "%d/%m/%Y"
-        advice = next(
-            filter(
-                lambda r: r.is_relevant(types=['pollens'], media='dashboard', raep=int(data['indice']['data']['total'])),
-                Recommandation.published_query().all()
+        try:
+            advice = next(
+                filter(
+                    lambda r: r.is_relevant(types=['pollens'], media='dashboard', raep=int(data['indice']['data']['total'])),
+                    Recommandation.published_query().all()
+                )
             )
-        )
+        except StopIteration:
+            advice = Recommandation()
         return {
             "indice": data["indice"]["data"],
             "validity": {
