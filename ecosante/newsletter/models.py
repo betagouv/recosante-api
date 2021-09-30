@@ -312,6 +312,8 @@ class Newsletter:
 
     @property
     def show_raep(self):
+        if not self.inscription.has_indicateur("raep"):
+            return False
         #On envoie pas en cas de polluants
         #ni en cas de risque faible à un personne non-allergique
         if type(self.raep) != int:
@@ -324,6 +326,9 @@ class Newsletter:
             return False
         return True
 
+    @property
+    def show_qa(self):
+        return self.inscription.has_indicateur("indice_atmo")
 
     @property
     def show_radon(self):
@@ -436,8 +441,9 @@ class NewsletterDB(db.Model, Newsletter):
                 "OBJECTIF": self.recommandation.objectif,
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
-                "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y"),
-                "POLLINARIUM_SENTINELLE": False if not commune or not commune.pollinarium_sentinelle else True
+                'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
+                'POLLINARIUM_SENTINELLE': False if not commune or not commune.pollinarium_sentinelle else True,
+                'SHOW_QA': self.show_qa
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))

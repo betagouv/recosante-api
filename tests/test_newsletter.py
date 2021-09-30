@@ -186,7 +186,7 @@ def test_pollens(db_session):
                         else:
                             episode = []
                         nl = Newsletter(
-                            inscription=Inscription(allergie_pollens=allergie_pollens),
+                            inscription=Inscription(allergie_pollens=allergie_pollens, indicateurs=['raep']),
                             forecast={"data": [{"date": date_, "indice": indice}]},
                             episodes={"data": episode},
                             raep=raep,
@@ -215,7 +215,36 @@ def test_pollens(db_session):
                                 else:
                                     assert nl.show_raep == True
                                     assert nl.recommandation.type_ != "pollens"
+                        nl = Newsletter(
+                            inscription=Inscription(allergie_pollens=allergie_pollens, indicateurs=[]),
+                            forecast={"data": [{"date": date_, "indice": indice}]},
+                            episodes={"data": episode},
+                            raep=raep,
+                            date=date_,
+                            recommandations=recommandations
+                        )
+                        assert nl.show_raep == False
 
+def test_show_qa(inscription):
+    inscription.indicateurs = ['indice_atmo']
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_qa == True
+
+    inscription.indicateurs = []
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_qa == False
 
 def test_show_radon_polluants(db_session):
     nl = Newsletter(

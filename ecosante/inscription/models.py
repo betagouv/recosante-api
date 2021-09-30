@@ -398,3 +398,6 @@ class Inscription(db.Model):
     @classmethod
     def is_valid_webpush_subscriptions_info(cls, val):
         return 'endpoint' in val and 'keys' in val
+
+    def has_indicateur(self, indicateur):
+        return isinstance(self.indicateurs, list) and indicateur in self.indicateurs
