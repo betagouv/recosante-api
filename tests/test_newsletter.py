@@ -1,11 +1,6 @@
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
 from datetime import date, timedelta
-
-def published_recommandation(**kw):
-    kw.setdefault('type_', 'generale')
-    kw.setdefault('montrer_dans', ['newsletter'])
-    kw.setdefault('status', 'published')
-    return Recommandation(**kw)
+from .utils import published_recommandation
 
 def test_episode_passe(db_session):
     yesterday = date.today() - timedelta(days=1)
