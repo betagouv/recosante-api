@@ -208,7 +208,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def get_recommandation(self, recommandations: List[Recommandation]):
+    def eligible_recommandations(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
         if not recommandations:
             return None
         last_nl = self.past_nl_query.order_by(text("date DESC")).limit(1).first()
@@ -218,21 +218,30 @@ class Newsletter:
         last_criteres = last_recommandation.criteres if last_recommandation else set()
         last_type = last_recommandation.type_ if last_recommandation else ""
 
-        eligible_recommandations = filter(
+        return filter(
             lambda r: recommandations[r[1]].is_relevant(
                 inscription=self.inscription,
                 qualif=self.qualif,
                 polluants=self.polluants,
                 raep=self.raep,
                 date_=self.date,
-                media='newsletter'
+                media='newsletter',
+                types=types
             ),
             sorted(
                 sorted_recommandation_ids,
                 key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
             )
         )
-        return recommandations[next(eligible_recommandations)[1]]
+
+
+    def get_recommandation(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
+        try:
+            r = next(self.eligible_recommandations(recommandations, types))
+            r_id = r[1]
+            return recommandations[r_id]
+        except StopIteration:
+            return None
 
 
     def csv_line(self):

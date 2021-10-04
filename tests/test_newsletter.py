@@ -602,3 +602,50 @@ text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne
 
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
+
+def test_get_recommandation_simple_case(inscription, recommandation):
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=[recommandation],
+    )
+
+    assert nl.recommandation is not None
+
+def test_get_recommandation_deja_recue(inscription, db_session):
+    yesterday = date.today() - timedelta(days=1)
+    recommandations = [
+        published_recommandation(),
+        published_recommandation()
+    ]
+    db_session.add_all(recommandations)
+    nl1 = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=recommandations,
+        date=yesterday
+    )
+    db_session.add(NewsletterDB(nl1))
+    nl2 = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=recommandations,
+    )
+    assert nl1.recommandation.id != nl2.recommandation.id
+
+def test_get_recommandation_par_type(inscription, db_session):
+    recommandations = [
+        published_recommandation(type_="generale"),
+        published_recommandation(type_="raep")
+    ]
+    db_session.add_all(recommandations)
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=recommandations,
+    )
+    assert all([r[1].type_ == "generale"] for r in nl.eligible_recommandations(recommandations, types=["generale"]))
