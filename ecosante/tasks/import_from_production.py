@@ -108,7 +108,8 @@ def import_from_production():
 
     try:
         import_inscriptions(prod_session)
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         prod_session.rollback()
     import_recommandations(prod_session)
