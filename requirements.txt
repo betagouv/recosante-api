@@ -1,3 +1,4 @@
 .
 celery
 git+git://github.com/jeancochrane/pytest-flask-sqlalchemy@master#egg=pytest-flask-sqlalchemy
+git+git://github.com/l-vincent-l/flask-rebar@master#egg=flask-rebar

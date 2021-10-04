@@ -1,11 +1,7 @@
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
 from datetime import date, timedelta
-
-def published_recommandation(**kw):
-    kw.setdefault('type_', 'generale')
-    kw.setdefault('montrer_dans', ['newsletter'])
-    kw.setdefault('status', 'published')
-    return Recommandation(**kw)
+from .utils import published_recommandation
+import os
 
 def test_episode_passe(db_session):
     yesterday = date.today() - timedelta(days=1)
@@ -190,7 +186,7 @@ def test_pollens(db_session):
                         else:
                             episode = []
                         nl = Newsletter(
-                            inscription=Inscription(allergie_pollens=allergie_pollens),
+                            inscription=Inscription(allergie_pollens=allergie_pollens, indicateurs=['raep']),
                             forecast={"data": [{"date": date_, "indice": indice}]},
                             episodes={"data": episode},
                             raep=raep,
@@ -219,7 +215,36 @@ def test_pollens(db_session):
                                 else:
                                     assert nl.show_raep == True
                                     assert nl.recommandation.type_ != "pollens"
+                        nl = Newsletter(
+                            inscription=Inscription(allergie_pollens=allergie_pollens, indicateurs=[]),
+                            forecast={"data": [{"date": date_, "indice": indice}]},
+                            episodes={"data": episode},
+                            raep=raep,
+                            date=date_,
+                            recommandations=recommandations
+                        )
+                        assert nl.show_raep == False
 
+def test_show_qa(inscription):
+    inscription.indicateurs = ['indice_atmo']
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_qa == True
+
+    inscription.indicateurs = []
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_qa == False
 
 def test_show_radon_polluants(db_session):
     nl = Newsletter(
@@ -493,3 +518,134 @@ def test_sorted_recommandation_query(db_session):
     sorted_recommandations =  nl.sorted_recommandations_query.all()
     next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 2.0
     next(filter(lambda a: a[1] == today_recommandation.id, sorted_recommandations))[0] == 2.0
+
+def test_export(db_session, inscription):
+    db_session.add(published_recommandation())
+    db_session.commit()
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+
+def test_export_user_hebdo(db_session, inscription):
+    inscription.indicateurs_frequence = ["hebdomadaire"]
+    db_session.add(inscription)
+    db_session.add(published_recommandation())
+    db_session.commit()
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
+
+def test_export_user_alerte_mauvaise_qualite_air(inscription_alerte, mauvaise_qualite_air, recommandation):
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+
+def test_export_user_alerte_bonne_qualite_air(inscription_alerte, bonne_qualite_air, recommandation):
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
+
+def test_export_user_alerte_raep_faible(inscription_alerte, recommandation, requests_mock):
+    requests_mock.get(
+        os.getenv('ALLERGIES_URL'),
+text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
+53;mayenne;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+""")
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
+
+def test_export_user_alerte_raep_eleve(inscription_alerte, recommandation, requests_mock):
+    requests_mock.get(
+        os.getenv('ALLERGIES_URL'),
+text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
+53;mayenne;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6
+""")
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+
+def test_export_user_alerte_raep_faible_bonne_qa(inscription_alerte, recommandation, requests_mock, bonne_qualite_air):
+    requests_mock.get(
+        os.getenv('ALLERGIES_URL'),
+text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
+53;mayenne;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+""")
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
+
+def test_export_user_alerte_raep_eleve_bonne_qa(inscription_alerte, recommandation, requests_mock, bonne_qualite_air):
+    requests_mock.get(
+        os.getenv('ALLERGIES_URL'),
+text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
+53;mayenne;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6
+""")
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+
+def test_export_user_alerte_raep_faible_mauvaise_qa(inscription_alerte, recommandation, requests_mock, mauvaise_qualite_air):
+    requests_mock.get(
+        os.getenv('ALLERGIES_URL'),
+text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
+53;mayenne;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+""")
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+
+def test_export_user_alerte_raep_eleve_mauvaise_qa(inscription_alerte, recommandation, requests_mock, mauvaise_qualite_air):
+    requests_mock.get(
+        os.getenv('ALLERGIES_URL'),
+text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
+53;mayenne;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6
+""")
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+
+def test_get_recommandation_simple_case(inscription, recommandation):
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=[recommandation],
+    )
+
+    assert nl.recommandation is not None
+
+def test_get_recommandation_deja_recue(inscription, db_session):
+    yesterday = date.today() - timedelta(days=1)
+    recommandations = [
+        published_recommandation(),
+        published_recommandation()
+    ]
+    db_session.add_all(recommandations)
+    nl1 = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=recommandations,
+        date=yesterday
+    )
+    db_session.add(NewsletterDB(nl1))
+    nl2 = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=recommandations,
+    )
+    assert nl1.recommandation.id != nl2.recommandation.id
+
+def test_get_recommandation_par_type(inscription, db_session):
+    recommandations = [
+        published_recommandation(type_="generale"),
+        published_recommandation(type_="raep")
+    ]
+    db_session.add_all(recommandations)
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        recommandations=recommandations,
+    )
+    assert all([r[1].type_ == "generale"] for r in nl.eligible_recommandations(recommandations, types=["generale"]))

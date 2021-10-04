@@ -1,3 +1,4 @@
+from indice_pollution.history.models import Commune
 from ecosante.extensions import db
 from ecosante.utils.funcs import generate_line
 from sqlalchemy.dialects import postgresql
@@ -13,6 +14,7 @@ from datetime import date
 from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.attributes import flag_modified
+import json
 
 @dataclass
 class Inscription(db.Model):
@@ -26,6 +28,8 @@ class Inscription(db.Model):
     ville_entree: str = db.Column(db.String)
     ville_name: str = db.Column(db.String)
     _ville_insee: str = db.Column("ville_insee", db.String)
+    commune_id: int = db.Column(db.Integer, db.ForeignKey(Commune.id))
+    commune: Commune = db.relationship(Commune)
     diffusion: str = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     telephone: str = db.Column(db.String)
     mail: str = db.Column(db.String)
@@ -45,13 +49,22 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
+    _webpush_subscriptions_info: str = db.Column("webpush_subscriptions_info", db.String)
+    #Indicateurs
+    indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
+    indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
+    indicateurs_media: List[str] = db.Column(postgresql.ARRAY(db.String))
+    #Recommandations
+    recommandations_actives: List[str] = db.Column(postgresql.ARRAY(db.String))
+    recommandations_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
+    recommandations_media: List[str] = db.Column(postgresql.ARRAY(db.String))
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
 
     def __init__(self, **kwargs):
+        kwargs.setdefault("date_inscription", date.today())
         super().__init__(**kwargs)
-        self.date_inscription = date.today()
 
     def has_deplacement(self, deplacement):
         return self.deplacement and deplacement in self.deplacement
@@ -205,6 +218,14 @@ class Inscription(db.Model):
         return self.cache_api_commune_get('codesPostaux')
 
     @property
+    def ville(self):
+        return {
+            "nom": self.ville_nom,
+            "code": self.ville_insee,
+            "codes_postaux": self.ville_codes_postaux
+        }
+
+    @property
     def region_name(self):
         return self.cache_api_commune_get('region', {}).get('nom')
 
@@ -319,3 +340,64 @@ class Inscription(db.Model):
             .update({"mail": None})
         db.session.commit()
         return r
+
+    @property
+    def diffusion_liste(self):
+        if self.diffusion:
+            return [self.diffusion]
+        else:
+            return self.diffusion
+
+    @diffusion_liste.setter
+    def diffusion_liste(self, value):
+        self.liste_setter(value, 'diffusion')
+
+    def liste_setter(self, value, attribute):
+        if type(value) == list:
+            if len(value) >= 1:
+                setattr(self, attribute, value[0])
+                return
+        self.diffusion = None
+
+    @property
+    def webpush_subscriptions_info(self):
+        if self._webpush_subscriptions_info is None:
+            return None
+        return json.loads(self._webpush_subscriptions_info)
+    @webpush_subscriptions_info.setter
+    def webpush_subscriptions_info(self, value):
+        new_value = self.__class__.make_new_value_webpush_subscriptions_info(self.webpush_subscriptions_info, value)
+        if new_value:
+            self._webpush_subscriptions_info = json.dumps(new_value)
+
+    @classmethod
+    def make_new_value_webpush_subscriptions_info(cls, old_value, new_value):
+        try:
+            j_new_value = json.loads(new_value)
+        except json.JSONDecodeError as e:
+            return None
+        if isinstance(j_new_value, dict):
+            j_new_value = [j_new_value]
+        elif isinstance(j_new_value, list):
+            pass
+        else:
+            return None
+        return_value = []
+        old_value = old_value or []
+        for v in old_value + j_new_value:
+            if any([cls.is_equal_webpush_subcriptions_info(v, w) for w in return_value]):
+                continue
+            return_value.append(v)
+        return return_value
+
+    @classmethod
+    def is_equal_webpush_subcriptions_info(cls, val1, val2):
+        return val1['endpoint'] == val2['endpoint'] and\
+               val1['keys'] == val2['keys']
+
+    @classmethod
+    def is_valid_webpush_subscriptions_info(cls, val):
+        return 'endpoint' in val and 'keys' in val
+
+    def has_indicateur(self, indicateur):
+        return isinstance(self.indicateurs, list) and indicateur in self.indicateurs

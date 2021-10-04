@@ -1,3 +1,4 @@
+from flask_migrate import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 from ecosante.newsletter.models import NewsletterDB
@@ -57,14 +58,17 @@ def import_recommandations(prod_session):
         db.session.add(clone_model(recommandation, staging_recommandations.get(recommandation.id)))
     db.session.commit()
 
-def import_indices_generic(last_week, prod_session, model, date_col):
+def import_indices_generic(last_week, prod_session, model, date_col, staging_inscriptions=None):
     model.query.filter(date_col <= last_week).delete()
     db.session.commit()
     hours = int(((datetime.today() + timedelta(days=1)) - last_week).days * 24)
     for d in [(last_week + timedelta(hours=i)) for i in range(1, hours)]:
         indices = list()
         for indice in prod_session.query(model).filter(func.date_trunc('hour', date_col)==d).all():
-            indices.append(clone_data(indice))
+            cloned_data = clone_data(indice)
+            if staging_inscriptions and cloned_data['inscription_id'] not in staging_inscriptions:
+                continue
+            indices.append(cloned_data)
             if len(indices) == 10000:
                 db.session.execute(
                     insert(
@@ -90,17 +94,23 @@ def import_indices(prod_session):
 
     import_indices_generic(last_week, prod_session, IndiceATMO, IndiceATMO.date_dif)
     import_indices_generic(last_week, prod_session, EpisodePollution, EpisodePollution.date_dif)
-    import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date)
+    staging_inscriptions = set([i.id for i in Inscription.query.all()])
+    import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date, staging_inscriptions)
 
 @celery.task
 def import_from_production():
     prod_url = os.getenv('SQLALCHEMY_PROD_DATABASE_URI')
-    if not prod_url:
+    if not prod_url or celery.conf.env not in ('staging', 'dev'):
         return
     prod_engine = create_engine(prod_url)
     prod_Session = sessionmaker(prod_engine)
     prod_session = prod_Session()
 
-    import_inscriptions(prod_session)
+    try:
+        import_inscriptions(prod_session)
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        prod_session.rollback()
     import_recommandations(prod_session)
     import_indices(prod_session)

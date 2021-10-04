@@ -21,7 +21,15 @@
             <h4 class="subtitle">Recommandation</h4>
             {{ render_field(form.status) }}
             {{ render_field(form.recommandation) }}
+            <div class="apercu">
+                <button class="button small button-apercu" data-id="recommandation">Apercu</button>
+                <div class="rendu modal"></div>
+            </div>
             {{ render_field(form.precisions) }}
+            <div class="apercu">
+                <button class="button small button-apercu" data-id="precisions">Apercu</button>
+                <div class="rendu modal"></div>
+            </div>
             {{ render_field(form.recommandation_format_SMS) }}
             {{ render_field(form.type_) }}
             <div class="form__group">

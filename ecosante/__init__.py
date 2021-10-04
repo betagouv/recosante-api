@@ -76,6 +76,7 @@ def create_app(testing=False):
         from .newsletter import blueprint as newsletter_bp, tasks
         from .pages import blueprint as pages_bp
         from .api import blueprint as api_bp
+        from .users import blueprint #noqa
         from .utils.funcs import oxford_comma, display_check
 
         app.register_blueprint(inscription_bp.bp)

@@ -33,6 +33,9 @@ def list_recommandations():
     query = make_query(form)
     return jsonify(query.filter(Recommandation.status=="published").all())
 
+@bp.route('_rendu_markdown', methods=['POST'])
+def rendu_markdown():
+    return Recommandation.sanitizer(request.form.get('to_render'))
 
 @bp.route('<secret_slug>/add', methods=['GET', 'POST'])
 @bp.route('add', methods=['GET', 'POST'])
@@ -68,7 +71,8 @@ def edit(id):
     return render_template(
         "edit.html",
         form=form,
-        action="Éditer"
+        action="Éditer",
+        recommandation=recommandation
     )
 
 @bp.route('<secret_slug>/remove/<id>', methods=["GET", "POST"])

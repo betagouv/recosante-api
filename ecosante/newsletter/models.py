@@ -7,6 +7,7 @@ from indice_pollution.history.models.commune import Commune
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
 from ecosante.inscription.models import Inscription
@@ -158,6 +159,7 @@ class Newsletter:
                 NewsletterDB.inscription_id
         )
         query = query\
+            .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
             .filter(Inscription.id.notin_(query_nl))\
             .filter(Inscription.date_inscription < str(date.today()))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
@@ -169,20 +171,24 @@ class Newsletter:
             current_app.logger.error(e)
             raise e
         for inscription in query.all():
-            if inscription.ville_insee not in insee_forecast:
+            forecast_ville = insee_forecast.get(inscription.ville_insee)
+            if not forecast_ville:
                 continue
             init_dict = {
                 "inscription": inscription,
                 "recommandations": recommandations,
-                "forecast": insee_forecast[inscription.ville_insee].get("forecast"),
-                "episodes": insee_forecast[inscription.ville_insee].get("episode"),
-                "raep": insee_forecast[inscription.ville_insee].get("raep", {}).get("total"),
-                "allergenes": insee_forecast[inscription.ville_insee].get("raep", {}).get("allergenes"),
-                "validite_raep": insee_forecast[inscription.ville_insee].get("raep", {}).get("periode_validite", {}),
+                "forecast": forecast_ville.get("forecast"),
+                "episodes": forecast_ville.get("episode"),
+                "raep": forecast_ville.get("raep", {}).get("total"),
+                "allergenes": forecast_ville.get("raep", {}).get("allergenes"),
+                "validite_raep": forecast_ville.get("raep", {}).get("periode_validite", {}),
             }
             if date_:
                 init_dict['date'] = date_
             newsletter = cls(**init_dict)
+            if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
+                if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                    continue
             yield newsletter
 
     @property
@@ -202,7 +208,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def get_recommandation(self, recommandations: List[Recommandation]):
+    def eligible_recommandations(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
         if not recommandations:
             return None
         last_nl = self.past_nl_query.order_by(text("date DESC")).limit(1).first()
@@ -212,21 +218,30 @@ class Newsletter:
         last_criteres = last_recommandation.criteres if last_recommandation else set()
         last_type = last_recommandation.type_ if last_recommandation else ""
 
-        eligible_recommandations = filter(
+        return filter(
             lambda r: recommandations[r[1]].is_relevant(
                 inscription=self.inscription,
                 qualif=self.qualif,
                 polluants=self.polluants,
                 raep=self.raep,
                 date_=self.date,
-                media='newsletter'
+                media='newsletter',
+                types=types
             ),
             sorted(
                 sorted_recommandation_ids,
                 key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
             )
         )
-        return recommandations[next(eligible_recommandations)[1]]
+
+
+    def get_recommandation(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
+        try:
+            r = next(self.eligible_recommandations(recommandations, types))
+            r_id = r[1]
+            return recommandations[r_id]
+        except StopIteration:
+            return None
 
 
     def csv_line(self):
@@ -306,6 +321,8 @@ class Newsletter:
 
     @property
     def show_raep(self):
+        if not self.inscription.has_indicateur("raep"):
+            return False
         #On envoie pas en cas de polluants
         #ni en cas de risque faible à un personne non-allergique
         if type(self.raep) != int:
@@ -318,6 +335,9 @@ class Newsletter:
             return False
         return True
 
+    @property
+    def show_qa(self):
+        return self.inscription.has_indicateur("indice_atmo")
 
     @property
     def show_radon(self):
@@ -430,8 +450,9 @@ class NewsletterDB(db.Model, Newsletter):
                 "OBJECTIF": self.recommandation.objectif,
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
-                "QUALITE_AIR_VALIDITE": self.date.strftime("%d/%m/%Y"),
-                "POLLINARIUM_SENTINELLE": False if not commune or not commune.pollinarium_sentinelle else True
+                'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
+                'POLLINARIUM_SENTINELLE': False if not commune or not commune.pollinarium_sentinelle else True,
+                'SHOW_QA': self.show_qa
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))

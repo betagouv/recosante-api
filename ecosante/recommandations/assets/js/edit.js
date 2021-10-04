@@ -43,4 +43,34 @@ document.addEventListener('DOMContentLoaded', _ => {
             })
         }
     )
+    document.querySelectorAll('.button-apercu').forEach(
+        b => {
+            b.addEventListener('click', e => {
+                e.preventDefault()
+                let parent = e.target.parentNode
+                let rendu = parent.querySelector('.rendu')
+                if (rendu.style.display != undefined && rendu.style.display != 'none') {
+                    rendu.style.display = 'none';
+                } else {
+                    document.querySelectorAll('.rendu').forEach(e => e.style.display = 'none')
+                    let to_render = document.getElementById(e.target.dataset.id).value
+                    var form = new FormData();
+                    form.append('to_render', to_render)
+                    fetch(
+                        '/recommandations/_rendu_markdown',
+                        {
+                            method: 'post',
+                            body: form
+                        }
+                    )
+                    .then(response => response.text())
+                    .then(blob => {
+                        rendu.innerHTML = blob
+                        rendu.style.display = 'block'
+                    })
+                }
+            })
+        }
+    )
+    document.querySelectorAll('.rendu').forEach(e => e.style.display = 'none')
 })
