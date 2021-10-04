@@ -24,9 +24,9 @@ recommandation = table(
     column('recommandation', sa.String),
     column('precisions', sa.String)
 )
-conn = op.get_bind()
 
 def upgrade():
+    conn = op.get_bind()
     res = conn.execute(recommandation.select())
     for r in res:
         conn.execute(
@@ -42,6 +42,7 @@ def upgrade():
         )
 
 def downgrade():
+    conn = op.get_bind()
     res = conn.execute(recommandation.select())
     for r in res:
         conn.execute(
