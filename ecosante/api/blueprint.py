@@ -54,7 +54,7 @@ def index():
             "indice": potentiel_radon,
             "advice": advice_radon,
             "sources": [{
-                "label": " Institut de radioprotection et de sûreté nucléaire (IRSN)",
+                "label": "Institut de radioprotection et de sûreté nucléaire (IRSN)",
                 "url": "https://www.irsn.fr/FR/connaissances/Environnement/expertises-radioactivite-naturelle/radon/Pages/5-cartographie-potentiel-radon-commune.aspx#.YUyf32aA6dY"
             }],
             "validity": {
