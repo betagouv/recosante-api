@@ -66,7 +66,7 @@ def import_indices_generic(last_week, prod_session, model, date_col, staging_ins
         indices = list()
         for indice in prod_session.query(model).filter(func.date_trunc('hour', date_col)==d).all():
             cloned_data = clone_data(indice)
-            if staging_inscriptions and cloned_data.inscription_id not in staging_inscriptions:
+            if staging_inscriptions and cloned_data['inscription_id'] not in staging_inscriptions:
                 continue
             indices.append(cloned_data)
             if len(indices) == 10000:
