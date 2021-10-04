@@ -58,7 +58,7 @@ def import_recommandations(prod_session):
         db.session.add(clone_model(recommandation, staging_recommandations.get(recommandation.id)))
     db.session.commit()
 
-def import_indices_generic(last_week, prod_session, model, date_col, staging_inscrpitions=None):
+def import_indices_generic(last_week, prod_session, model, date_col, staging_inscriptions=None):
     model.query.filter(date_col <= last_week).delete()
     db.session.commit()
     hours = int(((datetime.today() + timedelta(days=1)) - last_week).days * 24)
@@ -66,7 +66,7 @@ def import_indices_generic(last_week, prod_session, model, date_col, staging_ins
         indices = list()
         for indice in prod_session.query(model).filter(func.date_trunc('hour', date_col)==d).all():
             cloned_data = clone_data(indice)
-            if staging_inscrpitions and hasattr(cloned_data, "inscription_id") and cloned_data.inscription_id not in staging_inscrpitions:
+            if staging_inscriptions and cloned_data.inscription_id not in staging_inscriptions:
                 continue
             indices.append(cloned_data)
             if len(indices) == 10000:
