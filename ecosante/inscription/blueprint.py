@@ -69,6 +69,13 @@ def confirm(uid):
     inscription = Inscription.query.filter_by(uid=uid).first()
     if not inscription:
         return jsonify({"errors": ["Unable to find inscription"]}), 404
+    inscription.indicateurs = ["indice_atmo", "raep"] if inscription.allergie_pollens else ["indice_atmo"]
+    inscription.indicateurs_frequence = ["quotidien"]
+    inscription.indicateurs_media = ["mail"]
+    inscription.recommandations_actives = ["oui"]
+    inscription.recommandations_frequence = ["quotidien"]
+    inscription.recommandations_media = ["mail"]
+
     celery.send_task(
         "ecosante.inscription.tasks.send_success_email.send_success_email",
         (inscription.id,),
