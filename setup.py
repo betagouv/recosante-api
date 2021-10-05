@@ -26,7 +26,10 @@ DEPENDENCIES = [
     'requests',
     'icalevents',
     'sentry-sdk[flask]',
-    'redis'
+    'redis',
+    'pywebpush',
+    'py-vapid',
+    'cryptography'
 ]
 
 class CustomPsycopg2Install(install):

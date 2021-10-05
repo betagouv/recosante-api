@@ -1,6 +1,7 @@
 from ecosante.extensions import rebar, db
 from .schemas import RequestPOST, Response, RequestPOSTID
 from ecosante.inscription.models import Inscription
+import os
 
 registry = rebar.create_handler_registry('/users/')
 
@@ -39,3 +40,8 @@ def post_user_id(uid):
     db.session.add(inscription)
     db.session.commit()
     return inscription, 200
+
+@registry.handles(rule='/_vapid_public_key', method='GET')
+def vapid_public_key():
+    APPLICATION_SERVER_KEY = os.getenv('APPLICATION_SERVER_KEY')
+    return {"public_key": APPLICATION_SERVER_KEY}
