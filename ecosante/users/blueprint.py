@@ -40,8 +40,3 @@ def post_user_id(uid):
     db.session.add(inscription)
     db.session.commit()
     return inscription, 200
-
-@registry.handles(rule='/_vapid_public_key', method='GET')
-def vapid_public_key():
-    APPLICATION_SERVER_KEY = os.getenv('APPLICATION_SERVER_KEY')
-    return {"public_key": APPLICATION_SERVER_KEY}

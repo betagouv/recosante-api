@@ -60,6 +60,7 @@ def create_app(testing=False):
     app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL') or f"sqla+{app.config['SQLALCHEMY_DATABASE_URI']}"
     app.config['TESTING'] = testing
     app.config['SERVER_NAME'] = os.getenv("SERVER_NAME")
+    app.config['APPLICATION_SERVER_KEY'] = os.getenv('APPLICATION_SERVER_KEY')
 
     db.init_app(app)
     migrate.init_app(app, db)

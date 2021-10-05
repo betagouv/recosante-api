@@ -1,3 +1,4 @@
+from flask.globals import current_app
 from ecosante.tasks.inscriptions_patients import inscription_patients_task
 from flask import (
     redirect,
@@ -107,3 +108,7 @@ def recommandation_episode_pollution():
         population=request.args.get('population'),
         polluants=polluants
     )
+
+@bp.route('/_application_server_key')
+def vapid_public_key():
+    return {"public_key": current_app.config['APPLICATION_SERVER_KEY']}
