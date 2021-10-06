@@ -86,23 +86,27 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send
         }
     )
     result = import_(task, newsletters, force_send, 2)
-    if current_app.config['ENV'] == 'production':
-        send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
-        send_email_api.send_email_campaign_now(result["email_campaign_id"])
-        task.update_state(
-            state='STARTED',
-            meta={
-                "progress": 99,
-                "details": "Envoi de la liste email",
-                "email_campaign_id": result['email_campaign_id'],
-            }
-        )
+    send(task, result["email_campaign_id"])
     result['progress'] = 100
     if current_app.config['ENV'] == 'production':
         db.session.commit()
     return result
 
-def import_(task, newsletters, force_send=False, overhead=0):
+def send(task, campaign_id, test=False):
+    if current_app.config['ENV'] == 'production' or test:
+        send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
+        send_email_api.send_email_campaign_now(campaign_id=campaign_id)
+        if task:
+            task.update_state(
+                state='STARTED',
+                meta={
+                    "progress": 99,
+                    "details": "Envoi de la liste email",
+                    "email_campaign_id": campaign_id,
+                }
+            )
+
+def import_(task, newsletters, force_send=False, overhead=0, test=False):
     email_campaign_id = None,
     errors = []
     
@@ -113,18 +117,19 @@ def import_(task, newsletters, force_send=False, overhead=0):
     r = lists_api.create_list(
         sib_api_v3_sdk.CreateList(
             name=f'{now} - mail',
-            folder_id=int(os.getenv('SIB_FOLDERID', 5))
+            folder_id=int(os.getenv('SIB_FOLDERID', 5)) if not test else int(os.getenv('SIB_FOLDERID', 1653))
         )
     )
     mail_list_id = r.id
     nb_requests += 1
-    task.update_state(
-        state='STARTED',
-        meta={
-            "progress": (nb_requests/total_nb_requests)*100,
-            "details": f"Création de la liste"
-        }
-    )
+    if task:
+        task.update_state(
+            state='STARTED',
+            meta={
+                "progress": (nb_requests/total_nb_requests)*100,
+                "details": f"Création de la liste"
+            }
+        )
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     for i, nl in enumerate(newsletters):
@@ -148,7 +153,7 @@ def import_(task, newsletters, force_send=False, overhead=0):
             current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
             try:
-                if current_app.config['ENV'] == 'production':
+                if current_app.config['ENV'] == 'production' or test:
                     contact_api.update_contact(
                         nl.inscription.mail,
                         sib_api_v3_sdk.UpdateContact(
@@ -161,19 +166,20 @@ def import_(task, newsletters, force_send=False, overhead=0):
                 current_app.logger.error(e)
             current_app.logger.info(f"Mise à jour de {nl.inscription.mail}")
         nb_requests += 1
-        task.update_state(
-            state='STARTED',
-            meta={
-                "progress": (nb_requests/total_nb_requests)*100,
-                "details": f"Mise à jour des contacts {i}/{len(newsletters)}"
-            }
-        )
+        if task:
+            task.update_state(
+                state='STARTED',
+                meta={
+                    "progress": (nb_requests/total_nb_requests)*100,
+                    "details": f"Mise à jour des contacts {i}/{len(newsletters)}"
+                }
+            )
         if current_app.config['ENV'] == 'production':
             db.session.add(nl)
     if current_app.config['ENV'] == 'production':
         db.session.commit()
 
-    if current_app.config['ENV'] == 'production':
+    if current_app.config['ENV'] == 'production' or test:
         template_id = int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 526))
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
@@ -191,21 +197,23 @@ def import_(task, newsletters, force_send=False, overhead=0):
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
                     list_ids=[mail_list_id]
                 ),
-                header="Aujourd'hui, la qualité de l'air autour de chez vous est…"
+                header="Aujourd'hui, la qualité de l'air autour de chez vous est…",
+                tag='newsletter' if not test else 'test_newsletter'
             )
         )
         email_campaign_id = r.id
     else:
         email_campaign_id = 0
     nb_requests += 1
-    task.update_state(
-        state='STARTED',
-        meta={
-            "progress": (nb_requests/total_nb_requests)*100,
-            "details": f"Création de la campagne mail",
-            "email_campaign_id": email_campaign_id
-        }
-    )
+    if task:
+        task.update_state(
+            state='STARTED',
+            meta={
+                "progress": (nb_requests/total_nb_requests)*100,
+                "details": f"Création de la campagne mail",
+                "email_campaign_id": email_campaign_id
+            }
+        )
     return {
         "state": "STARTED",
         "progress": (nb_requests/total_nb_requests)*100,
