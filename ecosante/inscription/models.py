@@ -261,8 +261,8 @@ class Inscription(db.Model):
     @classmethod
     def active_query(cls):
         return db.session.query(cls)\
-            .filter(or_(Inscription.deactivation_date == None, Inscription.deactivation_date > date.today()))\
-            .filter(Inscription.ville_insee.isnot(None))
+            .filter((Inscription.deactivation_date == None) | (Inscription.deactivation_date > date.today()))\
+            .filter(Inscription.ville_insee.isnot(None) | Inscription.commune_id.isnot(None))
 
     def unsubscribe(self):
         from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
