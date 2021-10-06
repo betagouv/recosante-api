@@ -111,4 +111,4 @@ def recommandation_episode_pollution():
 
 @bp.route('/_application_server_key')
 def vapid_public_key():
-    return {"public_key": current_app.config['APPLICATION_SERVER_KEY']}
+    return {"application_server_key": current_app.config['APPLICATION_SERVER_KEY']}
