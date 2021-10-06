@@ -8,12 +8,17 @@ from flask import (
     stream_with_context,
 )
 from flask.wrappers import Response
-from datetime import datetime
+from datetime import datetime, timedelta
+
+from indice_pollution.helpers import today
+from ecosante.inscription.models import Inscription
 
 from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from .forms import FormAvis
-from .models import NewsletterDB, db
+from .models import Newsletter, NewsletterDB, db
+from .tasks.import_in_sb import import_, send
+from indice_pollution.history.models import IndiceATMO
 
 bp = Blueprint("newsletter", __name__)
 
@@ -82,3 +87,27 @@ def export_avis():
             "Content-Disposition": f"attachment; filename=export-avis-{datetime.now()}"
         }
     )
+
+
+@bp.route('<secret_slug>/test', methods=['GET', 'POST'])
+@bp.route('/test', methods=['GET', 'POST'])
+@admin_capability_url
+def test():
+    if request.method == "GET":
+        return render_template("test.html")
+    indice_atmo = int(request.form.get("indice_atmo"))
+    uid = request.form.get("uid")
+    inscription = Inscription.query.filter_by(uid=uid).first()
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data":[{"date": str(today()), "label": IndiceATMO.label_from_valeur(indice_atmo), "couleur": IndiceATMO.couleur_from_valeur(indice_atmo)}]},
+        raep=request.form.get("raep"),
+        allergenes={k: v for k, v in zip(request.form.getlist('allergene_nom'), request.form.getlist('allergene_value'))},
+        validite_raep={
+            "debut": today().strftime("%d/%m/%Y"),
+            "fin": (today()+timedelta(days=7)).strftime("%d/%m/%Y")
+        }
+    )
+    result = import_(None, [NewsletterDB(nl)], force_send=True, test=True)
+    send(None, result["email_campaign_id"], test=True)
+    return render_template("test_ok.html")

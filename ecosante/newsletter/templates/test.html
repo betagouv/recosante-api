@@ -1,0 +1,192 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section">
+  <div class="container">
+    <form class="search">
+      <div class="form__group">
+        <fieldset>
+          <label for="search_input">Rechercher un utilisateur</label>
+          <input id="search_input" type="text" placeholder="Mail de l’utilisateur" list="suggestions" autocomplete="off" >
+          <datalist id="suggestions"></datalist>
+        </fieldset>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="section" id="div_user">
+  <div class="container">
+    Utilisateur : <span id="user_mail"></span>
+    <form id="div_forecast" method="POST">
+      <input type="hidden" id="uid" name="uid">
+      <fieldset>
+        <label for="indice_atmo">Qualité de l’air</label>
+        <select id="indice_atmo" name="indice_atmo">
+          <option value="1">Bon</option>
+          <option value="2">Moyen</option>
+          <option value="3">Dégradé</option>
+          <option value="4">Mauvais</option>
+          <option value="5">Très mauvais</option>
+          <option value="6">Extrêment mauvais</option>
+        </select>
+      </fieldset>
+      <fieldset>
+        <label for="raep">RAEP</label>
+        <select id="raep" name="raep">
+          <option value="0">Nul</option>,
+          <option value="1">Très faible</option>
+          <option value="2">Faible</option>
+          <option value="3">Moyen</option>,
+          <option value="4">Élevé</option>,
+          <option value="5">Très élevé</option>
+        </select>
+      </fieldset>
+      <fieldset>
+        <label for="allergenes">Allergènes</label>
+        <div id="liste_allergenes"></div>
+        <div>
+        <select id="ajout_allergene_nom">
+          <option>cypres</option>
+          <option>noisetier</option>
+          <option>aulne</option>
+          <option>peuplier</option>
+          <option>saule</option>
+          <option>frene</option>
+          <option>charme</option>
+          <option>bouleau</option>
+          <option>platane</option>
+          <option>chene</option>
+          <option>olivier</option>
+          <option>tilleul</option>
+          <option>chataignier</option>
+          <option>rumex</option>
+          <option>graminees</option>
+          <option>plantain</option>
+          <option>urticacees</option>
+          <option>armoises</option>
+          <option>ambroisies</option>
+        </select>
+        <select id="ajout_allergene_value">
+          <option value="0">Nul</option>,
+          <option value="1">Très faible</option>
+          <option value="2">Faible</option>
+          <option value="3">Moyen</option>,
+          <option value="4">Élevé</option>,
+          <option value="5">Très élevé</option>
+        </select>
+        <input type="button" id="ajout_allergene_button" onclick="clickAjoutAllergene()" value="Ajouter">
+        </div>
+      </fieldset>
+      <fieldset>
+        <label for="polluants">Polluants</label>
+          <select multiple id="code_pol">
+            <option value="1">Dioxyde de soufre</option>
+            <option value="5">Particules fines</option>
+            <option value="7">Ozone</option>
+            <option value="8">Dioxyde azote</option>
+          </select>
+      </fieldset>
+      <input type="submit">
+    </form>
+  </div>
+</div>
+
+<script type="text/javascript">
+function ajoutAllergene(nom, value) {
+  let allergene_nom = document.getElementById("ajout_allergene_nom").cloneNode(true)
+  allergene_nom.id = "allergene_nom[]"
+  allergene_nom.name = "allergene_nom[]"
+  allergene_nom.value = nom
+  let allergene_value = document.getElementById("ajout_allergene_value").cloneNode(true)
+  allergene_value.id = "allergene_value[]"
+  allergene_value.name = "allergene_value[]"
+  allergene_value.value = value
+
+  let div = document.createElement("div")
+  div.appendChild(allergene_nom)
+  div.appendChild(allergene_value)
+
+  document.getElementById("liste_allergenes").appendChild(div)
+  let raep = document.getElementById("raep")
+  if (allergene_value.value > raep.value) {
+    raep.value = allergene_value.value
+  }
+}
+
+function clickAjoutAllergene() {
+  ajoutAllergene(document.getElementById("ajout_allergene_nom").value, document.getElementById("ajout_allergene_value").value)
+}
+
+function displayForecast(commune) {
+  fetch(`https://api.recosante.beta.gouv.fr/v1/?` + new URLSearchParams({insee: commune.code}))
+  .then(response => response.json())
+  .then(data => {
+      document.getElementById("div_forecast").style.display = 'block'
+      document.getElementById("indice_atmo").value = data.indice_atmo.indice.value
+      document.getElementById("raep").value = data.raep.indice.value
+      data.raep.indice.details.forEach(el => {
+        if(el.indice.value != 0) {
+          ajoutAllergene(el.label, el.indice.value)
+        }
+      })
+  })
+}
+function displayUser(uid) {
+  document.getElementById("div_user").style.display = 'none'
+  document.getElementById("div_forecast").style.display = 'none'
+  fetch(`/users/${uid}`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById("div_user").style.display = 'block'
+      document.getElementById("user_mail").textContent = data.mail
+      document.getElementById("uid").value = data.uid
+      displayForecast(data.commune)
+    })
+}
+
+let status = 'waiting'
+function loadSuggestions() {
+  suggestions.innerHTML = ''
+  if (status === 'loading') {
+    return
+  }
+  status = 'loading'
+  let mail = document.getElementById("search_input").value
+  fetch('/users/_search?' + new URLSearchParams({ mail }))
+    .then(response => response.json())
+    .then(data => {
+      data.forEach(
+        element => {
+          let textNode = document.createTextNode(element.mail)
+          let ele = document.createElement("option")
+          ele.appendChild(textNode)
+          ele.setAttribute("data-value", element.uid)
+          suggestions.appendChild(ele)
+        }
+      )
+      status = 'waiting'
+      if( mail != document.getElementById("search_input").value) {
+        loadSuggestions()
+      }
+    })
+}
+
+document.addEventListener('DOMContentLoaded', e => {
+  document.getElementById("div_user").style.display = 'none'
+  document.getElementById("div_forecast").style.display = 'none'
+  document.getElementById("search_input").addEventListener("input", function (e) {
+    let suggestions = document.getElementById("suggestions")
+    if (e.inputType == "insertReplacementText") {
+      let selected_option = Array.from(suggestions.childNodes).find(el => el.innerText == e.target.value)
+      let uid = selected_option.getAttribute("data-value")
+      displayUser(uid)
+      return
+    }
+    loadSuggestions()
+  }
+  );
+})
+
+  </script>
+{% endblock content %}
