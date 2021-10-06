@@ -20,8 +20,7 @@ def capability_url(env_key, redirect_to_slash, f):
             current_app.logger.error(f"La variable d'environnement {env_key} n'existe pas")
             abort(500)
         if 'secret_slug' in kwargs and redirect_to_slash:
-            session['secret_slug'] = kwargs['secret_slug']
-            del kwargs['secret_slug']
+            session['secret_slug'] = kwargs.pop('secret_slug')
             return redirect(
                 url_for(request.endpoint, **kwargs)
             )
