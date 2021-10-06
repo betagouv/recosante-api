@@ -119,6 +119,8 @@ def openings():
             status='sent'
         )
         for campaign in api_response.campaigns:
+            if campaign['tag'] and campaign['tag'] != 'newsletter':
+                continue
             try:
                 date_ = parse(campaign['name'])
             except ParserError as e:
