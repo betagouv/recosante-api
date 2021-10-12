@@ -469,7 +469,8 @@ class NewsletterDB(db.Model, Newsletter):
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
                 'POLLINARIUM_SENTINELLE': False if not commune or not commune.pollinarium_sentinelle else True,
-                'SHOW_QA': self.show_qa
+                'SHOW_QA': self.show_qa,
+                'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else ""
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))

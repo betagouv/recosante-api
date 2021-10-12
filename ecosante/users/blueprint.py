@@ -3,9 +3,7 @@ from ecosante.extensions import rebar, db
 from ecosante.utils.decorators import admin_capability_url
 from .schemas import RequestPOST, Response, RequestPOSTID
 from ecosante.inscription.models import Inscription
-from flask import session, current_app, abort
-from marshmallow.fields import List
-import os
+from ecosante.extensions import celery
 
 registry = rebar.create_handler_registry('/users/')
 
@@ -34,6 +32,12 @@ def post_users():
     inscription = rebar.validated_body
     db.session.add(inscription)
     db.session.commit()
+    celery.send_task(
+        "ecosante.inscription.tasks.send_success_email.send_success_email",
+        (inscription.id, True),
+        queue='send_email',
+        routing_key='send_email.subscribe'
+    )
     return inscription, 201
 
 @registry.handles(

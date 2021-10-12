@@ -8,11 +8,17 @@ from time import sleep
 import json
 
 @celery.task()
-def send_success_email(inscription_id):
-    success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108))
+def send_success_email(inscription_id, new_version=False):
+    inscription = Inscription.query.get(inscription_id)
+    if not new_version:
+        success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108))
+    else:
+        if inscription.recommandations_actives == ['oui']:
+	        success_template_id = int(os.getenv('SIB_SUCCESS_RECOMMANDATIONS_TEMPLATE_ID', 1453))
+        else:
+            success_template_id = int(os.getenv('SIB_SUCCESS_INDICATEURS_TEMPLATE_ID', 1452))
     if not success_template_id:
         return
-    inscription = Inscription.query.get(inscription_id)
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     try:
