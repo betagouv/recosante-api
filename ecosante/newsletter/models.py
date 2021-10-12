@@ -10,7 +10,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
-from ecosante.inscription.models import Inscription
+from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from ecosante.utils.funcs import (
     convert_boolean_to_oui_non,
@@ -24,6 +24,8 @@ FR_DATE_FORMAT = '%d/%m/%Y'
 
 @dataclass
 class Newsletter:
+    webpush_subscription_info_id: int = None
+    webpush_subscription_info: dict = None
     date: datetime = field(default_factory=today, init=True)
     recommandation: Recommandation = field(default=None, init=True)
     recommandations: List[Recommandation] = field(default=None, init=True)
@@ -397,6 +399,8 @@ class NewsletterDB(db.Model, Newsletter):
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
     sous_indices: dict = db.Column(postgresql.JSONB)
+    webpush_subscription_info_id: int = db.Column(db.Integer, db.ForeignKey('webpush_subscription_info.id'), index=True)
+    webpush_subscription_info: WebpushSubscriptionInfo = db.relationship(WebpushSubscriptionInfo)
 
     def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
@@ -417,6 +421,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.show_raep = newsletter.show_raep
         self.show_radon = newsletter.show_radon
         self.sous_indices = newsletter.sous_indices
+        self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
+        self.webpush_subscription_info = newsletter.webpush_subscription_info
 
 
     def attributes(self):
@@ -458,6 +464,16 @@ class NewsletterDB(db.Model, Newsletter):
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
         }
 
+    @property
+    def webpush_data(self):
+        commune = self.inscription.commune
+        with different_locale('fr_FR.utf8'):
+            title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
+        return {
+            "title": title,
+            "body": f"Indice de la qualité de l’air : {self.label.capitalize()}",
+            "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.nom}/"
+        }
     @classmethod
     def generate_csv_avis(cls):
         yield generate_line([

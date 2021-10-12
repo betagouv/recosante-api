@@ -61,6 +61,7 @@ def create_app(testing=False):
     app.config['TESTING'] = testing
     app.config['SERVER_NAME'] = os.getenv("SERVER_NAME")
     app.config['APPLICATION_SERVER_KEY'] = os.getenv('APPLICATION_SERVER_KEY')
+    app.config['VAPID_PRIVATE_KEY'] = os.getenv('VAPID_PRIVATE_KEY')
 
     db.init_app(app)
     migrate.init_app(app, db)

@@ -1,3 +1,5 @@
+from sqlalchemy.orm import backref, relationship
+from sqlalchemy.sql.schema import PrimaryKeyConstraint
 from indice_pollution.history.models import Commune
 from ecosante.extensions import db
 from ecosante.utils.funcs import generate_line
@@ -15,6 +17,11 @@ from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.attributes import flag_modified
 import json
+
+class WebpushSubscriptionInfo(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    data = db.Column(postgresql.JSONB)
+    inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'), index=True)
 
 @dataclass
 class Inscription(db.Model):
@@ -49,7 +56,7 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
-    _webpush_subscriptions_info: str = db.Column("webpush_subscriptions_info", db.String)
+    webpush_subscriptions_info: List[WebpushSubscriptionInfo] = relationship("WebpushSubscriptionInfo")
     #Indicateurs
     indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
     indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
@@ -64,7 +71,13 @@ class Inscription(db.Model):
 
     def __init__(self, **kwargs):
         kwargs.setdefault("date_inscription", date.today())
+        if 'webpush_subscriptions_info' in kwargs:
+            webpush_subscriptions_info = kwargs.pop('webpush_subscriptions_info')
+        else:
+            webpush_subscriptions_info = None
         super().__init__(**kwargs)
+        if webpush_subscriptions_info:
+            self.add_webpush_subscriptions_info(webpush_subscriptions_info)
 
     def has_deplacement(self, deplacement):
         return self.deplacement and deplacement in self.deplacement
@@ -359,21 +372,9 @@ class Inscription(db.Model):
                 return
         self.diffusion = None
 
-    @property
-    def webpush_subscriptions_info(self):
-        if self._webpush_subscriptions_info is None:
-            return None
-        return json.loads(self._webpush_subscriptions_info)
-    @webpush_subscriptions_info.setter
-    def webpush_subscriptions_info(self, value):
-        new_value = self.__class__.make_new_value_webpush_subscriptions_info(self.webpush_subscriptions_info, value)
-        if new_value:
-            self._webpush_subscriptions_info = json.dumps(new_value)
-
-    @classmethod
-    def make_new_value_webpush_subscriptions_info(cls, old_value, new_value):
+    def add_webpush_subscriptions_info(self, value):
         try:
-            j_new_value = json.loads(new_value)
+            j_new_value = json.loads(value)
         except json.JSONDecodeError as e:
             return None
         if isinstance(j_new_value, dict):
@@ -382,13 +383,13 @@ class Inscription(db.Model):
             pass
         else:
             return None
-        return_value = []
-        old_value = old_value or []
-        for v in old_value + j_new_value:
-            if any([cls.is_equal_webpush_subcriptions_info(v, w) for w in return_value]):
-                continue
-            return_value.append(v)
-        return return_value
+        for data in j_new_value:
+            if any([self.is_equal_webpush_subcriptions_info(sub.data, data) for sub in self.webpush_subscriptions_info]):
+                return
+            wp = WebpushSubscriptionInfo(data=data)
+            wp.inscription_id = self.id
+            self.webpush_subscriptions_info.append(wp)
+            db.session.add(wp)
 
     @classmethod
     def is_equal_webpush_subcriptions_info(cls, val1, val2):
