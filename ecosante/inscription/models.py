@@ -58,13 +58,13 @@ class Inscription(db.Model):
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
     webpush_subscriptions_info: List[WebpushSubscriptionInfo] = relationship("WebpushSubscriptionInfo", backref="inscription")
     #Indicateurs
-    indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
-    indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
-    indicateurs_media: List[str] = db.Column(postgresql.ARRAY(db.String))
+    indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String), default=['indice_atmo', 'raep'])
+    indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String), default=['quotidien'])
+    indicateurs_media: List[str] = db.Column(postgresql.ARRAY(db.String), default=['mail'])
     #Recommandations
-    recommandations_actives: List[str] = db.Column(postgresql.ARRAY(db.String))
-    recommandations_frequence: List[str] = db.Column(postgresql.ARRAY(db.String))
-    recommandations_media: List[str] = db.Column(postgresql.ARRAY(db.String))
+    recommandations_actives: List[str] = db.Column(postgresql.ARRAY(db.String), default=['oui'])
+    recommandations_frequence: List[str] = db.Column(postgresql.ARRAY(db.String), default=['quotidien'])
+    recommandations_media: List[str] = db.Column(postgresql.ARRAY(db.String), default=['mail'])
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
