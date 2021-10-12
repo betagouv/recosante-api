@@ -6,6 +6,7 @@ from flask_rebar import ResponseSchema, RequestSchema, errors
 from ecosante.inscription.models import Inscription
 from ecosante.utils.custom_fields import TempList
 from ecosante.api.schemas.commune import CommuneSchema
+from ecosante.extensions import celery
 from indice_pollution.history.models import Commune as CommuneModel
 from flask import request
 
@@ -49,6 +50,12 @@ class RequestPOST(User, RequestSchema):
     def make_inscription(self, data, **kwargs):
         inscription = Inscription.query.filter_by(mail=data['mail']).first()
         if inscription:
+            celery.send_task(
+                "ecosante.inscription.tasks.send_update_profile.send_update_profile",
+                (inscription.id,),
+                queue='send_email',
+                routing_key='send_email.subscribe'
+            )
             raise ValidationError('mail already used', field_name='mail')
         inscription = Inscription(**data)
         return inscription
