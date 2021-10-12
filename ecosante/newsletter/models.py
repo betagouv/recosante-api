@@ -59,7 +59,7 @@ class Newsletter:
             ]
         else:
             self.polluants = []
-        if not self.raep and not self.allergenes and not self.validite_raep:
+        if self.raep is None and self.allergenes is None and not self.validite_raep:
             raep = get_raep(self.inscription.ville_insee).get('data')
             if raep:
                 self.raep = raep['total']
