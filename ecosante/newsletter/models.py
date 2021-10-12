@@ -1,3 +1,4 @@
+from calendar import different_locale
 from dataclasses import dataclass, field
 from typing import List
 from datetime import datetime, date, timedelta
@@ -37,7 +38,6 @@ class Newsletter:
     radon: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
-
 
     def __post_init__(self):
         if not 'label' in self.today_forecast:
@@ -149,31 +149,33 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail'):
         query = Inscription.active_query()
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
         query_nl = NewsletterDB.query\
             .filter(
                 NewsletterDB.date==date.today(),
-                NewsletterDB.label != None)\
+                NewsletterDB.label != None,
+                NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
             .with_entities(
                 NewsletterDB.inscription_id
         )
         query = query\
             .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
             .filter(Inscription.id.notin_(query_nl))\
-            .filter(Inscription.date_inscription < str(date.today()))
+            .filter(Inscription.date_inscription < str(date.today()))\
+            .filter(Inscription.indicateurs_media.contains([media]))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        inscriptions = query.distinct(Inscription.ville_insee)
-        insee_region = {i.ville_insee: i.region_name for i in inscriptions}
+        inscriptions = query.distinct(Inscription.commune_id)
+        insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions}
         try:
             insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True, date_=date_)
         except requests.exceptions.HTTPError as e:
             current_app.logger.error(e)
             raise e
         for inscription in query.all():
-            forecast_ville = insee_forecast.get(inscription.ville_insee)
+            forecast_ville = insee_forecast.get(inscription.commune.insee)
             if not forecast_ville:
                 continue
             init_dict = {
@@ -187,11 +189,21 @@ class Newsletter:
             }
             if date_:
                 init_dict['date'] = date_
-            newsletter = cls(**init_dict)
-            if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
-                    continue
-            yield newsletter
+            if media == 'notifications_web' and 'notifications_web' in inscription.indicateurs_media:
+                for wp in WebpushSubscriptionInfo.query.filter_by(inscription_id=inscription.id):
+                    init_dict['webpush_subscription_info_id'] = wp.id
+                    init_dict['webpush_subscription_info'] = wp
+                    newsletter = cls(**init_dict)
+                    if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
+                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                            continue
+                    yield newsletter
+            else:
+                newsletter = cls(**init_dict)
+                if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
+                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                        continue
+                yield newsletter
 
     @property
     def past_nl_query(self):
