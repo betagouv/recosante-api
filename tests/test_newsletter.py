@@ -648,4 +648,5 @@ def test_get_recommandation_par_type(inscription, db_session):
         episodes={"data": []},
         recommandations=recommandations,
     )
-    assert all([r[1].type_ == "generale"] for r in nl.eligible_recommandations(recommandations, types=["generale"]))
+    eligible_recommandations = list(nl.eligible_recommandations({r.id: r for r in recommandations}, types=["generale"]))
+    assert all([r.type_ == "generale"] for r in eligible_recommandations)

@@ -1,3 +1,5 @@
+from indice_pollution.history.models.commune import Commune
+from indice_pollution.history.models.indice_atmo import IndiceATMO
 import pytest
 import os
 import sqlalchemy as sa
@@ -7,6 +9,7 @@ from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
 from ecosante.newsletter.models import NewsletterDB
 from ecosante.inscription.models import Inscription
+from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
 
 # Retrieve a database connection string from the shell environment
@@ -21,11 +24,11 @@ else:
 
 pytest_plugins = ['pytest-flask-sqlalchemy']
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def client(app):
     return app.test_client()
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def app(request):
     indice_pollution_app = create_app_indice_pollution()
     indice_pollution_app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONN
@@ -33,6 +36,7 @@ def app(request):
         db_indice_pollution = indice_pollution_app.extensions['sqlalchemy'].db
         db_indice_pollution.engine.execute('CREATE SCHEMA IF NOT EXISTS indice_schema')
         db_indice_pollution.create_all()
+        db_indice_pollution.metadata.bind = db_indice_pollution.engine
 
     app = create_app()
     app.config['WTF_CSRF_ENABLED'] = False
@@ -44,17 +48,24 @@ def app(request):
         with cf.ProcessPoolExecutor() as pool:
             pool.submit(flask_migrate.upgrade)
         yield app
-        db.session.remove()  # looks like db.session.close() would work as well
         db.metadata.drop_all()
+        db.session.remove()
+        db_indice_pollution.metadata.drop_all()
         db_indice_pollution.session.remove()
-        db_indice_pollution.drop_all()
+        db.session.close()
+        db_indice_pollution.session.close()
 
 @pytest.fixture(scope='function')
 def _db(app):
-    return app.extensions['sqlalchemy'].db
+    db = app.extensions['sqlalchemy'].db
+    db.session.execute('TRUNCATE {} RESTART IDENTITY;'.format(
+        ','.join(table.name 
+                 for table in reversed(db.metadata.sorted_tables))))
+    db.session.commit()
+    return db
 
 @pytest.fixture(scope='function')
-def commune(db_session):
+def commune(db_session) -> Commune:
     from indice_pollution.history.models import Commune, Departement, Region, Zone
     region = Region(nom="Pays de la Loire", code="52")
     departement = Departement("Mayenne", "53", region.code)
@@ -64,22 +75,23 @@ def commune(db_session):
     return commune
 
 @pytest.fixture(scope='function')
-def commune_commited(commune, db_session):
+def commune_commited(commune, db_session) -> Commune:
     db_session.commit()
+    return commune
 
 @pytest.fixture(scope='function')
-def inscription(commune):
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28')
+def inscription(commune) -> Inscription:
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=["mail"])
     return inscription
 
 @pytest.fixture(scope='function')
-def inscription_alerte(commune):
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28')
+def inscription_alerte(commune) -> Inscription:
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=['mail'])
     inscription.indicateurs_frequence = ["alerte"]
     return inscription
 
 @pytest.fixture(scope='function')
-def mauvaise_qualite_air(commune, db_session):
+def mauvaise_qualite_air(commune, db_session) -> IndiceATMO:
     from indice_pollution.history.models import IndiceATMO
     from datetime import date
     indice = IndiceATMO(
@@ -92,7 +104,7 @@ def mauvaise_qualite_air(commune, db_session):
     return indice
 
 @pytest.fixture(scope='function')
-def bonne_qualite_air(commune, db_session):
+def bonne_qualite_air(commune, db_session) -> IndiceATMO:
     from indice_pollution.history.models import IndiceATMO
     from datetime import date
     indice = IndiceATMO(
@@ -105,7 +117,7 @@ def bonne_qualite_air(commune, db_session):
     return indice
 
 @pytest.fixture(scope='function')
-def recommandation(db_session):
+def recommandation(db_session) -> Recommandation:
     recommandation = published_recommandation()
     db_session.add(recommandation)
     return recommandation

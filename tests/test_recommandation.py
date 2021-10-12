@@ -275,12 +275,13 @@ def test_get_relevant_last_criteres(db_session):
     i = Inscription(activites=["menage"], deplacement=["velo"])
     db_session.add_all([r1, r2, r3, i])
     db_session.commit()
-    nl1 = NewsletterDB(Newsletter(
+    nl = Newsletter(
         inscription=i,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2, r3]
-    ))
+    )
+    nl1 = NewsletterDB(nl)
     db_session.add(nl1)
     db_session.commit()
     nl2 = NewsletterDB(Newsletter(

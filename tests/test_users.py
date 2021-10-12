@@ -134,8 +134,8 @@ def test_webpush_subscriptions_info(commune_commited, client):
     assert response.status_code == 201
     jdata = json.loads(data['webpush_subscriptions_info'])
     inscription = Inscription.query.filter_by(mail='lebo@tonvelo.com').first()
-    assert inscription.webpush_subscriptions_info[0]['endpoint'] == jdata['endpoint']
-    assert inscription.webpush_subscriptions_info[0]['keys'] == jdata['keys']
+    assert inscription.webpush_subscriptions_info[0].data['endpoint'] == jdata['endpoint']
+    assert inscription.webpush_subscriptions_info[0].data['keys'] == jdata['keys']
 
 
 def test_update_user_bad_uid(commune_commited, client):
