@@ -1,6 +1,7 @@
 from ecosante.extensions import celery
 from celery.schedules import crontab
-from .import_in_sb import import_send_and_report #noqa
+from .import_in_sb import import_send_and_report, send #noqa
+from .send_webpush_notifications import send_webpush_notifications #noqa
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -17,4 +18,10 @@ def setup_periodic_tasks(sender, **kwargs):
         import_send_and_report.s(force_send=True, report=True),
         queue='send_newsletter',
         routing_key='send_newsletter.import_send_and_report'
+    )
+    sender.add_periodic_task(
+        crontab(minute='*/30', hour='05-09', day_of_week='*/1'),
+        send_webpush_notifications.s(),
+        queue='send_newsletter',
+        routing_key='send_newsletter.send_webpush_notifications'
     )

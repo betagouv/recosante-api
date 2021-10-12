@@ -3,6 +3,7 @@ from time import sleep
 from flask import current_app
 from py_vapid import Vapid
 from ecosante.newsletter.models import Newsletter, NewsletterDB, db
+from ecosante.extensions import celery
 from pywebpush import WebPushException, webpush
 
 
@@ -30,6 +31,7 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
                 current_app.logger.error(f"Unable to retry after: {retry_after}")
                 return None
 
+@celery.task(bind=True)
 def send_webpush_notifications():
     for nl in Newsletter.export(media='notifications_web'):
         nldb = NewsletterDB(nl)
