@@ -17,7 +17,8 @@
 </div>
 <div class="section" id="div_user">
   <div class="container">
-    Utilisateur : <span id="user_mail"></span>
+    Utilisateur : <span id="user_mail"></span><br>
+    Médias : <span id="user_medias"></span>
     <form id="div_forecast" method="POST">
       <input type="hidden" id="uid" name="uid">
       <fieldset>
@@ -87,12 +88,21 @@
             <option value="8">Dioxyde azote</option>
           </select>
       </fieldset>
-      <input type="submit">
+      <input type="submit" onclick="monterChargement()">
     </form>
+    <div class="modal__backdrop" id="modal_status">
+      <div class="modal">
+        <h3 id="status"></h3>
+      </div>
+    </div>
   </div>
 </div>
 
 <script type="text/javascript">
+function monterChargement() {
+  document.getElementById("modal_status").style.display = 'block'
+  document.getElementById("status") = "Envoi en cours"
+}
 function ajoutAllergene(nom, value) {
   let allergene_nom = document.getElementById("ajout_allergene_nom").cloneNode(true)
   allergene_nom.id = "allergene_nom[]"
@@ -119,6 +129,8 @@ function clickAjoutAllergene() {
 }
 
 function displayForecast(commune) {
+  document.getElementById("modal_status").style.display = 'block'
+  document.getElementById("status").innerText = "Chargement des prévisions pour l’utilisateur"
   fetch(`https://api.recosante.beta.gouv.fr/v1/?` + new URLSearchParams({insee: commune.code}))
   .then(response => response.json())
   .then(data => {
@@ -130,6 +142,7 @@ function displayForecast(commune) {
           ajoutAllergene(el.label, el.indice.value)
         }
       })
+      document.getElementById("modal_status").style.display = 'none'
   })
 }
 function displayUser(uid) {
@@ -140,6 +153,7 @@ function displayUser(uid) {
     .then(data => {
       document.getElementById("div_user").style.display = 'block'
       document.getElementById("user_mail").textContent = data.mail
+      document.getElementById("user_medias").textContent = data.indicateurs_media.join()
       document.getElementById("uid").value = data.uid
       displayForecast(data.commune)
     })
@@ -175,6 +189,7 @@ function loadSuggestions() {
 document.addEventListener('DOMContentLoaded', e => {
   document.getElementById("div_user").style.display = 'none'
   document.getElementById("div_forecast").style.display = 'none'
+  document.getElementById("modal_status").style.display = 'none'
   document.getElementById("search_input").addEventListener("input", function (e) {
     let suggestions = document.getElementById("suggestions")
     if (e.inputType == "insertReplacementText") {
