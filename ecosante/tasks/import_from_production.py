@@ -1,4 +1,3 @@
-from flask_migrate import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 from ecosante.newsletter.models import NewsletterDB
@@ -9,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine, inspect, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
-from indice_pollution.history.models import IndiceATMO, EpisodePollution
+from indice_pollution.history.models import IndiceATMO, EpisodePollution, Commune, Zone
 
 
 def clone_data(model, model_b=None, **kwargs):
@@ -43,13 +42,23 @@ def import_inscriptions(prod_session):
     faker = Faker(locale='fr_FR')
 
     staging_inscriptions = {i.id: i for i in Inscription.query.all()}
+    communes = {c.insee: c.id for c in Commune.query.all()}
     for inscription in prod_session.query(Inscription).all():
         if not inscription.id in staging_inscriptions:
             new_inscription = clone_model(inscription)
             new_inscription.mail = faker.email()
+            if inscription.commune:
+                new_inscription.commune_id = communes[inscription.commune.insee]
+            elif inscription.ville_insee:
+                new_inscription.commune_id = communes[inscription.ville_insee]
             db.session.add(new_inscription)
         else:
-            db.session.add(clone_model(inscription, staging_inscriptions[inscription.id]))
+            inscription = clone_model(inscription, staging_inscriptions[inscription.id])
+            if inscription.commune:
+                inscription.commune_id = communes[inscription.commune.insee]
+            elif inscription.ville_insee:
+                inscription.commune_id = communes[inscription.ville_insee]
+            db.session.add(inscription)
     db.session.commit()
 
 def import_recommandations(prod_session):
@@ -58,8 +67,9 @@ def import_recommandations(prod_session):
         db.session.add(clone_model(recommandation, staging_recommandations.get(recommandation.id)))
     db.session.commit()
 
-def import_indices_generic(last_week, prod_session, model, date_col, staging_inscriptions=None):
-    model.query.filter(date_col <= last_week).delete()
+def import_indices_generic(last_week, prod_session, model, date_col, staging_inscriptions=None, zones=None):
+    table_name = f'{model.__table__.schema}."{model.__tablename__}"' if model.__table__.schema else model.__tablename__
+    db.session.execute(f'TRUNCATE TABLE {table_name}')
     db.session.commit()
     hours = int(((datetime.today() + timedelta(days=1)) - last_week).days * 24)
     for d in [(last_week + timedelta(hours=i)) for i in range(1, hours)]:
@@ -68,6 +78,8 @@ def import_indices_generic(last_week, prod_session, model, date_col, staging_ins
             cloned_data = clone_data(indice)
             if staging_inscriptions and cloned_data['inscription_id'] not in staging_inscriptions:
                 continue
+            if zones and cloned_data['zone_id'] in zones:
+                cloned_data['zone_id'] = zones[cloned_data['zone_id']]
             indices.append(cloned_data)
             if len(indices) == 10000:
                 db.session.execute(
@@ -92,10 +104,20 @@ def import_indices(prod_session):
         datetime.min.time()
     )
 
-    import_indices_generic(last_week, prod_session, IndiceATMO, IndiceATMO.date_dif)
-    import_indices_generic(last_week, prod_session, EpisodePollution, EpisodePollution.date_dif)
+    zones = {
+        "region": {},
+        "epci": {},
+        "departement": {},
+        "bassin_dair": {},
+        "commune": {},
+    }
+    for z in Zone.query.all():
+        zones[z.type][z.code] = z.id
+    zones_production = {z.id: zones[z.type][z.code] for z in prod_session.query(Zone).all()}
+    import_indices_generic(last_week, prod_session, IndiceATMO, IndiceATMO.date_dif, zones=zones_production)
+    import_indices_generic(last_week, prod_session, EpisodePollution, EpisodePollution.date_dif, zones=zones_production)
     staging_inscriptions = set([i.id for i in Inscription.query.all()])
-    import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date, staging_inscriptions)
+    import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date, staging_inscriptions=staging_inscriptions)
 
 @celery.task
 def import_from_production():
