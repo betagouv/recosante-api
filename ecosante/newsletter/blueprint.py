@@ -101,6 +101,7 @@ def test():
     inscription = Inscription.query.filter_by(uid=uid).first()
     nb_mails = 0
     nb_notifications = 0
+    nb_notifications_sent = 0
     for media in inscription.indicateurs_media:
         nl = Newsletter(
             inscription=inscription,
@@ -120,7 +121,8 @@ def test():
             for wp in inscription.webpush_subscriptions_info:
                 nl.webpush_subscription_info = wp
                 nl.webpush_subscription_info_id = wp.id
-                send_webpush_notification(NewsletterDB(nl), vapid_claims)
+                if send_webpush_notification(NewsletterDB(nl), vapid_claims):
+                    nb_notifications_sent += 1
                 nb_notifications += 1
 
-    return render_template("test_ok.html", nb_mails=nb_mails, nb_notifications=nb_notifications)
+    return render_template("test_ok.html", nb_mails=nb_mails, nb_notifications=nb_notifications, nb_notifications_sent=nb_notifications_sent)

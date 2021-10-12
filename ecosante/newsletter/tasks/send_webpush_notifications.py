@@ -12,7 +12,7 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
     if retry >= 3:
         return None
     try:
-        webpush(
+        r = webpush(
             nldb.webpush_subscription_info.data,
             data=json.dumps(nldb.webpush_data),
             vapid_private_key=current_app.config['VAPID_PRIVATE_KEY'],
