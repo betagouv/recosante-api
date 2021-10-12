@@ -8,7 +8,7 @@ from flask import current_app
 
 @celery.task()
 def send_update_profile(inscription_id):
-    success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 1454))
+    success_template_id = int(os.getenv('SIB_UPDATE_PROFILE_TEMPLATE_ID', 1454))
     inscription = Inscription.query.get(inscription_id)
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     try:
