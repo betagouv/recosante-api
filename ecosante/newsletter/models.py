@@ -224,7 +224,8 @@ class Newsletter:
 
     def eligible_recommandations(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
         if not recommandations:
-            return None
+            return
+            yield # See https://stackoverflow.com/questions/13243766/python-empty-generator-function
         last_nl = self.past_nl_query.order_by(text("date DESC")).limit(1).first()
         sorted_recommandation_ids = self.sorted_recommandations_query.all()
 
@@ -232,8 +233,12 @@ class Newsletter:
         last_criteres = last_recommandation.criteres if last_recommandation else set()
         last_type = last_recommandation.type_ if last_recommandation else ""
 
-        return filter(
-            lambda r: recommandations[r[1]].is_relevant(
+        sorted_recommandations_ids_by_criteria = sorted(
+                sorted_recommandation_ids,
+                key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
+            )
+        for r in sorted_recommandations_ids_by_criteria:
+            if recommandations[r[1]].is_relevant(
                 inscription=self.inscription,
                 qualif=self.qualif,
                 polluants=self.polluants,
@@ -241,19 +246,13 @@ class Newsletter:
                 date_=self.date,
                 media='newsletter',
                 types=types
-            ),
-            sorted(
-                sorted_recommandation_ids,
-                key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
-            )
-        )
+            ):
+                yield recommandations[r[1]]
 
 
     def get_recommandation(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
         try:
-            r = next(self.eligible_recommandations(recommandations, types))
-            r_id = r[1]
-            return recommandations[r_id]
+            return next(self.eligible_recommandations(recommandations, types))
         except StopIteration:
             return None
 
@@ -486,6 +485,7 @@ class NewsletterDB(db.Model, Newsletter):
             "body": f"Indice de la qualité de l’air : {self.label.capitalize()}",
             "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.nom}/"
         }
+
     @classmethod
     def generate_csv_avis(cls):
         yield generate_line([
