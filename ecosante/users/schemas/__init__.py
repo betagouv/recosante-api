@@ -1,5 +1,5 @@
 from dataclasses import field
-from marshmallow import Schema, ValidationError, post_load
+from marshmallow import Schema, ValidationError, post_load, schema
 from marshmallow.validate import OneOf, Length
 from marshmallow.fields import Str, List, Nested, Email
 from flask_rebar import ResponseSchema, RequestSchema, errors
@@ -50,12 +50,6 @@ class RequestPOST(User, RequestSchema):
     def make_inscription(self, data, **kwargs):
         inscription = Inscription.query.filter_by(mail=data['mail']).first()
         if inscription:
-            celery.send_task(
-                "ecosante.inscription.tasks.send_update_profile.send_update_profile",
-                (inscription.id,),
-                queue='send_email',
-                routing_key='send_email.subscribe'
-            )
             raise ValidationError('mail already used', field_name='mail')
         inscription = Inscription(**data)
         return inscription
@@ -85,3 +79,6 @@ class RequestPOSTID(User, RequestSchema):
         for k, v in data.items():
             setattr(inscription, k, v) 
         return inscription
+
+class RequestUpdateProfile(Schema):
+    mail = Email(required=True)

@@ -1,7 +1,7 @@
 from flask.globals import request
 from ecosante.extensions import rebar, db
 from ecosante.utils.decorators import admin_capability_url
-from .schemas import RequestPOST, Response, RequestPOSTID
+from .schemas import RequestPOST, Response, RequestPOSTID, RequestUpdateProfile
 from ecosante.inscription.models import Inscription
 from ecosante.extensions import celery
 
@@ -61,3 +61,22 @@ def post_user_id(uid):
     db.session.add(inscription)
     db.session.commit()
     return inscription, 200
+
+
+@registry.handles(
+    rule='/_send_update_profile',
+    method='POST',
+    request_body_schema=RequestUpdateProfile()
+)
+def send_update_profile():
+    r = rebar.validated_body
+    inscription = Inscription.query.filter_by(mail=r['mail']).first()
+    if not inscription:
+        return {}, 404
+    celery.send_task(
+        "ecosante.inscription.tasks.send_update_profile.send_update_profile",
+        (inscription.id,),
+        queue='send_email',
+        routing_key='send_email.subscribe'
+    )
+    return 'ok', 200
