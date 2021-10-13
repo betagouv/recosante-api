@@ -29,6 +29,8 @@ class Newsletter:
     webpush_subscription_info: dict = None
     date: datetime = field(default_factory=today, init=True)
     recommandation: Recommandation = field(default=None, init=True)
+    recommandation_qa: Recommandation = field(default=None, init=True)
+    recommandation_raep: Recommandation = field(default=None, init=True)
     recommandations: List[Recommandation] = field(default=None, init=True)
     user_seed: str = field(default=None, init=True)
     inscription: Inscription = field(default=None, init=True)
@@ -77,6 +79,8 @@ class Newsletter:
         if type(self.recommandations) == list:
             self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
+        self.recommandation_qa = self.recommandation or self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"])
+        self.recommandation_raep = self.recommandation or self.get_recommandation(self.recommandations, types=["pollens"])
     
 
     @property
@@ -395,7 +399,11 @@ class NewsletterDB(db.Model, Newsletter):
     lien_aasqa: str = db.Column(db.String())
     nom_aasqa: str = db.Column(db.String())
     recommandation_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
-    recommandation: Recommandation = db.relationship("Recommandation")
+    recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_id])
+    recommandation_qa_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation_qa: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_qa_id])
+    recommandation_raep_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation_raep: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_raep_id])
     date: date = db.Column(db.Date())
     qualif: str = db.Column(db.String())
     label: str = db.Column(db.String())
@@ -421,6 +429,10 @@ class NewsletterDB(db.Model, Newsletter):
         self.nom_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or ""
         self.recommandation = newsletter.recommandation
         self.recommandation_id = newsletter.recommandation.id
+        self.recommandation_qa = newsletter.recommandation_qa
+        self.recommandation_qa_id = newsletter.recommandation_qa.id
+        self.recommandation_raep = newsletter.recommandation_raep
+        self.recommandation_raep_id = newsletter.recommandation_raep.id
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
@@ -471,7 +483,9 @@ class NewsletterDB(db.Model, Newsletter):
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
                 'POLLINARIUM_SENTINELLE': False if not commune or not commune.pollinarium_sentinelle else True,
                 'SHOW_QA': self.show_qa,
-                'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else ""
+                'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
+                'RECOMMANDATION_QA': self.recommandation_qa or "",
+                'RECOMMANDATION_RAEP': self.recommandation_raep or ""
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
