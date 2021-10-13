@@ -56,7 +56,7 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
-    webpush_subscriptions_info: List[WebpushSubscriptionInfo] = relationship("WebpushSubscriptionInfo", backref="inscription")
+    _webpush_subscriptions_info: List[WebpushSubscriptionInfo] = relationship("WebpushSubscriptionInfo", backref="inscription")
     #Indicateurs
     indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String), default=['indice_atmo', 'raep'])
     indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String), default=['quotidien'])
@@ -71,13 +71,7 @@ class Inscription(db.Model):
 
     def __init__(self, **kwargs):
         kwargs.setdefault("date_inscription", date.today())
-        if 'webpush_subscriptions_info' in kwargs:
-            webpush_subscriptions_info = kwargs.pop('webpush_subscriptions_info')
-        else:
-            webpush_subscriptions_info = None
         super().__init__(**kwargs)
-        if webpush_subscriptions_info:
-            self.add_webpush_subscriptions_info(webpush_subscriptions_info)
 
     def has_deplacement(self, deplacement):
         return self.deplacement and deplacement in self.deplacement
@@ -372,6 +366,13 @@ class Inscription(db.Model):
                 return
         self.diffusion = None
 
+    @property
+    def webpush_subscriptions_info(self):
+        return self._webpush_subscriptions_info
+    @webpush_subscriptions_info.setter
+    def webpush_subscriptions_info(self, value):
+        self.add_webpush_subscriptions_info(value)
+
     def add_webpush_subscriptions_info(self, value):
         try:
             j_new_value = json.loads(value)
@@ -384,7 +385,7 @@ class Inscription(db.Model):
         else:
             return None
         for data in j_new_value:
-            if any([self.is_equal_webpush_subcriptions_info(sub.data, data) for sub in self.webpush_subscriptions_info]):
+            if any([self.is_equal_webpush_subscriptions_info(sub.data, data) for sub in self.webpush_subscriptions_info]):
                 return
             wp = WebpushSubscriptionInfo(data=data)
             wp.inscription_id = self.id
@@ -392,7 +393,7 @@ class Inscription(db.Model):
             db.session.add(wp)
 
     @classmethod
-    def is_equal_webpush_subcriptions_info(cls, val1, val2):
+    def is_equal_webpush_subscriptions_info(cls, val1, val2):
         return val1['endpoint'] == val2['endpoint'] and\
                val1['keys'] == val2['keys']
 

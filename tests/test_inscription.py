@@ -267,7 +267,7 @@ def test_add_webpush_subscriptions_info_bad_json(inscription):
     assert len(inscription.webpush_subscriptions_info) == 0
 
 
-def test_make_new_value_webpush_subscriptions_info(inscription: Inscription):
+def test_make_new_value_webpush_subscriptions_info(inscription):
     old_value = [
        {
            "endpoint": "https://recosante.beta.gouv.fr/dashboard/",
@@ -285,16 +285,16 @@ def test_make_new_value_webpush_subscriptions_info(inscription: Inscription):
             }
         }
     # We first add old value, and check its added
-    inscription.add_webpush_subscriptions_info(json.dumps(old_value))
+    inscription.webpush_subscriptions_info = json.dumps(old_value)
     assert len(inscription.webpush_subscriptions_info) == 1
     # Then we add old value, and check we have the old one and the new one
-    inscription.add_webpush_subscriptions_info(json.dumps(new_value))
+    inscription.webpush_subscriptions_info = json.dumps(new_value)
     assert len(inscription.webpush_subscriptions_info) == 2
     assert any([v.data == old_value[0] for v in inscription.webpush_subscriptions_info])
     assert any([v.data == new_value for v in inscription.webpush_subscriptions_info])
 
     # Let's try to add another time this new_value and check we still have only 2 values
-    inscription.add_webpush_subscriptions_info(json.dumps(new_value))
+    inscription.add_webpush_subscriptions_info = json.dumps(new_value)
     assert len(inscription.webpush_subscriptions_info) == 2
     assert any([v.data == old_value[0] for v in inscription.webpush_subscriptions_info])
     assert any([v.data == new_value for v in inscription.webpush_subscriptions_info])

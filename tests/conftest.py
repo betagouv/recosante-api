@@ -81,12 +81,12 @@ def commune_commited(commune, db_session) -> Commune:
 
 @pytest.fixture(scope='function')
 def inscription(commune) -> Inscription:
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=["mail"])
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=["mail"], commune_id=commune.id, commune=commune)
     return inscription
 
 @pytest.fixture(scope='function')
 def inscription_alerte(commune) -> Inscription:
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=['mail'])
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=['mail'], commune_id=commune.id, commune=commune)
     inscription.indicateurs_frequence = ["alerte"]
     return inscription
 
