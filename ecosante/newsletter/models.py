@@ -163,6 +163,7 @@ class Newsletter:
         )
         query = query\
             .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
+            .filter(Inscription.commune_id != None)\
             .filter(Inscription.id.notin_(query_nl))\
             .filter(Inscription.date_inscription < str(date.today()))\
             .filter(Inscription.indicateurs_media.contains([media]))
