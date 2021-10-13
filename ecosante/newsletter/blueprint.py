@@ -106,7 +106,7 @@ def test():
         nl = Newsletter(
             inscription=inscription,
             forecast={"data":[{"date": str(today()), "label": IndiceATMO.label_from_valeur(indice_atmo), "couleur": IndiceATMO.couleur_from_valeur(indice_atmo)}]},
-            raep=request.form.get("raep"),
+            raep=int(request.form.get("raep")),
             allergenes={k: v for k, v in zip(request.form.getlist('allergene_nom'), request.form.getlist('allergene_value'))},
             validite_raep={
                 "debut": today().strftime("%d/%m/%Y"),

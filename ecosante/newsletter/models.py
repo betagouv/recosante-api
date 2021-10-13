@@ -426,7 +426,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.label = newsletter.label
         self.couleur = newsletter.couleur
         self.polluants = newsletter.polluants
-        self.raep = int(newsletter.raep) if newsletter.raep else None
+        self.raep = int(newsletter.raep) if newsletter.raep is not None else None
         self.allergenes = newsletter.allergenes
         self.raep_debut_validite = newsletter.validite_raep.get('debut')
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
