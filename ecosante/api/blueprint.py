@@ -33,7 +33,7 @@ def index():
     potentiel_radon = PotentielRadon.get(insee)
 
     advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice)
-    advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"]))
+    advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep else None
     advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
 
     return {
