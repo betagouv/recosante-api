@@ -485,7 +485,7 @@ class NewsletterDB(db.Model, Newsletter):
         return {
             "title": title,
             "body": f"Indice de la qualité de l’air : {self.label.capitalize()}",
-            "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.nom}/"
+            "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.nom.lower()}/"
         }
 
     @classmethod
