@@ -46,7 +46,7 @@ def index():
             "indice": indice_raep,
             "advice": advice_raep,
             "sources": [{
-                "label": "Le Réseau National de Surveillance Aérobiologique (RNSA)",
+                "label": "Le Réseau national de surveillance aérobiologique (RNSA)",
                 "url": "https://www.pollens.fr/"
             }]
         },
