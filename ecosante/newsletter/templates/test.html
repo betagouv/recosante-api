@@ -101,7 +101,7 @@
 <script type="text/javascript">
 function monterChargement() {
   document.getElementById("modal_status").style.display = 'block'
-  document.getElementById("status") = "Envoi en cours"
+  document.getElementById("status").innerText = "Envoi en cours"
 }
 function ajoutAllergene(nom, value) {
   let allergene_nom = document.getElementById("ajout_allergene_nom").cloneNode(true)
