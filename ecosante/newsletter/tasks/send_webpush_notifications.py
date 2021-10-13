@@ -32,7 +32,7 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
                 return None
 
 @celery.task(bind=True)
-def send_webpush_notifications():
+def send_webpush_notifications(self):
     for nl in Newsletter.export(media='notifications_web'):
         nldb = NewsletterDB(nl)
         nldb = send_webpush_notification(nldb, vapid_claims)
