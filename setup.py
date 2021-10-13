@@ -19,7 +19,7 @@ DEPENDENCIES = [
     'Flask-Manage-Webpack',
     'html2text', # to convert from HTML to markdown, used by one alembic revision
     'wtforms[email]',
-    'indice_pollution==0.20.2',
+    'indice_pollution==0.20.3',
     'markdown',
     'markdown-link-attr-modifier',
     'sib-api-v3-sdk',
