@@ -1,4 +1,4 @@
-from ecosante.inscription.models import Inscription
+from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.users.schemas import User
 import json
 
@@ -178,6 +178,25 @@ def test_update_user(commune_commited, client):
     inscription = Inscription.query.filter_by(mail=data['mail']).first()
     assert inscription is not None
     assert inscription.animaux_domestiques == ["aucun"]
+
+    webpush_subscriptions_info = {
+        "endpoint": "https://fcm.googleapis.com/fcm/send/cijfalUoQG4:APA91bHVycLDBVOO32SUxNfKWu7Xjshb-6o7NHNa4OwMH_Zm82jRtMVRoubKoRyLGi97hMdKNNX2ZBZldtkQlvKu0Ziq8DBCqlzSqsfFzI6-50NI61XnQ5enMvT1BxeSYsjjEMBCO851",
+        "expirationTime": None,
+        "keys":{
+            "p256dh": "BKYdaBoOmsfeC1KI6_PClwZhdxWvNV1RvLvXRjPITNsP1VsHf4w4LiMwMYHBWGP7ouMJzltO3ZrVDMGthIGnUQs",
+            "auth": "lk1Q18SEM4aCecGojD-i-g"
+            }
+        }
+    j_dump = json.dumps(webpush_subscriptions_info)
+    response = client.post(
+        f'/users/{uid}',
+        json={"indicateurs_media":["notifications_web"], "webpush_subscriptions_info": j_dump}
+    )
+    assert response.status_code == 200
+    inscription = Inscription.query.filter_by(mail=data['mail']).first()
+    assert inscription.indicateurs_media == ["notifications_web"]
+    assert len(inscription.webpush_subscriptions_info) == 1
+
 
 def test_update_user_with_existing_email(commune_commited, client):
     data = {
