@@ -169,7 +169,7 @@ class Newsletter:
             .filter(Inscription.indicateurs_media.contains([media]))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.commune_id)
-        insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions}
+        insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions if i.commune.departement and i.commune.departement.region}
         try:
             insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True, date_=date_)
         except requests.exceptions.HTTPError as e:
