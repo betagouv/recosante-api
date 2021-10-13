@@ -311,7 +311,7 @@ class Newsletter:
     @staticmethod
     def raep_value_to_qualif(value):
         return {
-            0: "nul",
+            0: "risque nul",
             1: "très faible",
             2: "faible",
             3: "moyen",
