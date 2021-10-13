@@ -482,9 +482,14 @@ class NewsletterDB(db.Model, Newsletter):
         commune = self.inscription.commune
         with different_locale('fr_FR.utf8'):
             title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
+        array_body = []
+        if "indice_atmo" in self.inscription.indicateurs:
+            array_body.append(f"Indice de la qualité de l’air : {self.label.capitalize()}.")
+        if "raep" in self.inscription.indicateurs:
+            array_body.append(f"Risque d’allergie aux pollens : {self.qualif_raep.capitalize()}.")
         return {
             "title": title,
-            "body": f"Indice de la qualité de l’air : {self.label.capitalize()}",
+            "body": "\n".join(array_body),
             "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.nom.lower()}/"
         }
 
