@@ -172,8 +172,8 @@ class Newsletter:
             .filter(Inscription.commune_id != None)\
             .filter(Inscription.date_inscription < str(date.today()))\
             .filter(Inscription.indicateurs_media.contains([media]))\
+            .filter(Inscription.id.notin_(query_nl))\
             .options(joinedload(Inscription.commune))
-            #.filter(Inscription.id.notin_(query_nl))\
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.commune_id)
         insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions if i.commune.departement and i.commune.departement.region}
