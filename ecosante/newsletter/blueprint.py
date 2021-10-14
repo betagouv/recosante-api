@@ -17,7 +17,7 @@ from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from .forms import FormAvis
 from .models import Newsletter, NewsletterDB, db
-from .tasks.import_in_sb import import_, send
+from .tasks.import_in_sb import create_campaign, import_, send
 from .tasks.send_webpush_notifications import send_webpush_notification, vapid_claims
 from indice_pollution.history.models import IndiceATMO
 
@@ -89,6 +89,15 @@ def export_avis():
         }
     )
 
+@bp.route('<secret_slug>/send_campaign/', methods=['GET', 'POST'])
+@bp.route('/test', methods=['GET', 'POST'])
+@admin_capability_url
+def send_campaign():
+    now = request.args.get('now')
+    list_id = request.args.get('list_id')
+    campaign_id =  create_campaign(now, list_id)
+    send(campaign_id)
+    return "ok"
 
 @bp.route('<secret_slug>/test', methods=['GET', 'POST'])
 @bp.route('/test', methods=['GET', 'POST'])

@@ -1,3 +1,5 @@
+import csv
+import io
 from flask import current_app
 from datetime import datetime
 from uuid import uuid4
@@ -86,25 +88,15 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send
         }
     )
     result = import_(task, newsletters, force_send, 2)
-    send(task, result["email_campaign_id"])
     result['progress'] = 100
     if current_app.config['ENV'] == 'production':
         db.session.commit()
     return result
 
-def send(task, campaign_id, test=False):
+def send(campaign_id, test=False):
     if current_app.config['ENV'] == 'production' or test:
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
-        if task:
-            task.update_state(
-                state='STARTED',
-                meta={
-                    "progress": 99,
-                    "details": "Envoi de la liste email",
-                    "email_campaign_id": campaign_id,
-                }
-            )
 
 def import_(task, newsletters, force_send=False, overhead=0, test=False):
     email_campaign_id = None,
@@ -131,7 +123,10 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             }
         )
 
-    contact_api = sib_api_v3_sdk.ContactsApi(sib)
+    output = io.StringIO()
+    fieldnames = list(newsletters[0].attributes().keys())
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
     for i, nl in enumerate(newsletters):
         if nl.label is None and not force_send:
             errors.append({
@@ -152,33 +147,26 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             })
             current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
-            try:
-                if current_app.config['ENV'] == 'production' or test:
-                    contact_api.update_contact(
-                        nl.inscription.mail,
-                        sib_api_v3_sdk.UpdateContact(
-                            attributes=nl.attributes(),
-                            list_ids=[mail_list_id]
-                        )
-                    )
-            except ApiException as e:
-                current_app.logger.error(f"Error updating {nl.inscription.mail}")
-                current_app.logger.error(e)
-            current_app.logger.info(f"Mise à jour de {nl.inscription.mail}")
-        nb_requests += 1
-        if task:
-            task.update_state(
-                state='STARTED',
-                meta={
-                    "progress": (nb_requests/total_nb_requests)*100,
-                    "details": f"Mise à jour des contacts {i}/{len(newsletters)}"
-                }
-            )
+            writer.writerow(nl.attributes())
         if current_app.config['ENV'] == 'production':
             db.session.add(nl)
     if current_app.config['ENV'] == 'production':
-        db.session.commit()
+        contact_api = sib_api_v3_sdk.ContactsApi(sib)
+        request_contact_import = sib_api_v3_sdk.RequestContactImport()
+        request_contact_import.list_ids = [mail_list_id]
+        request_contact_import.email_blacklist = False
+        request_contact_import.sms_blacklist = False
+        request_contact_import.update_existing_contacts = True
+        request_contact_import.empty_contacts_attributes = True
+        request_contact_import.file_body = output.getvalue()
+        request_contact_import.notify_url = 'https://api.recosante.beta.gouv.fr/newsletter/{os.getenv("CAPABILITY_ADMIN_TOKEN")}/send_campaign/?now={now}&list_id={list_id}'
+        try:
+            contact_api.import_contacts(request_contact_import)
+            db.session.commit()
+        except ApiException as e:
+            current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
 
+def create_campaign(now, mail_list_id, test=False):
     if current_app.config['ENV'] == 'production' or test:
         template_id = int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 526))
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
@@ -204,23 +192,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
         email_campaign_id = r.id
     else:
         email_campaign_id = 0
-    nb_requests += 1
-    if task:
-        task.update_state(
-            state='STARTED',
-            meta={
-                "progress": (nb_requests/total_nb_requests)*100,
-                "details": f"Création de la campagne mail",
-                "email_campaign_id": email_campaign_id
-            }
-        )
-    return {
-        "state": "STARTED",
-        "progress": (nb_requests/total_nb_requests)*100,
-        "details": "Terminé",
-        "email_campaign_id": email_campaign_id,
-        "errors": errors
-    }
+    return email_campaign_id
 
 def format_errors(errors):
     if not errors:

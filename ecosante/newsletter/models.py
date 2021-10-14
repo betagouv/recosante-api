@@ -8,6 +8,7 @@ from indice_pollution.history.models.commune import Commune
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
@@ -43,9 +44,9 @@ class Newsletter:
 
     def __post_init__(self):
         if not 'label' in self.today_forecast:
-            current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
+            current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
         if not 'couleur' in self.today_forecast:
-            current_app.logger.error(f'No couleur for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
+            current_app.logger.error(f'No couleur for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
         if self.episodes and 'data' in self.episodes:
             self.polluants = [
                 {
@@ -62,7 +63,7 @@ class Newsletter:
         else:
             self.polluants = []
         if self.raep is None and self.allergenes is None and not self.validite_raep:
-            raep = get_raep(self.inscription.ville_insee).get('data')
+            raep = get_raep(self.inscription.commune.insee).get('data')
             if raep:
                 self.raep = raep['total']
                 self.allergenes = raep['allergenes']
@@ -108,12 +109,12 @@ class Newsletter:
         try:
             data = self.forecast['data']
         except KeyError:
-            current_app.logger.error(f'No data for forecast of inscription "{self.inscription.id}" INSEE: "{self.inscription.ville_insee}"')
+            current_app.logger.error(f'No data for forecast of inscription "{self.inscription.id}" INSEE: "{self.inscription.commune.insee}"')
             return dict()
         try:
             return next(iter([v for v in data if v['date'] == str(self.date)]), dict())
         except (TypeError, ValueError, StopIteration) as e:
-            current_app.logger.error(f'Unable to get forecast for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
+            current_app.logger.error(f'Unable to get forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
             current_app.logger.error(e)
             return dict()
 
@@ -123,7 +124,7 @@ class Newsletter:
         try:
             return [v for v in data if v['date'] == str(self.date)]
         except (TypeError, ValueError, StopIteration) as e:
-            current_app.logger.error(f'Unable to get episodes for inscription: id: {self.inscription.id} insee: {self.inscription.ville_insee}')
+            current_app.logger.error(f'Unable to get episodes for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
             current_app.logger.error(e)
             return [dict()]
 
@@ -161,6 +162,7 @@ class Newsletter:
             .filter(
                 NewsletterDB.date==date.today(),
                 NewsletterDB.label != None,
+                NewsletterDB.label != "",
                 NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
             .with_entities(
                 NewsletterDB.inscription_id
@@ -168,9 +170,10 @@ class Newsletter:
         query = query\
             .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
             .filter(Inscription.commune_id != None)\
-            .filter(Inscription.id.notin_(query_nl))\
             .filter(Inscription.date_inscription < str(date.today()))\
-            .filter(Inscription.indicateurs_media.contains([media]))
+            .filter(Inscription.indicateurs_media.contains([media]))\
+            .options(joinedload(Inscription.commune))
+            #.filter(Inscription.id.notin_(query_nl))\
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.commune_id)
         insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions if i.commune.departement and i.commune.departement.region}
@@ -264,7 +267,7 @@ class Newsletter:
 
     def csv_line(self):
         return generate_line([
-            self.inscription.ville_name,
+            self.inscription.commune.nom,
             "; ".join(self.inscription.deplacement or []),
             convert_boolean_to_oui_non(self.inscription.sport),
             "Non",
@@ -329,7 +332,7 @@ class Newsletter:
 
     @property
     def departement_preposition(self):
-        commune = Commune.get(self.inscription.ville_insee)
+        commune = self.inscription.commune
         if commune and commune.departement and commune.departement.preposition:
             preposition = commune.departement.preposition
             if preposition[-1].isalpha():
@@ -458,15 +461,15 @@ class NewsletterDB(db.Model, Newsletter):
                 return next(filter(lambda s: s.get('polluant_name', '').lower() == nom.lower(), self.sous_indices))
             except StopIteration:
                 return {}
-        commune = Commune.get(self.inscription.ville_insee)
         return {
             **{
+                'EMAIL': self.inscription.mail,
                 'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
                 'LIEN_AASQA': self.lien_aasqa,
                 'NOM_AASQA': self.nom_aasqa,
                 'PRECISIONS': self.recommandation.precisions or "",
                 'QUALITE_AIR': self.label or "",
-                'VILLE': self.inscription.ville_nom or "",
+                'VILLE': self.inscription.commune.nom or "",
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_formatted or "",
@@ -475,13 +478,13 @@ class NewsletterDB(db.Model, Newsletter):
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
-                'DEPARTEMENT': self.inscription.departement.get('nom') or "",
+                'DEPARTEMENT': self.inscription.commune.departement.nom or "",
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "OBJECTIF": self.recommandation.objectif,
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
-                'POLLINARIUM_SENTINELLE': False if not commune or not commune.pollinarium_sentinelle else True,
+                'POLLINARIUM_SENTINELLE': False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True,
                 'SHOW_QA': self.show_qa,
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
