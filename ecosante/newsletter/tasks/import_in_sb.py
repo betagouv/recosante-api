@@ -4,6 +4,7 @@ from flask import current_app
 from datetime import datetime
 from uuid import uuid4
 import os
+from flask.helpers import url_for
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
@@ -159,7 +160,14 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
         request_contact_import.update_existing_contacts = True
         request_contact_import.empty_contacts_attributes = True
         request_contact_import.file_body = output.getvalue()
-        request_contact_import.notify_url = f'https://api.recosante.beta.gouv.fr/newsletter/{os.getenv("CAPABILITY_ADMIN_TOKEN")}/send_campaign/?now={now}&list_id={mail_list_id}'
+        request_contact_import.notify_url = url_for(
+            'newsletter.send_campaign',
+            secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
+            now=now,
+            mail_list_id=mail_list_id,
+            _external=True,
+            _schema='https'
+        )
         try:
             contact_api.import_contacts(request_contact_import)
             db.session.commit()
