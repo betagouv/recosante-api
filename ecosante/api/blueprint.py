@@ -1,6 +1,6 @@
 from ecosante.extensions import rebar
 from .schemas import ResponseSchema, QuerySchema
-from indice_pollution import forecast, raep
+from indice_pollution import forecast, raep, episodes as get_episodes
 from indice_pollution.history.models import PotentielRadon
 from ecosante.recommandations.models import Recommandation
 
@@ -30,6 +30,7 @@ def index():
 
     indice_atmo  = forecast(insee, use_make_resp=False)
     indice_raep = raep(insee)
+    episodes = get_episodes(insee)
     potentiel_radon = PotentielRadon.get(insee)
 
     advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice)
@@ -60,5 +61,11 @@ def index():
             "validity": {
                 "area": indice_atmo.commune.nom
             }
-        }
+        },
+        "episodes_pollution": [
+            {
+                "indice": episode,
+                "advice": None
+            } for episode in episodes
+        ]
     }

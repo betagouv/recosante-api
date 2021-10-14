@@ -484,8 +484,8 @@ class NewsletterDB(db.Model, Newsletter):
                 'POLLINARIUM_SENTINELLE': False if not commune or not commune.pollinarium_sentinelle else True,
                 'SHOW_QA': self.show_qa,
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
-                'RECOMMANDATION_QA': self.recommandation_qa or "",
-                'RECOMMANDATION_RAEP': self.recommandation_raep or ""
+                'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
+                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) or ""
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
