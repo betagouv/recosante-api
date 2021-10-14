@@ -90,6 +90,7 @@ def export_avis():
     )
 
 @bp.route('<secret_slug>/send_campaign/', methods=['GET', 'POST'])
+@bp.route('send_campaign/', methods=['GET', 'POST'])
 @admin_capability_url
 def send_campaign():
     now = request.args.get('now')
