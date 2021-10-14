@@ -159,7 +159,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
         request_contact_import.update_existing_contacts = True
         request_contact_import.empty_contacts_attributes = True
         request_contact_import.file_body = output.getvalue()
-        request_contact_import.notify_url = f'https://api.recosante.beta.gouv.fr/newsletter/{os.getenv("CAPABILITY_ADMIN_TOKEN")}/send_campaign/?now={now}&list_id={list_id}'
+        request_contact_import.notify_url = f'https://api.recosante.beta.gouv.fr/newsletter/{os.getenv("CAPABILITY_ADMIN_TOKEN")}/send_campaign/?now={now}&list_id={mail_list_id}'
         try:
             contact_api.import_contacts(request_contact_import)
             db.session.commit()
