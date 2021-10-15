@@ -117,6 +117,8 @@ def export(mail_list_id, secret_slug):
         writer.writeheader()
         yield line.read()
         for nl in newsletters:
+            if nl.inscription.mail is None:
+                continue
             writer.writerow(nl.attributes())
             yield line.read()
     newsletters = list(db.session.query(NewsletterDB).filter_by(
