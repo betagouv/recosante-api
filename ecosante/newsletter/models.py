@@ -425,6 +425,7 @@ class NewsletterDB(db.Model, Newsletter):
     sous_indices: dict = db.Column(postgresql.JSONB)
     webpush_subscription_info_id: int = db.Column(db.Integer, db.ForeignKey('webpush_subscription_info.id'), index=True)
     webpush_subscription_info: WebpushSubscriptionInfo = db.relationship(WebpushSubscriptionInfo)
+    mail_list_id: int = db.Column(db.Integer)
 
     def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
