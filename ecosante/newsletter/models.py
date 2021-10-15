@@ -453,7 +453,6 @@ class NewsletterDB(db.Model, Newsletter):
         self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
         self.webpush_subscription_info = newsletter.webpush_subscription_info
 
-
     def attributes(self):
         noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
         def get_sous_indice(nom):
@@ -463,6 +462,8 @@ class NewsletterDB(db.Model, Newsletter):
                 return next(filter(lambda s: s.get('polluant_name', '').lower() == nom.lower(), self.sous_indices))
             except StopIteration:
                 return {}
+        def convert_bool_to_yes_no(b):
+            return "Yes" if b else "No"
         return {
             **{
                 'EMAIL': self.inscription.mail,
@@ -476,7 +477,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_formatted or "",
                 'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
-                'SHOW_RAEP': self.show_raep or False,
+                'SHOW_RAEP': convert_bool_to_yes_no((self.show_raep or False)),
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
@@ -486,8 +487,10 @@ class NewsletterDB(db.Model, Newsletter):
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
-                'POLLINARIUM_SENTINELLE': False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True,
-                'SHOW_QA': self.show_qa,
+                'POLLINARIUM_SENTINELLE': convert_bool_to_yes_no((False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True)),
+                'SHOW_QA': convert_bool_to_yes_no(self.show_qa),
+                'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
+                'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) or ""
