@@ -31,22 +31,15 @@ class IndiceRAEP(FullIndiceSchema):
     @pre_dump
     def load_indice_raep(self, data, many, **kwargs):
         date_format = "%d/%m/%Y"
-        try:
-            advice = next(
-                filter(
-                    lambda r: r.is_relevant(types=['pollens'], media='dashboard', raep=int(data['indice']['data']['total'])),
-                    Recommandation.published_query().all()
-                )
-            )
-        except StopIteration:
-            advice = Recommandation()
-        return {
-            "indice": data["indice"]["data"],
-            "validity": {
+        resp = {"sources": data.get('sources')}
+        if data['indice']['data']:
+            resp['indice'] = data["indice"]["data"]
+            resp['advice'] = data['advice']
+            resp['validity'] = {
                 "start": datetime.strptime(data["indice"]["data"]["periode_validite"]["debut"], date_format),
                 "end": datetime.strptime(data["indice"]["data"]["periode_validite"]["fin"], date_format),
                 "area": data["indice"]["departement"]["nom"]
-            },
-            "advice": advice,
-            "sources": data.get('sources')
-        }
+            }
+        else:
+            resp['error'] = "Inactive region"
+        return resp

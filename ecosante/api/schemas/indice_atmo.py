@@ -27,18 +27,23 @@ class IndiceATMO(FullIndiceSchema):
 
     @pre_dump
     def load_indice_atmo(self, data, many, **kwargs):
-        return {
-            "indice": data["indice"].dict(),
-            "validity": {
-                "start": data["indice"].date_ech,
-                "end": data["indice"].date_ech + timedelta(1) - timedelta(seconds=1),
-                "area": data["indice"].commune.nom
-            },
+        resp =  {
             "sources": [
                 {
                    "label":  data["indice"].region.Service.nom_aasqa,
                    "url": data["indice"].region.Service.website
                 }
             ],
-            "advice": data['advice']
         }
+        if hasattr(data["indice"], 'error'):
+            resp['error'] = data["indice"].error
+        else:
+            resp["indice"] = data["indice"].dict()
+            resp['validity'] = {
+                "start": data["indice"].date_ech,
+                "end": data["indice"].date_ech + timedelta(1) - timedelta(seconds=1),
+                "area": data["indice"].commune.nom
+            }
+        if data.get("advice"):
+            resp['advice'] = data['advice']
+        return resp

@@ -23,3 +23,4 @@ class FullIndiceSchema(Schema):
     advice = fields.Nested(AdviceSchema, allow_none=True)
     validity = fields.Nested(ValiditySchema)
     sources = fields.List(fields.Nested(SourceSchema))
+    error = fields.String()
