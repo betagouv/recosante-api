@@ -9,6 +9,8 @@ from flask import (
 )
 from flask.wrappers import Response
 from datetime import datetime, timedelta
+import io
+from openpyxl import Workbook
 
 from indice_pollution.helpers import today
 from ecosante.inscription.models import Inscription
@@ -97,6 +99,26 @@ def send_campaign():
     campaign_id = create_campaign(now, mail_list_id)
     send(campaign_id)
     return "ok"
+
+@bp.route('<secret_slug>/export/', methods=['GET', 'POST'])
+@admin_capability_url
+def export():
+    mail_list_id = request.args.get('mail_list_id', type=int)
+    if not mail_list_id:
+        return "no mail list id", 404
+    newsletters = NewsletterDB.query.filter_by(mail_list_id=mail_list_id)
+
+    fieldnames = {k: i+1 for i, k in enumerate(newsletters[0].attributes().keys())}
+    wb = Workbook()
+    ws1 = wb.active
+    for k, i in fieldnames.items():
+        _ = ws1.cell(row=1, column=i, value=k)
+    for nl in newsletters:
+        for k, v in nl.attributes().items():
+            _ = ws1.cell(row=i+2, column=fieldnames[k], value=v)
+    output = io.BytesIO()
+    wb.save(output)
+    return output
 
 @bp.route('<secret_slug>/test', methods=['GET', 'POST'])
 @bp.route('/test', methods=['GET', 'POST'])
