@@ -22,6 +22,7 @@ DEPENDENCIES = [
     'indice_pollution==0.21.0',
     'markdown',
     'markdown-link-attr-modifier',
+    'openpyxl',
     'sib-api-v3-sdk',
     'requests',
     'icalevents',
