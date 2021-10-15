@@ -167,8 +167,7 @@ def test():
             }
         )
         if media == "mail":
-            result = import_(None, [NewsletterDB(nl)], force_send=True, test=True)
-            send(None, result["email_campaign_id"], test=True)
+            import_(None, [NewsletterDB(nl)], force_send=True, test=True)
             nb_mails += 1
         elif media == "notifications_web":
             for wp in inscription.webpush_subscriptions_info:
