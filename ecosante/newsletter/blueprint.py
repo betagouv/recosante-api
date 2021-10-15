@@ -100,7 +100,7 @@ def send_campaign():
     send(campaign_id)
     return "ok"
 
-@bp.route('<secret_slug>/export/', methods=['GET', 'POST'])
+@bp.route('<secret_slug>/export.xlsx', methods=['GET', 'POST'])
 @admin_capability_url
 def export():
     mail_list_id = request.args.get('mail_list_id', type=int)
