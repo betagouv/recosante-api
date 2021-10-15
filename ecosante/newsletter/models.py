@@ -8,7 +8,7 @@ from indice_pollution.history.models.commune import Commune
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import subqueryload
 from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
@@ -21,6 +21,7 @@ from ecosante.utils.funcs import (
 )
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep
+from indice_pollution.history.models import Departement
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
@@ -174,7 +175,11 @@ class Newsletter:
             .filter(Inscription.commune_id != None)\
             .filter(Inscription.date_inscription < str(date.today()))\
             .filter(Inscription.indicateurs_media.contains([media]))\
-            .options(joinedload(Inscription.commune))
+            .options(subqueryload(
+                Inscription.commune,
+                Commune.departement,
+                Departement.region,
+            ))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.commune_id)
         insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions if i.commune.departement and i.commune.departement.region}
