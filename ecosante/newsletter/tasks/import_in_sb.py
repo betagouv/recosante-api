@@ -1,5 +1,3 @@
-import csv
-import io
 from flask import current_app
 from datetime import datetime
 from uuid import uuid4
@@ -100,7 +98,6 @@ def send(campaign_id, test=False):
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
 
 def import_(task, newsletters, force_send=False, overhead=0, test=False):
-    email_campaign_id = None,
     errors = []
     
     now = datetime.now()
@@ -124,10 +121,6 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             }
         )
 
-    output = io.StringIO()
-    fieldnames = list(newsletters[0].attributes().keys())
-    writer = csv.DictWriter(output, fieldnames=fieldnames)
-    writer.writeheader()
     for i, nl in enumerate(newsletters):
         if nl.label is None and not force_send:
             errors.append({
@@ -148,10 +141,12 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             })
             current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
-            writer.writerow(nl.attributes())
-        if current_app.config['ENV'] == 'production':
-            db.session.add(nl)
-    if current_app.config['ENV'] == 'production':
+            if current_app.config['ENV'] == 'production':
+                nl.mail_list_id = mail_list_id
+                db.session.add(nl)
+
+    if current_app.config['ENV'] == 'production' or test:
+        db.session.commit()
         contact_api = sib_api_v3_sdk.ContactsApi(sib)
         request_contact_import = sib_api_v3_sdk.RequestContactImport()
         request_contact_import.list_ids = [mail_list_id]
@@ -159,7 +154,13 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
         request_contact_import.sms_blacklist = False
         request_contact_import.update_existing_contacts = True
         request_contact_import.empty_contacts_attributes = True
-        request_contact_import.file_body = output.getvalue()
+        request_contact_import.file_url = url_for(
+            'newsletter.export',
+            secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
+            mail_list_id=mail_list_id,
+            _external=True,
+            _scheme='https'
+        )
         request_contact_import.notify_url = url_for(
             'newsletter.send_campaign',
             secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
@@ -170,7 +171,6 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
         )
         try:
             contact_api.import_contacts(request_contact_import)
-            db.session.commit()
         except ApiException as e:
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
 
