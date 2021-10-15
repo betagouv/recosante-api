@@ -69,8 +69,9 @@ def import_recommandations(prod_session):
 
 def import_indices_generic(last_week, prod_session, model, date_col, staging_inscriptions=None, zones=None):
     table_name = f'{model.__table__.schema}."{model.__tablename__}"' if model.__table__.schema else model.__tablename__
-    db.session.execute(f'TRUNCATE TABLE {table_name}')
-    db.session.commit()
+    #db.session.execute(f'TRUNCATE TABLE {table_name}')
+    #db.session.commit()
+    #On commente pour l’instant à cause de deadlocks
     hours = int(((datetime.today() + timedelta(days=1)) - last_week).days * 24)
     for d in [(last_week + timedelta(hours=i)) for i in range(1, hours)]:
         indices = list()
