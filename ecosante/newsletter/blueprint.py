@@ -94,7 +94,7 @@ def export_avis():
 @admin_capability_url
 def send_campaign():
     now = request.args.get('now')
-    mail_list_id = request.args.get('mail_list_id')
+    mail_list_id = request.args.get('mail_list_id', type=int)
     campaign_id =  create_campaign(now, [mail_list_id])
     send(campaign_id)
     return "ok"
