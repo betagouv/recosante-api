@@ -47,7 +47,7 @@ class FormAdd(BaseForm):
     )
     min_raep = SelectField(
         'Montrer à partir d’un un RAEP de',
-        choices=[(0, "--"), (1, "1"), (4, "4")],
+        choices=[(0, "0"), (1, "1"), (4, "4")],
         coerce=int
     )
     personne_allergique = OuiNonField(
