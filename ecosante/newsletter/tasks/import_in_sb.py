@@ -166,7 +166,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             now=now,
             mail_list_id=mail_list_id,
             _external=True,
-            _schema='https'
+            _scheme='https'
         )
         try:
             contact_api.import_contacts(request_contact_import)

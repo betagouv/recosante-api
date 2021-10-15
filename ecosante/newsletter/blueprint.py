@@ -95,7 +95,7 @@ def export_avis():
 def send_campaign():
     now = request.args.get('now')
     mail_list_id = request.args.get('mail_list_id')
-    campaign_id =  create_campaign(now, mail_list_id)
+    campaign_id =  create_campaign(now, [mail_list_id])
     send(campaign_id)
     return "ok"
 
