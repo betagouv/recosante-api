@@ -218,9 +218,9 @@ class Recommandation(db.Model):
                     return False
         # Pollens
         if self.type_ == "pollens":
-            if raep == None or raep == 0:
+            if type(self.min_raep) != int or type(raep) != int:
                 return False
-            if self.min_raep and raep < self.min_raep:
+            if raep < self.min_raep:
                 return False
             if "newsletter" in self.montrer_dans:
                 if 0 < raep < 4: #RAEP Faible
