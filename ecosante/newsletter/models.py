@@ -154,25 +154,26 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail'):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=False):
         query = Inscription.active_query()
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
-        query_nl = NewsletterDB.query\
-            .filter(
-                NewsletterDB.date==date.today(),
-                NewsletterDB.label != None,
-                NewsletterDB.label != "",
-                NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
-            .with_entities(
-                NewsletterDB.inscription_id
-        )
+        if filter_already_sent:
+            query_nl = NewsletterDB.query\
+                .filter(
+                    NewsletterDB.date==date.today(),
+                    NewsletterDB.label != None,
+                    NewsletterDB.label != "",
+                    NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
+                .with_entities(
+                    NewsletterDB.inscription_id
+            )
+            query = query.filter(Inscription.id.notin_(query_nl))
         query = query\
             .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
             .filter(Inscription.commune_id != None)\
             .filter(Inscription.date_inscription < str(date.today()))\
             .filter(Inscription.indicateurs_media.contains([media]))\
-            .filter(Inscription.id.notin_(query_nl))\
             .options(joinedload(Inscription.commune))
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.commune_id)
