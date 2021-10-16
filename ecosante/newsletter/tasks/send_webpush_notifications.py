@@ -2,8 +2,8 @@ import json
 from time import sleep
 from flask import current_app
 from py_vapid import Vapid
-from ecosante.newsletter.models import Newsletter, NewsletterDB, db
-from ecosante.extensions import celery
+from ecosante.newsletter.models import Newsletter, NewsletterDB
+from ecosante.extensions import db, celery
 from pywebpush import WebPushException, webpush
 
 
