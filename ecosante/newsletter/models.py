@@ -155,7 +155,7 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=False):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True):
         query = Inscription.active_query()
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
