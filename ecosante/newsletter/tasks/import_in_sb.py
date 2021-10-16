@@ -126,18 +126,18 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             errors.append({
                 "type": "no_air_quality",
                 "nl_id": nl.id,
-                "region": nl.inscription.cache_api_commune['region']['nom'],
-                "ville": nl.inscription.ville_nom,
-                "insee": nl.inscription.ville_insee
+                "region": nl.inscription.commune.departement.region.nom,
+                "ville": nl.inscription.commune.nom,
+                "insee": nl.inscription.commune.insee
             })
             current_app.logger.error(f"No qai for {nl.inscription.mail}")
         elif not nl.something_to_show and force_send:
             errors.append({
                 "type": "nothing_to_show",
                 "nl_id": nl.id,
-                "region": nl.inscription.cache_api_commune['region']['nom'],
-                "ville": nl.inscription.ville_nom,
-                "insee": nl.inscription.ville_insee
+                "region": nl.inscription.commune.departement.region.nom,
+                "ville": nl.inscription.commune.nom,
+                "insee": nl.inscription.commune.insee
             })
             current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
