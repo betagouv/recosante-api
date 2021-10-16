@@ -158,7 +158,7 @@ def test_reco_pollen_pollution():
     i = Inscription(allergie_pollens=True)
     assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
-def test_reco_pollen_pas_pollution_raep_nul():
+def test_reco_pollen_pas_pollution_raep_nul(commune):
     r = published_recommandation(type_="pollens")
 
     i = Inscription(allergie_pollens=False)
@@ -175,8 +175,8 @@ def test_reco_pollen_pas_pollution_raep_nul():
     i = Inscription(allergie_pollens=True)
     assert r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_reco_pollen_pas_pollution_raep_faible_atmo_bon():
-    r = published_recommandation(type_="pollens")
+def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune):
+    r = published_recommandation(type_="pollens", min_raep=1)
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -187,8 +187,8 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_bon():
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais():
-    r = published_recommandation(type_="pollens")
+def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais(commune):
+    r = published_recommandation(type_="pollens", min_raep=1)
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -199,8 +199,8 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais():
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon():
-    r = published_recommandation(type_="pollens")
+def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon(commune):
+    r = published_recommandation(type_="pollens", min_raep=1)
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -211,8 +211,8 @@ def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon():
         i = Inscription(allergie_pollens=True)
         assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais():
-    r = published_recommandation(type_="pollens")
+def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais(commune):
+    r = published_recommandation(type_="pollens", min_raep=1)
 
     for delta in range(0, 7):
         date_ = date.today() + timedelta(days=delta)
@@ -244,14 +244,13 @@ def test_chauffage():
     i = Inscription(chauffage=None)
     assert r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_get_relevant_recent(db_session):
+def test_get_relevant_recent(db_session, inscription):
     r1 = published_recommandation(status="published")
     r2 = published_recommandation(ordre=0)
-    i = Inscription()
-    db_session.add_all([r1, r2, i])
+    db_session.add_all([r1, r2, inscription])
     db_session.commit()
     nl1 = NewsletterDB(Newsletter(
-        inscription=i,
+        inscription=inscription,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2]
@@ -260,7 +259,7 @@ def test_get_relevant_recent(db_session):
     db_session.add(nl1)
     db_session.commit()
     nl2 = NewsletterDB(Newsletter(
-        inscription=i,
+        inscription=inscription,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2]
@@ -268,15 +267,16 @@ def test_get_relevant_recent(db_session):
 
     assert nl1.recommandation_id != nl2.recommandation_id
 
-def test_get_relevant_last_criteres(db_session):
+def test_get_relevant_last_criteres(db_session, inscription):
     r1 = published_recommandation(menage=True)
     r2 = published_recommandation(menage=True)
     r3 = published_recommandation(velo_trott_skate=True)
-    i = Inscription(activites=["menage"], deplacement=["velo"])
-    db_session.add_all([r1, r2, r3, i])
+    inscription.activites = ["menage"]
+    inscription.deplacement = ["velo"]
+    db_session.add_all([r1, r2, r3, inscription])
     db_session.commit()
     nl = Newsletter(
-        inscription=i,
+        inscription=inscription,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2, r3]
@@ -285,7 +285,7 @@ def test_get_relevant_last_criteres(db_session):
     db_session.add(nl1)
     db_session.commit()
     nl2 = NewsletterDB(Newsletter(
-        inscription=i,
+        inscription=inscription,
         forecast={"data": []},
         episodes={"data": []},
         recommandations=[r1, r2, r3]
