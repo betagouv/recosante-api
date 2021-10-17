@@ -97,21 +97,22 @@ def send(campaign_id, test=False):
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
 
-def import_(task, newsletters, force_send=False, overhead=0, test=False):
+def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_list_id=None):
     errors = []
     
     now = datetime.now()
     total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
-    lists_api = sib_api_v3_sdk.ListsApi(sib)
-    r = lists_api.create_list(
-        sib_api_v3_sdk.CreateList(
-            name=f'{now} - mail',
-            folder_id=int(os.getenv('SIB_FOLDERID', 5)) if not test else int(os.getenv('SIB_FOLDERID', 1653))
+    if not mail_list_id:
+        lists_api = sib_api_v3_sdk.ListsApi(sib)
+        r = lists_api.create_list(
+            sib_api_v3_sdk.CreateList(
+                name=f'{now} - mail',
+                folder_id=int(os.getenv('SIB_FOLDERID', 5)) if not test else int(os.getenv('SIB_FOLDERID', 1653))
+            )
         )
-    )
-    mail_list_id = r.id
-    nb_requests += 1
+        mail_list_id = r.id
+        nb_requests += 1
     if task:
         task.update_state(
             state='STARTED',
@@ -173,6 +174,14 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False):
             contact_api.import_contacts(request_contact_import)
         except ApiException as e:
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
+    return {
+        "state": "STARTED",
+        "progress": (nb_requests/total_nb_requests)*100,
+        "details": "Terminé",
+        "errors": errors
+    }
+
+
 
 def create_campaign(now, mail_list_id, test=False):
     if current_app.config['ENV'] == 'production' or test:
