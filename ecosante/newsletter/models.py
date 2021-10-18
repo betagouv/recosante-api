@@ -81,8 +81,8 @@ class Newsletter:
         if type(self.recommandations) == list:
             self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
-        self.recommandation_qa = self.recommandation or self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"])
-        self.recommandation_raep = self.recommandation or self.get_recommandation(self.recommandations, types=["pollens"])
+        self.recommandation_qa = self.recommandation or self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"], media='dashboard')
+        self.recommandation_raep = self.recommandation or self.get_recommandation(self.recommandations, types=["pollens"], media='dashboard')
     
 
     @property
