@@ -1,3 +1,4 @@
+from flask.globals import current_app
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 from ecosante.newsletter.models import NewsletterDB
@@ -124,6 +125,10 @@ def import_indices(prod_session):
 def import_from_production():
     prod_url = os.getenv('SQLALCHEMY_PROD_DATABASE_URI')
     if not prod_url or celery.conf.env not in ('staging', 'dev'):
+        current_app.logger.error("Quitting, can not import to an environment that is not staging or dev")
+        return
+    if str(db.engine.url) == prod_url:
+        current_app.logger.error("Quitting, can not import from the same url as prod_url")
         return
     prod_engine = create_engine(prod_url)
     prod_Session = sessionmaker(prod_engine)
@@ -135,5 +140,6 @@ def import_from_production():
         print(e)
         db.session.rollback()
         prod_session.rollback()
+        current_app.logger.error("")
     import_recommandations(prod_session)
     import_indices(prod_session)
