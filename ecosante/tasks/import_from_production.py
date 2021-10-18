@@ -1,5 +1,5 @@
 from flask.globals import current_app
-from ecosante.inscription.models import Inscription
+from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from ecosante.newsletter.models import NewsletterDB
 from ecosante.extensions import db, celery
@@ -61,6 +61,16 @@ def import_inscriptions(prod_session):
                 inscription.commune_id = communes[inscription.ville_insee]
             db.session.add(inscription)
     db.session.commit()
+
+def import_webpush_subcriptions(prod_session):
+    staging_subs = {w.id: w for w in WebpushSubscriptionInfo.query.all()}
+    for wp in prod_session.query(WebpushSubscriptionInfo).all():
+        if wp.id in staging_subs:
+            continue
+        new_wp = clone_model(wp)
+        db.session.add(new_wp)
+    db.session.commit()
+
 
 def import_recommandations(prod_session):
     staging_recommandations = {r.id: r for r in Recommandation.query.all()}
@@ -140,6 +150,7 @@ def import_from_production():
         print(e)
         db.session.rollback()
         prod_session.rollback()
-        current_app.logger.error("")
+        return
+    import_webpush_subcriptions(prod_session)
     import_recommandations(prod_session)
     import_indices(prod_session)
