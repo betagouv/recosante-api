@@ -49,11 +49,7 @@ def app(request):
             pool.submit(flask_migrate.upgrade)
         yield app
         db.metadata.drop_all()
-        db.session.remove()
         db_indice_pollution.metadata.drop_all()
-        db_indice_pollution.session.remove()
-        db.session.close()
-        db_indice_pollution.session.close()
 
 @pytest.fixture(scope='function')
 def _db(app):

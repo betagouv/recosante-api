@@ -1,7 +1,8 @@
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
 from datetime import date, timedelta
 from .utils import published_recommandation
-import os
+import os, pytest
+from itertools import product
 
 def test_episode_passe(db_session, inscription):
     yesterday = date.today() - timedelta(days=1)
@@ -97,6 +98,7 @@ def test_formatted_polluants_generale_pm10_o3_no2(db_session, inscription):
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=o3&polluants=no2'
 
 
+def test_formatted_polluants_generale_no2(db_session, inscription):
     recommandations=[
         published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, type_='episode_pollution'),
@@ -167,8 +169,17 @@ def test_avis_non(db_session, client, inscription):
     assert nldb2.appliquee == False
     assert nldb2.avis == avis
 
-
-def test_pollens(db_session, inscription):
+@pytest.mark.parametrize(
+    "episodes,raep,allergie_pollens,delta,indice",
+    product(
+        [[], [{"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]],
+        [0, 2, 6],
+        [True, False],
+        range(0, 7),
+        ["bon", "degrade"]
+    )
+)
+def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delta, indice):
     recommandations=[
         published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, type_='episode_pollution'),
@@ -177,59 +188,54 @@ def test_pollens(db_session, inscription):
     ]
     db_session.add_all(recommandations)
     db_session.commit()
-    for episodes in [[], [{"code_pol": "8", "etat": "INFORMATION ET RECOMMANDATION", "date": str(date.today())}]]:
-        for raep in [0, 2, 6]:
-            for allergie_pollens in [True, False]:
-                for delta in range(0, 7):
-                    date_ = date.today() + timedelta(days=delta)
-                    for indice in ["bon", "degrade"]:
-                        if delta == 0:
-                            episode = episodes
-                        else:
-                            episode = []
-                        inscription.allergie_pollens = allergie_pollens
-                        inscription.indicateurs = ['raep']
-                        nl = Newsletter(
-                            inscription=inscription,
-                            forecast={"data": [{"date": date_, "indice": indice}]},
-                            episodes={"data": episode},
-                            raep=raep,
-                            date=date_,
-                            recommandations=recommandations
-                        )
+    date_ = date.today() + timedelta(days=delta)
+    if delta == 0:
+        episode = episodes
+    else:
+        episode = []
+    inscription.allergie_pollens = allergie_pollens
+    inscription.indicateurs = ['raep']
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [{"date": date_, "indice": indice}]},
+        episodes={"data": episode},
+        raep=raep,
+        date=date_,
+        recommandations=recommandations
+    )
 
-                        if episode:
-                            assert nl.show_raep == False
-                            assert not nl.recommandation.personne_allergique
-                        else:
-                            if raep == 0:
-                                assert nl.show_raep == False
-                                assert not nl.recommandation.personne_allergique
-                            elif 0 < raep < 4:
-                                if allergie_pollens:
-                                    assert nl.show_raep == True
-                                    assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
-                                else:
-                                    assert nl.show_raep == False
-                                    assert nl.recommandation.type_ != "pollens"
-                            else:
-                                if allergie_pollens:
-                                    assert nl.show_raep == True
-                                    assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
-                                else:
-                                    assert nl.show_raep == True
-                                    assert nl.recommandation.type_ != "pollens"
-                        inscription.allergie_pollens = allergie_pollens
-                        inscription.indicateurs = []
-                        nl = Newsletter(
-                            inscription=inscription,
-                            forecast={"data": [{"date": date_, "indice": indice}]},
-                            episodes={"data": episode},
-                            raep=raep,
-                            date=date_,
-                            recommandations=recommandations
-                        )
-                        assert nl.show_raep == False
+    if episode:
+        assert nl.show_raep == False
+        assert not nl.recommandation.personne_allergique
+    else:
+        if raep == 0:
+            assert nl.show_raep == False
+            assert not nl.recommandation.personne_allergique
+        elif 0 < raep < 4:
+            if allergie_pollens:
+                assert nl.show_raep == True
+                assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
+            else:
+                assert nl.show_raep == False
+                assert nl.recommandation.type_ != "pollens"
+        else:
+            if allergie_pollens:
+                assert nl.show_raep == True
+                assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
+            else:
+                assert nl.show_raep == True
+                assert nl.recommandation.type_ != "pollens"
+    inscription.allergie_pollens = allergie_pollens
+    inscription.indicateurs = []
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [{"date": date_, "indice": indice}]},
+        episodes={"data": episode},
+        raep=raep,
+        date=date_,
+        recommandations=recommandations
+    )
+    assert nl.show_raep == False
 
 def test_show_qa(inscription):
     inscription.indicateurs = ['indice_atmo']

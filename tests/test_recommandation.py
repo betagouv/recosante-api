@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 def published_recommandation(**kw):
     kw.setdefault('type_', 'generale')
-    kw.setdefault('medias', ['newsletter'])
+    kw.setdefault('medias', ['newsletter_quotidienne'])
     kw.setdefault('status', 'published')
     return Recommandation(**kw)
 

@@ -74,7 +74,7 @@ def test_list_user(db_session, client, commune_commited):
         'connaissance_produit', 'population',  'indicateurs', 'indicateurs_media', 
         'recommandations', 'recommandations_media']
     for attribute_name in listes:
-        attribute = getattr(User, attribute_name)
+        attribute = User._declared_fields.get(attribute_name)
         one_of_validator = next(filter(lambda v: hasattr(v, 'choices'), attribute.inner.validators))
         choices = one_of_validator.choices
 
