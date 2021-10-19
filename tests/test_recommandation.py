@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 def published_recommandation(**kw):
     kw.setdefault('type_', 'generale')
-    kw.setdefault('montrer_dans', ['newsletter'])
+    kw.setdefault('medias', ['newsletter'])
     kw.setdefault('status', 'published')
     return Recommandation(**kw)
 
@@ -324,9 +324,9 @@ def test_personne_allergique():
     assert r.is_relevant(i, "bon", [], 0, date.today()) == True
 
 def test_widget():
-    r = published_recommandation(personne_allergique=None, montrer_dans=['widget'])
+    r = published_recommandation(personne_allergique=None, medias=['widget'])
     assert r.is_relevant(qualif="bon", media='widget', types=['generale']) == True
 
 def test_dashboard():
-    r = published_recommandation(montrer_dans=['dashboard'])
+    r = published_recommandation(medias=['dashboard'])
     assert r.is_relevant(qualif="bon", media='dashboard', types=['generale']) == True

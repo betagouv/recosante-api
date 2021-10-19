@@ -79,7 +79,7 @@ class Recommandation(db.Model):
     personne_allergique: bool = db.Column(db.Boolean, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
-    montrer_dans: List[str] = db.Column(postgresql.ARRAY(db.String, dimensions=1), nullable=True)
+    medias: List[str] = db.Column(postgresql.ARRAY(db.String, dimensions=1), default=[])
 
     @property
     def velo(self) -> bool:
@@ -185,7 +185,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'newsletter', types: List[str] = ["generale", "episode_pollution", "pollens"]):
+    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'newsletter_quotidienne', types: List[str] = ["generale", "episode_pollution", "pollens"]):
         #Inscription
         if inscription:
             if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -222,7 +222,7 @@ class Recommandation(db.Model):
                 return False
             if raep < self.min_raep:
                 return False
-            if "newsletter" in self.montrer_dans:
+            if "newsletter_quotidienne" in self.medias:
                 if 0 < raep < 4: #RAEP Faible
                     if inscription and inscription.allergie_pollens:
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
@@ -250,7 +250,7 @@ class Recommandation(db.Model):
             elif self.automne and season != 4:
                 return False
 
-        return media in self.montrer_dans and self.type_ in types
+        return media in self.medias and self.type_ in types
 
     def format(self, inscription):
         return self.recommandation if inscription.diffusion == 'mail' else self.recommandation_format_SMS

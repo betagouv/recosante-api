@@ -81,8 +81,8 @@ class Newsletter:
         if type(self.recommandations) == list:
             self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
-        self.recommandation_qa = self.recommandation or self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"], media='dashboard')
-        self.recommandation_raep = self.recommandation or self.get_recommandation(self.recommandations, types=["pollens"], media='dashboard')
+        self.recommandation_qa = self.recommandation or self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"], media='newsletter_quotidienne')
+        self.recommandation_raep = self.recommandation or self.get_recommandation(self.recommandations, types=["pollens"], media='newsletter_quotidienne')
     
 
     @property
@@ -236,7 +236,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def eligible_recommandations(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
+    def eligible_recommandations(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
         if not recommandations:
             return
             yield # See https://stackoverflow.com/questions/13243766/python-empty-generator-function
@@ -258,15 +258,15 @@ class Newsletter:
                 polluants=self.polluants,
                 raep=self.raep,
                 date_=self.date,
-                media='newsletter',
+                media=media,
                 types=types
             ):
                 yield recommandations[r[1]]
 
 
-    def get_recommandation(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"]):
+    def get_recommandation(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
         try:
-            return next(self.eligible_recommandations(recommandations, types))
+            return next(self.eligible_recommandations(recommandations, types, media))
         except StopIteration:
             return None
 

@@ -53,11 +53,12 @@ class FormSearch(BaseForm):
         ]
     )
 
-    montrer_dans = SelectMultipleField(
-        "Montrée dans",
+    medias = SelectMultipleField(
+        "Medias",
         choices=[
+            ('newsletter_quotidienne', 'Newsletter quotidienne'),
+            ('newsletter_hebdomadaire', 'Newsletter hebdomadaire'),
             ('widget', 'Widget'),
-            ('newsletter', 'Newsletter'),
             ('dashboard', 'Dashboard')
         ]
     )

@@ -115,10 +115,11 @@ class FormAdd(BaseForm):
         ],
         coerce=coerce_int
     )
-    montrer_dans = MultiCheckboxField(
-        "Montrer dans:",
+    medias = MultiCheckboxField(
+        "Médias :",
         choices=[
-            ('newsletter', 'Newsletter'),
+            ('newsletter_quotidienne', 'Newsletter quotidienne'),
+            ('newsletter_hebdomadaire', 'Newsletter hebdomadaire'),
             ('widget', 'Widget'),
             ('dashboard', 'Dashboard')
         ]
