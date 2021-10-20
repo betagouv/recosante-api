@@ -209,13 +209,13 @@ class Newsletter:
                     init_dict['webpush_subscription_info'] = wp
                     newsletter = cls(**init_dict)
                     if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 2:
                             continue
                     yield newsletter
             else:
                 newsletter = cls(**init_dict)
                 if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 2:
                         continue
                 yield newsletter
 
