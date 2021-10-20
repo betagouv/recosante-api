@@ -103,7 +103,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
     now = datetime.now()
     total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
-    if not mail_list_id:
+    if mail_list_id == None:
         lists_api = sib_api_v3_sdk.ListsApi(sib)
         r = lists_api.create_list(
             sib_api_v3_sdk.CreateList(
