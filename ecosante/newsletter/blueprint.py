@@ -113,7 +113,7 @@ def export(mail_list_id, secret_slug):
             return self._line
     def iter_csv(newsletters):
         line = Line()
-        writer = csv.DictWriter(line, fieldnames=newsletters[0].attributes())
+        writer = csv.DictWriter(line, fieldnames=NewsletterDB.header)
         writer.writeheader()
         yield line.read()
         for nl in newsletters:
