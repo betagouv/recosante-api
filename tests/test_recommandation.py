@@ -1,7 +1,9 @@
+import pytest
 from ecosante.recommandations.models import Recommandation
 from ecosante.inscription.models import Inscription
 from ecosante.newsletter.models import NewsletterDB, Newsletter
 from datetime import date, timedelta
+from itertools import product
 
 def published_recommandation(**kw):
     kw.setdefault('type_', 'generale')
@@ -175,53 +177,25 @@ def test_reco_pollen_pas_pollution_raep_nul(commune):
     i = Inscription(allergie_pollens=True)
     assert r.is_relevant(i, "bon", [], 0, date.today())
 
-def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune):
+@pytest.mark.parametrize(
+    "delta,qualif,raep",
+    product(
+        list(range(0, 7)),
+        ["bon", "mauvais"],
+        [1, 6]
+    )
+)
+def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune, delta, qualif, raep):
     r = published_recommandation(type_="pollens", min_raep=1)
 
-    for delta in range(0, 7):
-        date_ = date.today() + timedelta(days=delta)
-        i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_)
+    date_ = date.today() + timedelta(days=delta)
+    i = Inscription(indicateurs=["indice_atmo"])
+    assert not r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_)
 
-        #On veut envoyer le mercredi et le samedi
-        i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_) == (date_.weekday() in [2, 5])
+    #On veut envoyer le mercredi et le samedi
+    i = Inscription(indicateurs=["raep"])
+    assert r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_) == (date_.weekday() in [2, 5])
 
-def test_reco_pollen_pas_pollution_raep_faible_atmo_mauvais(commune):
-    r = published_recommandation(type_="pollens", min_raep=1)
-
-    for delta in range(0, 7):
-        date_ = date.today() + timedelta(days=delta)
-        i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_)
-
-        #On veut envoyer le mercredi et le samedi
-        i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=1, date_=date_) == (date_.weekday() in [2, 5])
-
-def test_reco_pollen_pas_pollution_raep_eleve_atmo_bon(commune):
-    r = published_recommandation(type_="pollens", min_raep=1)
-
-    for delta in range(0, 7):
-        date_ = date.today() + timedelta(days=delta)
-        i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_)
-
-        #On veut envoyer le mercredi et le samedi
-        i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_) == (date_.weekday() in [2, 5])
-
-def test_reco_pollen_pas_pollution_raep_eleve_atmo_mauvais(commune):
-    r = published_recommandation(type_="pollens", min_raep=1)
-
-    for delta in range(0, 7):
-        date_ = date.today() + timedelta(days=delta)
-        i = Inscription(allergie_pollens=False)
-        assert not r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_)
-
-        #On veut envoyer le mercredi et le samedi
-        i = Inscription(allergie_pollens=True)
-        assert r.is_relevant(inscription=i, qualif="bon", polluants=[], raep=6, date_=date_) == (date_.weekday() in [2, 5])
 
 def test_chauffage():
     r = published_recommandation(chauffage=[])
@@ -298,30 +272,22 @@ def test_min_raep():
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today()) == False
 
-def test_personne_allergique():
-    r = published_recommandation(personne_allergique=None)
-    i = Inscription()
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
-    i = Inscription(allergie_pollens=True)
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
-    i = Inscription(allergie_pollens=False)
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
-
-    r = published_recommandation(personne_allergique=True)
-    i = Inscription()
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
-    i = Inscription(allergie_pollens=True)
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
-    i = Inscription(allergie_pollens=False)
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
-
-    r = published_recommandation(personne_allergique=False)
-    i = Inscription()
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
-    i = Inscription(allergie_pollens=True)
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
-    i = Inscription(allergie_pollens=False)
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == True
+@pytest.mark.parametrize(
+    "reco_personne_allergique,assert1,assert2,assert3",
+    [
+        (None, True, True, True),
+        (True, False, True, False),
+        (False, True, False, True),
+    ]
+)
+def test_personne_allergique(reco_personne_allergique, assert1, assert2, assert3):
+    r = published_recommandation(personne_allergique=reco_personne_allergique)
+    i = Inscription(indicateurs=[])
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == assert1
+    i = Inscription(indicateurs=["raep"])
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == assert2
+    i = Inscription(indicateurs=["indice_atmo"])
+    assert r.is_relevant(i, "bon", [], 0, date.today()) == assert3
 
 def test_widget():
     r = published_recommandation(personne_allergique=None, medias=['widget'])

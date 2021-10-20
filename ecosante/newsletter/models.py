@@ -209,13 +209,13 @@ class Newsletter:
                     init_dict['webpush_subscription_info'] = wp
                     newsletter = cls(**init_dict)
                     if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 2:
+                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
                             continue
                     yield newsletter
             else:
                 newsletter = cls(**init_dict)
                 if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 2:
+                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
                         continue
                 yield newsletter
 
@@ -358,7 +358,7 @@ class Newsletter:
             return False
         if self.raep == 0:
             return False
-        elif self.raep < 4 and not self.inscription.allergie_pollens:
+        elif self.raep < 4 and "alerte" in self.inscription.indicateurs_frequence:
             return False
         return True
 
@@ -371,9 +371,9 @@ class Newsletter:
         if self.polluants:
             return False
         if type(self.raep) == int:
-            if self.inscription.allergie_pollens and self.raep != 0:
+            if "raep" in self.inscription.indicateurs and self.raep != 0:
                 return False
-            if not self.inscription.allergie_pollens and self.raep >= 4:
+            if not "raep" in self.inscription.indicateurs and self.raep >= 4:
                 return False
         if self.qualif not in ['bon', 'moyen']:
             return False

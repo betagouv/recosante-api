@@ -193,8 +193,10 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         episode = episodes
     else:
         episode = []
-    inscription.allergie_pollens = allergie_pollens
-    inscription.indicateurs = ['raep']
+    if allergie_pollens:
+        inscription.indicateurs = ['raep']
+    else:
+        inscription.indicateurs = ['indice_atmo']
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": [{"date": date_, "indice": indice}]},
@@ -208,7 +210,10 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         assert nl.show_raep == False
         assert not nl.recommandation.personne_allergique
     else:
-        if raep == 0:
+        if not allergie_pollens:
+            assert nl.show_raep == False
+            assert not nl.recommandation.personne_allergique
+        elif raep == 0:
             assert nl.show_raep == False
             assert not nl.recommandation.personne_allergique
         elif 0 < raep < 4:
@@ -273,7 +278,7 @@ def test_show_radon_polluants(db_session, inscription):
 def test_show_radon_raep(db_session, inscription):
     today_date = date.today()
     inscription.id = 1
-    inscription.allergie_pollens = True
+    inscription.indicateurs = ["indice_atmo", "raep"]
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
@@ -292,7 +297,7 @@ def test_show_radon_raep(db_session, inscription):
     )
     assert nl.show_radon == False
 
-    inscription.allergie_pollens = False
+    inscription.indicateurs = ["indice_atmo"]
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": [{"date": str(today_date), "indice": "bon"}]},

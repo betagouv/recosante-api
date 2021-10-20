@@ -198,7 +198,7 @@ class Recommandation(db.Model):
                 return False
             if self.enfants and not inscription.has_enfants:
                 return False
-            if self.personne_allergique is not None and self.personne_allergique != inscription.allergie_pollens:
+            if self.personne_allergique is not None and self.personne_allergique != ("raep" in inscription.indicateurs):
                 return False
         # Environnement
         if polluants and self.type_ != "episode_pollution":
@@ -224,12 +224,12 @@ class Recommandation(db.Model):
                 return False
             if "newsletter_quotidienne" in self.medias:
                 if 0 < raep < 4: #RAEP Faible
-                    if inscription and inscription.allergie_pollens:
+                    if inscription and "raep" in inscription.indicateurs:
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
                     else:
                         return False
                 if raep >= 4:
-                    if inscription and inscription.allergie_pollens:
+                    if inscription and "raep" in inscription.indicateurs:
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
                     else:
                         return False

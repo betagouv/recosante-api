@@ -74,7 +74,7 @@ def stats():
 
     total_inscriptions = Inscription.query.count()
     total_actifs = Inscription.active_query().count()
-    total_allergies = Inscription.active_query().filter(Inscription.population.any("allergie_pollens")).count()
+    total_allergies = Inscription.active_query().filter(Inscription.inscription.any("raep")).count()
     total_pathologie_respiratoire = Inscription.active_query().filter(Inscription.population.any("pathologie_respiratoire")).count()
 
 
