@@ -25,7 +25,7 @@ def test_episode_passe(db_session, inscription):
     assert nldb.lien_recommandations_alerte == None
     assert nldb.attributes()['POLLUANT'] == ""
     assert nldb.attributes()['LIEN_RECOMMANDATIONS_ALERTE'] == ""
-    assert nldb.attributes()['RECOMMANDATION'] == 'ça va en fait'
+    assert nldb.attributes()['RECOMMANDATION'] == '<p>ça va en fait</p>'
     assert nldb.attributes()['DEPARTEMENT'] == 'Mayenne'
 
 def test_formatted_polluants_generale_pm10(db_session, inscription):
