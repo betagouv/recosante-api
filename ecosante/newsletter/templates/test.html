@@ -18,7 +18,8 @@
 <div class="section" id="div_user">
   <div class="container">
     Utilisateur : <span id="user_mail"></span><br>
-    Médias : <span id="user_medias"></span>
+    Médias : <span id="user_medias"></span><br>
+    Fréquence : <span id="user_frequence"></span>
     <form id="div_forecast" method="POST">
       <input type="hidden" id="uid" name="uid">
       <fieldset>
@@ -154,6 +155,7 @@ function displayUser(uid) {
       document.getElementById("div_user").style.display = 'block'
       document.getElementById("user_mail").textContent = data.mail
       document.getElementById("user_medias").textContent = data.indicateurs_media.join()
+      document.getElementById("user_frequence").textContent = data.indicateurs_frequence.join()
       document.getElementById("uid").value = data.uid
       displayForecast(data.commune)
     })
