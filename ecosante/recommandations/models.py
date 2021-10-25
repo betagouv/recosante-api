@@ -1,5 +1,5 @@
 from datetime import date
-from ecosante.extensions import db
+from ecosante.extensions import db, markdown
 from dataclasses import dataclass, asdict
 from ecosante.inscription.models import Inscription
 from flask.globals import current_app
@@ -8,8 +8,6 @@ from  sqlalchemy.sql.expression import func, nullslast
 import uuid
 import random
 from typing import List, Set
-from markdown import markdown
-from markdown_link_attr_modifier import LinkAttrModifierExtension
 
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
@@ -291,7 +289,7 @@ class Recommandation(db.Model):
             result = result.replace(f'{punc} ', f'{punc} ')
         result = result.replace("'", '’')
         result = result.replace("  ", " ")
-        return markdown(s, extensions=[LinkAttrModifierExtension(new_tab='on')])
+        return markdown.reset().convert(s)
 
     @property
     def recommandation_sanitized(self) -> str:
