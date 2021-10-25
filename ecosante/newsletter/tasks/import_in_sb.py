@@ -98,6 +98,7 @@ def send(campaign_id, test=False):
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
 
 def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_list_id=None):
+    mail_list_id_set = mail_list_id is not None
     errors = []
     
     now = datetime.now()
@@ -142,9 +143,11 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
             })
             current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
-            if current_app.config['ENV'] == 'production':
+            if current_app.config['ENV'] == 'production' and mail_list_id_set:
                 nl.mail_list_id = mail_list_id
                 db.session.add(nl)
+                if i % 100 == 0:
+                    db.session.commit()
 
     if current_app.config['ENV'] == 'production' or test:
         db.session.commit()
@@ -170,8 +173,11 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
             _external=True,
             _scheme='https'
         )
+        current_app.logger.debug("About to send newsletter with params")
+        current_app.logger.debug(request_contact_import)
         try:
             contact_api.import_contacts(request_contact_import)
+            current_app.logger.debug("Newsletter sent")
         except ApiException as e:
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
     return {
