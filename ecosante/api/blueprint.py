@@ -1,3 +1,4 @@
+from indice_pollution.history.models.commune import Commune
 from ecosante.extensions import rebar
 from .schemas import ResponseSchema, QuerySchema
 from indice_pollution import forecast, raep, episodes as get_episodes
@@ -28,16 +29,18 @@ def index():
     advices = Recommandation.published_query().all()
     insee = rebar.validated_args.get('insee')
 
+    commune = Commune.get(insee)
+
     indice_atmo  = forecast(insee, use_make_resp=False)
     indice_raep = raep(insee)
     potentiel_radon = PotentielRadon.get(insee)
 
-    advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice) if not hasattr(indice_atmo, "error") else None
+    advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
     advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
 
     return {
-        "commune": indice_atmo.commune,
+        "commune": commune,
         "indice_atmo": {
             "indice": indice_atmo,
             "advice": advice_atmo
@@ -58,7 +61,7 @@ def index():
                 "url": "https://www.irsn.fr/FR/connaissances/Environnement/expertises-radioactivite-naturelle/radon/Pages/5-cartographie-potentiel-radon-commune.aspx#.YUyf32aA6dY"
             }],
             "validity": {
-                "area": indice_atmo.commune.nom
+                "area": commune.nom
             }
         }
     }

@@ -27,6 +27,8 @@ class IndiceATMO(FullIndiceSchema):
 
     @pre_dump
     def load_indice_atmo(self, data, many, **kwargs):
+        if data["indice"] is None:
+            return {}
         resp =  {
             "sources": [
                 {
