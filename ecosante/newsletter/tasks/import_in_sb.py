@@ -143,7 +143,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
             })
             current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
         else:
-            if current_app.config['ENV'] == 'production' and mail_list_id_set:
+            if current_app.config['ENV'] == 'production' and not mail_list_id_set:
                 nl.mail_list_id = mail_list_id
                 db.session.add(nl)
                 if i % 100 == 0:
