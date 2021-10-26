@@ -1,8 +1,11 @@
+from datetime import date, timedelta
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
+from indice_pollution.history.models.raep import RAEP
 import pytest
 import os
 import sqlalchemy as sa
+from psycopg2.extras import DateRange
 import concurrent.futures as cf
 import flask_migrate
 from ecosante import create_app
@@ -64,10 +67,11 @@ def _db(app):
 def commune(db_session) -> Commune:
     from indice_pollution.history.models import Commune, Departement, Region, Zone
     region = Region(nom="Pays de la Loire", code="52")
-    departement = Departement("Mayenne", "53", region.code)
+    zone_departement = Zone(type='departement', code='53')
+    departement = Departement(nom="Mayenne", code="53", codeRegion=region.code, zone=zone_departement)
     zone = Zone(type='commune', code='53130')
-    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], codeDepartement='53', zone=zone)
-    db_session.add_all([region, departement, zone, commune])
+    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, departement=departement)
+    db_session.add_all([region, zone_departement, departement, zone, commune])
     return commune
 
 @pytest.fixture(scope='function')
@@ -77,12 +81,12 @@ def commune_commited(commune, db_session) -> Commune:
 
 @pytest.fixture(scope='function')
 def inscription(commune) -> Inscription:
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=["mail"], commune_id=commune.id, commune=commune)
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=["mail"], commune_id=commune.id, commune=commune, mail='test@example.com')
     return inscription
 
 @pytest.fixture(scope='function')
 def inscription_alerte(commune) -> Inscription:
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=['mail'], commune_id=commune.id, commune=commune)
+    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=['mail'], commune_id=commune.id, commune=commune, mail='test@example.com')
     inscription.indicateurs_frequence = ["alerte"]
     return inscription
 
@@ -117,3 +121,41 @@ def recommandation(db_session) -> Recommandation:
     recommandation = published_recommandation()
     db_session.add(recommandation)
     return recommandation
+
+def make_raep(commune, raep):
+    return RAEP(
+        zone_id=commune.departement.zone_id,
+        validity=DateRange(date.today(), date.today() + timedelta(weeks=1)),
+        cypres=raep,
+        noisetier=raep,
+        aulne=raep,
+        peuplier=raep,
+        saule=raep,
+        frene=raep,
+        charme=raep,
+        bouleau=raep,
+        platane=raep,
+        chene=raep,
+        olivier=raep,
+        tilleul=raep,
+        chataignier=raep,
+        rumex=raep,
+        graminees=raep,
+        plantain=raep,
+        urticacees=raep,
+        armoises=raep,
+        ambroisies=raep,
+        total=raep
+    )
+
+@pytest.fixture(scope='function')
+def raep_eleve(db_session, commune_commited):
+    raep = make_raep(commune_commited, 6)
+    db_session.add(raep)
+    return raep
+
+@pytest.fixture(scope='function')
+def raep_faible(db_session, commune_commited):
+    raep = make_raep(commune_commited, 1)
+    db_session.add(raep)
+    return raep

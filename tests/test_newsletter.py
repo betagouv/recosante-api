@@ -575,53 +575,23 @@ text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 0
 
-def test_export_user_alerte_raep_eleve(inscription_alerte, recommandation, requests_mock):
-    requests_mock.get(
-        os.getenv('ALLERGIES_URL'),
-text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
-53;mayenne;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6
-""")
-
+def test_export_user_alerte_raep_eleve(inscription_alerte, recommandation, raep_eleve):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
 
-def test_export_user_alerte_raep_faible_bonne_qa(inscription_alerte, recommandation, requests_mock, bonne_qualite_air):
-    requests_mock.get(
-        os.getenv('ALLERGIES_URL'),
-text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
-53;mayenne;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-""")
-
+def test_export_user_alerte_raep_faible_bonne_qa(inscription_alerte, recommandation, raep_faible, bonne_qualite_air):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 0
 
-def test_export_user_alerte_raep_eleve_bonne_qa(inscription_alerte, recommandation, requests_mock, bonne_qualite_air):
-    requests_mock.get(
-        os.getenv('ALLERGIES_URL'),
-text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
-53;mayenne;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6
-""")
-
+def test_export_user_alerte_raep_eleve_bonne_qa(inscription_alerte, recommandation, raep_eleve, bonne_qualite_air):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
 
-def test_export_user_alerte_raep_faible_mauvaise_qa(inscription_alerte, recommandation, requests_mock, mauvaise_qualite_air):
-    requests_mock.get(
-        os.getenv('ALLERGIES_URL'),
-text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
-53;mayenne;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-""")
-
+def test_export_user_alerte_raep_faible_mauvaise_qa(inscription_alerte, recommandation, raep_faible, mauvaise_qualite_air):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
 
-def test_export_user_alerte_raep_eleve_mauvaise_qa(inscription_alerte, recommandation, requests_mock, mauvaise_qualite_air):
-    requests_mock.get(
-        os.getenv('ALLERGIES_URL'),
-text=f"""{date.today().strftime("%d/%m/%Y")};departements;cypres;noisetier;aulne;peuplier;saule;frene;charme;bouleau;platane;chene;olivier;tilleul;chataignier;rumex;graminees;plantain;urticacees;armoises;ambroisies;Total
-53;mayenne;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6;6
-""")
-
+def test_export_user_alerte_raep_eleve_mauvaise_qa(inscription_alerte, recommandation, raep_eleve, mauvaise_qualite_air):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
 
