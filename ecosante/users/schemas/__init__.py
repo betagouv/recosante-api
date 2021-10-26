@@ -48,7 +48,7 @@ class Response(User, ResponseSchema):
 class RequestPOST(User, RequestSchema):
     @post_load
     def make_inscription(self, data, **kwargs):
-        inscription = Inscription.query.filter_by(mail=data['mail']).first()
+        inscription = Inscription.query.filter(Inscription.mail.ilike(data['mail'])).first()
         if inscription:
             raise ValidationError('mail already used', field_name='mail')
         inscription = Inscription(**data)
