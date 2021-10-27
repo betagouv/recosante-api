@@ -34,6 +34,7 @@ def index():
     indice_atmo  = forecast(insee, use_make_resp=False)
     indice_raep = raep(insee)
     potentiel_radon = PotentielRadon.get(insee)
+    episodes = get_episodes(insee)
 
     advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
@@ -63,5 +64,9 @@ def index():
             "validity": {
                 "area": commune.nom
             }
+        },
+        "episodes_pollution": {
+            "indice": episodes,
+            "advice": None
         }
     }
