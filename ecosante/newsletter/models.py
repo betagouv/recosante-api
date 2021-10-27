@@ -81,8 +81,8 @@ class Newsletter:
         if type(self.recommandations) == list:
             self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
-        self.recommandation_qa = self.recommandation or self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"], media='newsletter_quotidienne')
-        self.recommandation_raep = self.recommandation or self.get_recommandation(self.recommandations, types=["pollens"], media='newsletter_quotidienne')
+        self.recommandation_qa = self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"], media='newsletter_quotidienne')
+        self.recommandation_raep = self.get_recommandation(self.recommandations, types=["pollens"], media='newsletter_quotidienne')
     
 
     @property
@@ -179,7 +179,8 @@ class Newsletter:
                 Inscription.commune,
                 Commune.departement,
                 Departement.region,
-            ))
+            )
+        ).populate_existing()
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         inscriptions = query.distinct(Inscription.commune_id)
         insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions if i.commune.departement and i.commune.departement.region}
@@ -209,13 +210,13 @@ class Newsletter:
                     init_dict['webpush_subscription_info'] = wp
                     newsletter = cls(**init_dict)
                     if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and (newsletter.raep == None or newsletter.raep < 4):
                             continue
                     yield newsletter
             else:
                 newsletter = cls(**init_dict)
                 if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and newsletter.raep < 4:
+                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and (newsletter.raep ==None or newsletter.raep < 4):
                         continue
                 yield newsletter
 
