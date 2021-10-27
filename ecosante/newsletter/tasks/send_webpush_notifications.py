@@ -19,6 +19,7 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
             vapid_private_key=current_app.config['VAPID_PRIVATE_KEY'],
             vapid_claims=vapid_claims
         )
+        current_app.logger.info(f"Notification sent to {nldb.inscription.mail}")
         return nldb
     except WebPushException as ex:
         if ex.response and ex.response.status_code == 429:
@@ -30,10 +31,14 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
             except ValueError:
                 current_app.logger.error(f"Unable to retry after: {retry_after}")
                 return None
+        else:
+            current_app.logger.error(f"Error sending notification to {nldb.inscription.mail}")
+            current_app.logger.error(ex)
+            return None
 
 @celery.task(bind=True)
-def send_webpush_notifications(self):
-    for nl in Newsletter.export(media='notifications_web'):
+def send_webpush_notifications(self, only_to=None, filter_already_sent=False):
+    for nl in Newsletter.export(media='notifications_web', only_to=only_to, filter_already_sent=filter_already_sent):
         nldb = NewsletterDB(nl)
         nldb = send_webpush_notification(nldb, vapid_claims)
         if nldb:
