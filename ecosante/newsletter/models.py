@@ -439,11 +439,11 @@ class NewsletterDB(db.Model, Newsletter):
         self.lien_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('website') or ""
         self.nom_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or ""
         self.recommandation = newsletter.recommandation
-        self.recommandation_id = newsletter.recommandation.id
+        self.recommandation_id = newsletter.recommandation.id if newsletter.recommandation else None
         self.recommandation_qa = newsletter.recommandation_qa
-        self.recommandation_qa_id = newsletter.recommandation_qa.id
+        self.recommandation_qa_id = newsletter.recommandation_qa.id if newsletter.recommandation_qa else None
         self.recommandation_raep = newsletter.recommandation_raep
-        self.recommandation_raep_id = newsletter.recommandation_raep.id
+        self.recommandation_raep_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
