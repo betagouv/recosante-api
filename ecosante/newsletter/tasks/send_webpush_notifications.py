@@ -5,6 +5,7 @@ from py_vapid import Vapid
 from ecosante.newsletter.models import Newsletter, NewsletterDB
 from ecosante.extensions import db, celery
 from pywebpush import WebPushException, webpush
+from copy import deepcopy
 
 
 vapid_claims = {"sub": "mailto:contact@recosante.beta.gouv.fr"}
@@ -17,7 +18,7 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
             nldb.webpush_subscription_info.data,
             data=json.dumps(nldb.webpush_data),
             vapid_private_key=current_app.config['VAPID_PRIVATE_KEY'],
-            vapid_claims=vapid_claims
+            vapid_claims=deepcopy(vapid_claims)
         )
         current_app.logger.info(f"Notification sent to {nldb.inscription.mail}")
         return nldb
