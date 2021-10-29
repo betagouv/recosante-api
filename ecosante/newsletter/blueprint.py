@@ -121,7 +121,7 @@ def export(mail_list_id, secret_slug):
                 continue
             writer.writerow(nl.attributes())
             yield line.read()
-    newsletters = list(db.session.query(NewsletterDB).filter_by(
+    newsletters = db.session.query(NewsletterDB).filter_by(
         mail_list_id=mail_list_id
         ).options(
             joinedload(
@@ -137,7 +137,7 @@ def export(mail_list_id, secret_slug):
         ).options(joinedload(NewsletterDB.recommandation_qa)
         ).options(joinedload(NewsletterDB.recommandation_raep)
         ).populate_existing(
-        ).all())
+        ).yield_per(1000)
     response = Response(iter_csv(newsletters), mimetype='text/csv')
     response.headers['Content-Disposition'] = 'attachment; filename=export.csv'
     return response

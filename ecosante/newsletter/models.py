@@ -499,7 +499,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
-                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) or "",
+                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
                 'INDICATEURS_MEDIA': oxford_comma(self.inscription.indicateurs_media)
             },
