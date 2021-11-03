@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, inspect, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from indice_pollution.history.models import IndiceATMO, EpisodePollution, Commune, Zone
+from itertools import chain
 
 
 def clone_data(model, model_b=None, **kwargs):
@@ -32,7 +33,8 @@ def clone_model(model, model_b=None, **kwargs):
         clone = model.__class__(**data)
         return clone
     table = model.__table__
-    for key in table.primary_key.columns.keys():
+    i = inspect(model.__class__)
+    for key in chain(table.primary_key.columns.keys(), i.relationships.keys()):
         if key in data:
             del data[key]
     for k, v in data.items():
@@ -44,22 +46,23 @@ def import_inscriptions(prod_session):
 
     staging_inscriptions = {i.id: i for i in Inscription.query.all()}
     communes = {c.insee: c.id for c in Commune.query.all()}
-    for inscription in prod_session.query(Inscription).all():
-        if not inscription.id in staging_inscriptions:
+    pas_de_commune = 0
+    avec_commune = 0
+    for inscription in prod_session.query(Inscription).yield_per(100):
+        insee = inscription.commune.insee if inscription.commune else inscription.ville_insee
+        if inscription.id in staging_inscriptions:
+            new_inscription = clone_model(inscription, staging_inscriptions[inscription.id])
+        else:
             new_inscription = clone_model(inscription)
             new_inscription.mail = faker.email()
-            if inscription.commune:
-                new_inscription.commune_id = communes[inscription.commune.insee]
-            elif inscription.ville_insee:
-                new_inscription.commune_id = communes[inscription.ville_insee]
-            db.session.add(new_inscription)
+        new_inscription.commune = None
+        if insee in communes:
+            new_inscription.commune_id = communes[inscription.commune.insee]
+            avec_commune += 1
         else:
-            inscription = clone_model(inscription, staging_inscriptions[inscription.id])
-            if inscription.commune:
-                inscription.commune_id = communes[inscription.commune.insee]
-            elif inscription.ville_insee:
-                inscription.commune_id = communes[inscription.ville_insee]
-            db.session.add(inscription)
+            new_inscription.commune_id = None
+            pas_de_commune += 1
+        db.session.add(new_inscription)
     db.session.commit()
 
 def import_webpush_subcriptions(prod_session):
@@ -94,12 +97,11 @@ def import_indices_generic(last_week, prod_session, model, date_col, staging_ins
                 cloned_data['zone_id'] = zones[cloned_data['zone_id']]
             indices.append(cloned_data)
             if len(indices) == 10000:
-                db.session.execute(
-                    insert(
+                query = insert(
                         model.__table__,
                         indices
                     ).on_conflict_do_nothing()
-                )
+                db.session.execute(query)
                 db.session.commit()
                 indices = []
         db.session.execute(
@@ -134,7 +136,7 @@ def import_indices(prod_session):
 @celery.task
 def import_from_production():
     prod_url = os.getenv('SQLALCHEMY_PROD_DATABASE_URI')
-    if not prod_url or celery.conf.env not in ('staging', 'dev'):
+    if not prod_url or celery.conf.env not in ('staging', 'dev', 'development'):
         current_app.logger.error("Quitting, can not import to an environment that is not staging or dev")
         return
     if str(db.engine.url) == prod_url:
