@@ -1,3 +1,5 @@
+from typing import List
+from indice_pollution.history.models.episode_pollution import EpisodePollution
 from ecosante.api.schemas.indice import FullIndiceSchema, IndiceDetailsSchema, NestedIndiceSchema
 from marshmallow import fields, pre_dump
 from ecosante.utils.funcs import oxford_comma
@@ -7,52 +9,35 @@ class EpisodeIndiceDetailsSchema(IndiceDetailsSchema):
     @pre_dump
     def dump_details(self, data, **kwargs):
         return {
-            "label": data["lib_pol"],
-            "level": data["etat"].capitalize()
+            "label": data.lib_pol_normalized.capitalize(),
+            "level": data.lib_etat.capitalize()
         }
 
 class IndiceSchema(EpisodeIndiceDetailsSchema):
     details = fields.List(fields.Nested(EpisodeIndiceDetailsSchema))
 
-    def make_label_level(self, data):
-        if len(data) == 0:
+    def make_label_level(self, episodes: List[EpisodePollution]):
+        if len(episodes) == 0:
             return {"label": "", "level": ""}
-        def sorter(v):
-            etat = v['etat'].lower()
-            if "alerte" in etat:
-                return 0
-            elif "information" in etat:
-                return 1
-            else:
-                return 2
-        sorted_polluants = sorted(data, key=sorter)
-        higher_level = sorted_polluants[0]['etat']
-        if higher_level == "PAS DE DEPASSEMENT":
-            return {"label": "Pas de dépassement", "level": "Pas de dépassement"}
-        higher_polluants = filter(lambda v: higher_level == v['etat'], sorted_polluants)
+        episodes_etat_haut = EpisodePollution.filter_etat_haut(episodes)
+        if episodes_etat_haut == []:
+            return {"label": "Pas de depassement", "level": "Pas de depassement"}
         preposition = "au"
-        if len(higher_polluants) > 1 or 'PM' in higher_polluants[0]:
+        if len(episodes_etat_haut) > 1 or 'particules' in episodes_etat_haut[0].lib_pol.lower():
             preposition = "aux"
-        if "alerte" in higher_level:
-            level = "Alerte"
-        else:
-            level = "Information"
         return  {
-            "label": f"Épisode de pollution {preposition} : {oxford_comma([v['lib_pol'] for v in higher_polluants])}",
-            "level": level
+            "label": f"Épisode de pollution {preposition} : {oxford_comma([v.lib_pol_normalized for v in episodes_etat_haut])}",
+            "level": episodes_etat_haut[0].lib_etat.capitalize()
         }
 
     @pre_dump
-    def dump_details(self, data, **kwargs):
-        label_level = self.make_label_level(data['data'])
+    def dump_details(self, episodes, **kwargs):
+        label_level = self.make_label_level(episodes)
         return {
             "label": label_level['label'],
             "level": label_level['level'],
-            "details": data['data']
+            "details": episodes
         }
 
 class EpisodePollutionSchema(FullIndiceSchema):
     indice = fields.Nested(IndiceSchema)
-    @pre_dump
-    def dump_details(self, data, **kwargs):
-        return data
