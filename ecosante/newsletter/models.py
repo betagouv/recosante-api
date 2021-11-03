@@ -209,7 +209,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def eligible_recommandations(self, recommandations: Dict[Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
+    def eligible_recommandations(self, recommandations: Dict[int, Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
         if not recommandations:
             return
             yield # See https://stackoverflow.com/questions/13243766/python-empty-generator-function
