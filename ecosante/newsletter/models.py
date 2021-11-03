@@ -3,12 +3,14 @@ from dataclasses import dataclass, field
 from typing import List
 from datetime import datetime, date, timedelta
 from itertools import chain
+from math import inf
 from flask.helpers import url_for
 from indice_pollution.history.models.commune import Commune
+from indice_pollution.history.models.region import Region
 import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import subqueryload
+from sqlalchemy.orm import joinedload, selectinload, subqueryload
 from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
@@ -20,7 +22,7 @@ from ecosante.utils.funcs import (
     oxford_comma
 )
 from ecosante.extensions import db
-from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep
+from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
 from indice_pollution.history.models import Departement
 
 FR_DATE_FORMAT = '%d/%m/%Y'
@@ -50,12 +52,7 @@ class Newsletter:
             current_app.logger.error(f'No couleur for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
         if self.episodes and 'data' in self.episodes:
             self.polluants = [
-                {
-                    '1': 'dioxyde_soufre',
-                    '5': 'particules_fines',
-                    '7': 'ozone',
-                    '8': 'dioxyde_azote',
-                }.get(str(e['code_pol']), f'erreur: {e["code_pol"]}')
+                e['lib_pol_normalized']
                 for e in self.episodes['data']
                 if e['etat'] != 'PAS DE DEPASSEMENT'\
                 and 'date' in e\
@@ -107,6 +104,8 @@ class Newsletter:
 
     @property
     def today_forecast(self):
+        if not self.forecast:
+            return dict()
         try:
             data = self.forecast['data']
         except KeyError:
@@ -156,51 +155,24 @@ class Newsletter:
 
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True):
-        query = Inscription.active_query()
-        if only_to:
-            query = query.filter(Inscription.mail.in_(only_to))
-        if filter_already_sent:
-            query_nl = NewsletterDB.query\
-                .filter(
-                    NewsletterDB.date==date.today(),
-                    NewsletterDB.label != None,
-                    NewsletterDB.label != "",
-                    NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
-                .with_entities(
-                    NewsletterDB.inscription_id
-            )
-            query = query.filter(Inscription.id.notin_(query_nl))
-        query = query\
-            .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
-            .filter(Inscription.commune_id != None)\
-            .filter(Inscription.date_inscription < str(date.today()))\
-            .filter(Inscription.indicateurs_media.contains([media]))\
-            .options(subqueryload(
-                Inscription.commune,
-                Commune.departement,
-                Departement.region,
-            )
-        ).populate_existing()
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        inscriptions = query.distinct(Inscription.commune_id)
-        insee_region = {i.commune.insee: i.commune.departement.region.nom for i in inscriptions if i.commune.departement and i.commune.departement.region}
-        try:
-            insee_forecast = bulk(insee_region, fetch_episodes=True, fetch_allergenes=True, date_=date_)
-        except requests.exceptions.HTTPError as e:
-            current_app.logger.error(e)
-            raise e
-        for inscription in query.all():
-            forecast_ville = insee_forecast.get(inscription.commune.insee)
-            if not forecast_ville:
-                continue
+        indices, episodes, allergenes = get_all(date_)
+        for inscription in Inscription.export_query(only_to, filter_already_sent, media).yield_per(100):
+            indice = indices.get(inscription.commune_id)
+            episode = episodes.get(inscription.commune.zone_pollution_id)
+            if inscription.commune.departement:
+                raep = allergenes.get(inscription.commune.departement.zone_id, {})
+            else:
+                raep = None
+            raep_dict = raep.to_dict() if raep else {}
             init_dict = {
                 "inscription": inscription,
                 "recommandations": recommandations,
-                "forecast": forecast_ville.get("forecast"),
-                "episodes": forecast_ville.get("episode"),
-                "raep": forecast_ville.get("raep", {}).get("total"),
-                "allergenes": forecast_ville.get("raep", {}).get("allergenes"),
-                "validite_raep": forecast_ville.get("raep", {}).get("periode_validite", {}),
+                "forecast": {"data": [indice.dict()]} if indice else None,
+                "episodes": episode.dict() if episode else None,
+                "raep": raep_dict.get("total"),
+                "allergenes": raep_dict.get("allergenes"),
+                "validite_raep": raep_dict.get("periode_validite", {}),
             }
             if date_:
                 init_dict['date'] = date_
@@ -237,20 +209,30 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def eligible_recommandations(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
+    def eligible_recommandations(self, recommandations: dict[Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
         if not recommandations:
             return
             yield # See https://stackoverflow.com/questions/13243766/python-empty-generator-function
-        last_nl = self.past_nl_query.order_by(text("date DESC")).limit(1).first()
-        sorted_recommandation_ids = self.sorted_recommandations_query.all()
+        if self.inscription.last_month_newsletters:
+            last_nl = self.inscription.last_month_newsletters[0]
+        else:
+            last_nl = None
+        recommandations_id = set(recommandations.keys())
+        sorted_recommandation_ids = list()
+        for nl in self.inscription.last_month_newsletters:
+            if nl.recommandation_id in recommandations_id:
+                sorted_recommandation_ids.append((nl.date, nl.recommandation_id))
+                recommandations_id.discard(nl.recommandation_id)
+        for recommandation_id in recommandations_id:
+            sorted_recommandation_ids.append((datetime.min.date(), recommandation_id))
 
-        last_recommandation = recommandations.get(last_nl[0]) if last_nl else None
+        last_recommandation = recommandations.get(last_nl.recommandation_id) if last_nl else None
         last_criteres = last_recommandation.criteres if last_recommandation else set()
         last_type = last_recommandation.type_ if last_recommandation else ""
 
         sorted_recommandations_ids_by_criteria = sorted(
                 sorted_recommandation_ids,
-                key=lambda r: (r[0], len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
+                key=lambda r: (r[0], recommandations[r[1]].ordre if recommandations[r[1]].ordre != None else inf, len(recommandations[r[1]].criteres.intersection(last_criteres)), recommandations[r[1]].type_ != last_type)
             )
         for r in sorted_recommandations_ids_by_criteria:
             if recommandations[r[1]].is_relevant(

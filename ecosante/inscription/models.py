@@ -1,4 +1,5 @@
-from sqlalchemy.orm import backref, relationship
+from operator import and_
+from sqlalchemy.orm import backref, joinedload, relationship, selectinload
 from sqlalchemy.sql.schema import PrimaryKeyConstraint
 from indice_pollution.history.models import Commune
 from ecosante.extensions import db
@@ -17,11 +18,19 @@ from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.attributes import flag_modified
 import json
+from sqlalchemy.orm import foreign, remote
 
 class WebpushSubscriptionInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     data = db.Column(postgresql.JSONB)
     inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'), index=True)
+
+def last_newsletter_join():
+    from ecosante.newsletter.models import NewsletterDB
+    return and_(
+        Inscription.id == NewsletterDB.inscription_id,
+        NewsletterDB.date >= (date.today() - timedelta(days=30))
+    )
 
 @dataclass
 class Inscription(db.Model):
@@ -65,6 +74,13 @@ class Inscription(db.Model):
     recommandations_actives: List[str] = db.Column(postgresql.ARRAY(db.String), default=['oui'])
     recommandations_frequence: List[str] = db.Column(postgresql.ARRAY(db.String), default=['quotidien'])
     recommandations_media: List[str] = db.Column(postgresql.ARRAY(db.String), default=['mail'])
+
+    last_month_newsletters = relationship(
+        "NewsletterDB",
+        order_by='desc(NewsletterDB.date)',
+        primaryjoin=last_newsletter_join,
+        viewonly=True
+    )
 
     date_inscription = db.Column(db.Date())
     _cache_api_commune = db.Column("cache_api_commune", db.JSON())
@@ -244,27 +260,6 @@ class Inscription(db.Model):
     def is_active(self):
         return self.deactivation_date is None or self.deactivation_date > date.today()
 
-    def last_month_newsletters(self):
-        from ecosante.newsletter.models import NewsletterDB
-
-        last_month = date.today() - timedelta(days=30)
-
-        query_sent_nl = db.session\
-            .query(func.max(NewsletterDB.id))\
-            .filter(
-                NewsletterDB.date>=last_month,
-                NewsletterDB.inscription_id==self.id
-            )\
-            .group_by(
-                NewsletterDB.date
-            ).order_by(
-                NewsletterDB.date.desc()
-            )
-        return db.session\
-            .query(NewsletterDB)\
-            .filter(NewsletterDB.id.in_(query_sent_nl))\
-            .all()
-
     @classmethod
     def active_query(cls):
         return db.session.query(cls)\
@@ -404,3 +399,38 @@ class Inscription(db.Model):
 
     def has_indicateur(self, indicateur):
         return isinstance(self.indicateurs, list) and indicateur in self.indicateurs
+
+    @classmethod
+    def export_query(cls, only_to=None, filter_already_sent=True, media='mail'):
+        from ecosante.newsletter.models import NewsletterDB
+        query = Inscription.active_query()
+        if only_to:
+            query = query.filter(Inscription.mail.in_(only_to))
+        if filter_already_sent:
+            query_nl = NewsletterDB.query\
+                .filter(
+                    NewsletterDB.date==date.today(),
+                    NewsletterDB.label != None,
+                    NewsletterDB.label != "",
+                    NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
+                .with_entities(
+                    NewsletterDB.inscription_id
+            )
+            query = query.filter(Inscription.id.notin_(query_nl))
+        query = query\
+            .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
+            .filter(Inscription.commune_id != None)\
+            .filter(Inscription.date_inscription < str(date.today()))\
+            .filter(Inscription.indicateurs_media.contains([media]))
+
+        return query.options(
+            selectinload(
+                Inscription.last_month_newsletters,
+            )
+        ).options(
+            joinedload(
+                Inscription.commune
+            ).joinedload(
+                Commune.departement
+            )
+        ).populate_existing()
