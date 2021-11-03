@@ -220,7 +220,7 @@ class Recommandation(db.Model):
                 return False
             if raep < self.min_raep:
                 return False
-            if "newsletter_quotidienne" in self.medias:
+            if "newsletter_quotidienne" in self.medias and media != "dashboard":
                 if 0 < raep < 4: #RAEP Faible
                     if inscription and "raep" in inscription.indicateurs:
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
