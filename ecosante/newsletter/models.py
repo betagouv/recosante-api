@@ -483,7 +483,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
-                'INDICATEURS_MEDIA': oxford_comma(self.inscription.indicateurs_media)
+                'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))

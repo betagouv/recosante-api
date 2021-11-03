@@ -3,7 +3,7 @@ from sqlalchemy.orm import backref, joinedload, relationship, selectinload
 from sqlalchemy.sql.schema import PrimaryKeyConstraint
 from indice_pollution.history.models import Commune
 from ecosante.extensions import db
-from ecosante.utils.funcs import generate_line
+from ecosante.utils.funcs import generate_line, oxford_comma
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import func
 from datetime import (
@@ -368,6 +368,13 @@ class Inscription(db.Model):
     @webpush_subscriptions_info.setter
     def webpush_subscriptions_info(self, value):
         self.add_webpush_subscriptions_info(value)
+
+    @property
+    def indicateurs_medias_lib(self):
+        return oxford_comma(
+            s.replace('notifications_web', 'notification')
+            for s in self.indicateurs_media
+        )
 
     def add_webpush_subscriptions_info(self, value):
         try:
