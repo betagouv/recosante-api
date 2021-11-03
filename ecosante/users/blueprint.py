@@ -80,3 +80,27 @@ def send_update_profile():
         routing_key='send_email.subscribe'
     )
     return 'ok', 200
+
+@registry.handles(
+    rule='/<uid>/_deactivate',
+    method='POST'
+)
+def deactivate(uid):
+    inscription = Inscription.query.filter_by(uid=uid).first()
+    if not inscription:
+        return 'error', 404
+    inscription.unsubscribe()
+    return 'ok', 200
+
+@registry.handles(
+    rule='/<uid>/_reactivate',
+    method='POST'
+)
+def reactivate(uid):
+    inscription = Inscription.query.filter_by(uid=uid).first()
+    if not inscription:
+        return 'error', 404
+    inscription.deactivation_date = None
+    db.session.add(inscription)
+    db.session.commit()
+    return 'ok', 200

@@ -1,7 +1,7 @@
 from dataclasses import field
 from marshmallow import Schema, ValidationError, post_load, schema
 from marshmallow.validate import OneOf, Length
-from marshmallow.fields import Str, List, Nested, Email
+from marshmallow.fields import Bool, Str, List, Nested, Email
 from flask_rebar import ResponseSchema, RequestSchema, errors
 from ecosante.inscription.models import Inscription
 from ecosante.utils.custom_fields import TempList
@@ -42,7 +42,7 @@ class User(Schema):
 
 
 class Response(User, ResponseSchema):
-    pass
+    is_active = Bool(attribute='is_active')
     
 
 class RequestPOST(User, RequestSchema):
