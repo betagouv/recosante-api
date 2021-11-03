@@ -1,7 +1,8 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
 from indice_pollution.history.models.raep import RAEP
+from indice_pollution.history.models.episode_pollution import EpisodePollution
 import pytest
 import os
 import sqlalchemy as sa
@@ -121,6 +122,40 @@ def recommandation(db_session) -> Recommandation:
     recommandation = published_recommandation()
     db_session.add(recommandation)
     return recommandation
+
+def make_episode(code_pol):
+    episode = EpisodePollution(
+        code_pol=code_pol,
+        etat="INFORMATION ET RECOMMANDATION",
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
+    )
+    return episode.dict()
+
+@pytest.fixture(scope='function')
+def episode_soufre():
+    return make_episode(1)
+
+@pytest.fixture(scope='function')
+def episode_azote():
+    return make_episode(3)
+
+@pytest.fixture(scope='function')
+def episode_carbone():
+    return make_episode(4)
+
+@pytest.fixture(scope='function')
+def episode_pm10():
+    return make_episode(5)
+
+@pytest.fixture(scope='function')
+def episode_ozone():
+    return make_episode(7)
+
+@pytest.fixture(scope='function')
+def episode_azote():
+    return make_episode(8)
+
 
 def make_raep(commune, raep):
     return RAEP(
