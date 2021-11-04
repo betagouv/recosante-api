@@ -418,8 +418,8 @@ class NewsletterDB(db.Model, Newsletter):
     def __init__(self, newsletter: Newsletter):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
-        self.lien_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('website') or ""
-        self.nom_aasqa = newsletter.forecast.get('metadata', {}).get('region', {}).get('nom_aasqa') or ""
+        self.lien_aasqa = newsletter.inscription.departement.region.aasqa_website,
+        self.nom_aasqa = newsletter.inscription.departement.region.aasqa_nom,
         self.recommandation = newsletter.recommandation
         self.recommandation_id = newsletter.recommandation.id if newsletter.recommandation else None
         self.recommandation_qa = newsletter.recommandation_qa

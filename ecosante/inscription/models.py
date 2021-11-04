@@ -1,7 +1,6 @@
 from operator import and_
-from sqlalchemy.orm import backref, joinedload, relationship, selectinload
-from sqlalchemy.sql.schema import PrimaryKeyConstraint
-from indice_pollution.history.models import Commune
+from sqlalchemy.orm import joinedload, relationship, selectinload
+from indice_pollution.history.models import Commune, Departement
 from ecosante.extensions import db
 from ecosante.utils.funcs import generate_line, oxford_comma
 from sqlalchemy.dialects import postgresql
@@ -18,7 +17,6 @@ from sqlalchemy import text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.attributes import flag_modified
 import json
-from sqlalchemy.orm import foreign, remote
 
 class WebpushSubscriptionInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -438,6 +436,8 @@ class Inscription(db.Model):
             joinedload(
                 Inscription.commune
             ).joinedload(
-                Commune.departement
+                Commune.departement,
+            ).joinedload(
+                Departement.region
             )
         ).populate_existing()
