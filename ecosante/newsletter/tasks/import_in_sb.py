@@ -65,20 +65,6 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send
             "details": "Constitution de la liste"
         }
     )
-    newsletters = list(
-        map(
-            NewsletterDB,
-            Newsletter.export(
-                preferred_reco=preferred_reco,
-                user_seed=seed,
-                remove_reco=remove_reco,
-                only_to=only_to
-            )
-        )
-    )
-    if current_app.config['ENV'] == 'production':
-        db.session.add_all(newsletters)
-        db.session.commit()
     task.update_state(
         state='STARTED',
         meta={
@@ -86,7 +72,7 @@ def import_and_send(task, seed, preferred_reco, remove_reco, only_to, force_send
             "details": "Construction des listes SIB d'envoi"
         }
     )
-    result = import_(task, newsletters, force_send, 2)
+    result = import_(task, force_send, 2)
     result['progress'] = 100
     if current_app.config['ENV'] == 'production':
         db.session.commit()
@@ -97,12 +83,11 @@ def send(campaign_id, test=False):
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
 
-def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_list_id=None):
+def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
     mail_list_id_set = mail_list_id is not None
     errors = []
     
     now = datetime.now()
-    total_nb_requests = 4 + len(newsletters) + overhead
     nb_requests = 0
     if mail_list_id == None:
         lists_api = sib_api_v3_sdk.ListsApi(sib)
@@ -118,34 +103,34 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
         task.update_state(
             state='STARTED',
             meta={
-                "progress": (nb_requests/total_nb_requests)*100,
                 "details": f"Création de la liste"
             }
         )
 
-    for i, nl in enumerate(newsletters):
-        if nl.label is None and not force_send:
+    for i, nl in enumerate(Newsletter.export()):
+        nldb = NewsletterDB(nl)
+        if nldb.label is None and not force_send:
             errors.append({
                 "type": "no_air_quality",
-                "nl_id": nl.id,
-                "region": nl.inscription.commune.departement.region.nom if nl.inscription.commune.departement else "",
-                "ville": nl.inscription.commune.nom,
-                "insee": nl.inscription.commune.insee
+                "nl_id": nldb.id,
+                "region": nldb.inscription.commune.departement.region.nom if nldb.inscription.commune.departement else "",
+                "ville": nldb.inscription.commune.nom,
+                "insee": nldb.inscription.commune.insee
             })
-            current_app.logger.error(f"No qai for {nl.inscription.mail}")
-        elif not nl.something_to_show and force_send:
+            current_app.logger.error(f"No qai for {nldb.inscription.mail}")
+        elif not nldb.something_to_show and force_send:
             errors.append({
                 "type": "nothing_to_show",
-                "nl_id": nl.id,
-                "region": nl.inscription.commune.departement.region.nom if nl.inscription.commune.departement else "",
-                "ville": nl.inscription.commune.nom,
-                "insee": nl.inscription.commune.insee
+                "nl_id": nldb.id,
+                "region": nldb.inscription.commune.departement.region.nom if nldb.inscription.commune.departement else "",
+                "ville": nldb.inscription.commune.nom,
+                "insee": nldb.inscription.commune.insee
             })
-            current_app.logger.error(f"Nothing to show for {nl.inscription.mail}")
+            current_app.logger.error(f"Nothing to show for {nldb.inscription.mail}")
         else:
             if current_app.config['ENV'] == 'production' and not mail_list_id_set:
-                nl.mail_list_id = mail_list_id
-                db.session.add(nl)
+                nldb.mail_list_id = mail_list_id
+                db.session.add(nldb)
                 if i % 100 == 0:
                     db.session.commit()
 
@@ -182,7 +167,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
     return {
         "state": "STARTED",
-        "progress": (nb_requests/total_nb_requests)*100,
+        "progress": 100,
         "details": "Terminé",
         "errors": errors
     }
