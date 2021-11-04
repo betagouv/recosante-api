@@ -128,7 +128,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
             errors.append({
                 "type": "no_air_quality",
                 "nl_id": nl.id,
-                "region": nl.inscription.commune.departement.region.nom,
+                "region": nl.inscription.commune.departement.region.nom if nl.inscription.commune.departement else "",
                 "ville": nl.inscription.commune.nom,
                 "insee": nl.inscription.commune.insee
             })
@@ -137,7 +137,7 @@ def import_(task, newsletters, force_send=False, overhead=0, test=False, mail_li
             errors.append({
                 "type": "nothing_to_show",
                 "nl_id": nl.id,
-                "region": nl.inscription.commune.departement.region.nom,
+                "region": nl.inscription.commune.departement.region.nom if nl.inscription.commune.departement else "",
                 "ville": nl.inscription.commune.nom,
                 "insee": nl.inscription.commune.insee
             })
