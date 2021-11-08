@@ -268,9 +268,32 @@ def test_get_relevant_last_criteres(db_session, inscription):
 
 
 def test_min_raep():
-    r = published_recommandation(type_="pollens", min_raep=4)
+    r = published_recommandation(type_="pollens", min_raep=0)
+    r.medias=['dashboard']
     i = Inscription()
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == False
+    assert r.is_relevant(i, "bon", [], 0, date.today(), media="dashboard") == True
+    assert r.is_relevant(i, "bon", [], 1, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 3, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 4, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == False
+
+    r = published_recommandation(type_="pollens", min_raep=1)
+    r.medias=['dashboard']
+    i = Inscription()
+    assert r.is_relevant(i, "bon", [], 0, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 1, date.today(), media="dashboard") == True
+    assert r.is_relevant(i, "bon", [], 3, date.today(), media="dashboard") == True
+    assert r.is_relevant(i, "bon", [], 4, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == False
+
+    r = published_recommandation(type_="pollens", min_raep=4)
+    r.medias=['dashboard']
+    i = Inscription()
+    assert r.is_relevant(i, "bon", [], 0, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 1, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 3, date.today(), media="dashboard") == False
+    assert r.is_relevant(i, "bon", [], 4, date.today(), media="dashboard") == True
+    assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == True
 
 @pytest.mark.parametrize(
     "reco_personne_allergique,assert1,assert2,assert3",

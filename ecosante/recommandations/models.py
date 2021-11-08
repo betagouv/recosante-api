@@ -218,7 +218,11 @@ class Recommandation(db.Model):
         if self.type_ == "pollens":
             if type(self.min_raep) != int or type(raep) != int:
                 return False
-            if raep < self.min_raep:
+            if self.min_raep == 0 and raep != 0:
+                return False
+            elif self.min_raep == 1 and not (1 <= raep <= 3):
+                return False
+            elif self.min_raep == 4 and raep < self.min_raep:
                 return False
             if "newsletter_quotidienne" in self.medias and media != "dashboard":
                 if 0 < raep < 4: #RAEP Faible
