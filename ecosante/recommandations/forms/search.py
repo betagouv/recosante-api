@@ -1,7 +1,6 @@
-from wtforms.fields.core import SelectMultipleField
 from ecosante.utils.form import BaseForm, MultiCheckboxField
-from wtforms.widgets.html5 import SearchInput
-from wtforms.fields import StringField, SelectField
+from wtforms.widgets import SearchInput
+from wtforms.fields import StringField, SelectField, SelectMultipleField
 from markupsafe import Markup
 from ..models import RECOMMANDATION_FILTERS
 

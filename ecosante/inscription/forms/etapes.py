@@ -1,7 +1,6 @@
 import requests
 from wtforms import ValidationError, validators, HiddenField
-from wtforms.fields.core import SelectField
-from wtforms.fields.html5 import EmailField
+from wtforms.fields import SelectField, EmailField
 from ecosante.utils.form import BaseForm, MultiCheckboxField
 from ecosante.inscription.models import Inscription
 

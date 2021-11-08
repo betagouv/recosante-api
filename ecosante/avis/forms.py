@@ -1,6 +1,6 @@
 from ecosante.utils.form import RadioField, BaseForm, MultiCheckboxField, OuiNonField
 from wtforms import validators, widgets, SelectField, TextAreaField
-from wtforms.fields.html5 import EmailField
+from wtforms.fields import EmailField
 from wtforms.validators import ValidationError
 from ecosante.inscription.models import Inscription
 

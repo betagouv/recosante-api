@@ -1,5 +1,5 @@
 from jinja2.nodes import Mul
-from wtforms.fields.core import IntegerField, SelectField
+from wtforms.fields import IntegerField, SelectField
 from ecosante.utils.form import RadioField, BaseForm, OuiNonField, MultiCheckboxField, IntegerField, coerce_int
 from wtforms import TextAreaField, HiddenField
 
