@@ -167,7 +167,7 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
     recommandations=[
         published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, type_='episode_pollution'),
-        published_recommandation(type_="pollens", min_raep=1),
+        published_recommandation(type_="pollens", min_raep=raep),
         published_recommandation(type_="generale")
     ]
     db_session.add_all(recommandations)

@@ -186,7 +186,7 @@ def test_reco_pollen_pas_pollution_raep_nul(commune):
     )
 )
 def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune, delta, qualif, raep):
-    r = published_recommandation(type_="pollens", min_raep=1)
+    r = published_recommandation(type_="pollens", min_raep=raep)
 
     date_ = date.today() + timedelta(days=delta)
     i = Inscription(indicateurs=["indice_atmo"])
@@ -194,7 +194,7 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune, delta, qualif, 
 
     #On veut envoyer le mercredi et le samedi
     i = Inscription(indicateurs=["raep"])
-    assert r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_) == (date_.weekday() in [2, 5])
+    assert r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_) == (date_.weekday() in [2, 5]) 
 
 
 def test_chauffage():
