@@ -29,13 +29,14 @@ def get_advice(advices, type_, **kwargs):
 def index():
     advices = Recommandation.published_query().all()
     insee = rebar.validated_args.get('insee')
+    date_ = rebar.validated_args.get('date')
 
     commune = Commune.get(insee)
 
-    indice_atmo  = forecast(insee, use_make_resp=False)
+    indice_atmo  = forecast(insee, date_=date_, use_make_resp=False)
     indice_raep = raep(insee)
     potentiel_radon = PotentielRadon.get(insee)
-    episodes = get_episodes(insee, use_make_resp=False)
+    episodes = get_episodes(insee, date_=date_, use_make_resp=False)
 
     advice_atmo = get_advice(advices, "generale", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None

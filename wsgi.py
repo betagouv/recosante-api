@@ -5,6 +5,7 @@ from sentry_sdk.integrations.redis import RedisIntegration
 import logging
 import os
 
+
 logging.basicConfig(level=logging.DEBUG)
 
 if os.getenv('SENTRY_DSN'):
