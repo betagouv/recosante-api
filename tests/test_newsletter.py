@@ -541,37 +541,22 @@ def test_export_user_hebdo(db_session, inscription):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 0
 
-def test_export_user_alerte_mauvaise_qualite_air(inscription_alerte, mauvaise_qualite_air, recommandation):
+@pytest.mark.parametrize(
+    "inscription, qa, raep, nb_nls",
+    [
+        ("inscription_alerte", "mauvaise_qualite_air", "raep_faible", 1),
+        ("inscription_alerte", "bonne_qualite_air", "raep_faible", 0),
+        ("inscription_alerte", "mauvaise_qualite_air", "raep_eleve", 1),
+        ("inscription_alerte", "bonne_qualite_air", "raep_eleve", 1)
+    ]
+)
+def test_export(recommandation, inscription, qa, raep, nb_nls, request):
+    inscription = request.getfixturevalue(inscription)
+    qa = request.getfixturevalue(qa)
+    raep = request.getfixturevalue(raep)
+    
     newsletters = list(Newsletter.export())
-    assert len(newsletters) == 1
-
-def test_export_user_alerte_bonne_qualite_air(inscription_alerte, bonne_qualite_air, recommandation):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 0
-
-def test_export_user_alerte_raep_faible(inscription_alerte, recommandation, raep_faible):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 0
-
-def test_export_user_alerte_raep_eleve(inscription_alerte, recommandation, raep_eleve):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 1
-
-def test_export_user_alerte_raep_faible_bonne_qa(inscription_alerte, recommandation, raep_faible, bonne_qualite_air):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 0
-
-def test_export_user_alerte_raep_eleve_bonne_qa(inscription_alerte, recommandation, raep_eleve, bonne_qualite_air):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 1
-
-def test_export_user_alerte_raep_faible_mauvaise_qa(inscription_alerte, recommandation, raep_faible, mauvaise_qualite_air):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 1
-
-def test_export_user_alerte_raep_eleve_mauvaise_qa(inscription_alerte, recommandation, raep_eleve, mauvaise_qualite_air):
-    newsletters = list(Newsletter.export())
-    assert len(newsletters) == 1
+    assert len(newsletters) == nb_nls
 
 def test_get_recommandation_simple_case(inscription, recommandation):
     nl = Newsletter(
