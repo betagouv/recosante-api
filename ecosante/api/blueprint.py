@@ -34,7 +34,7 @@ def index():
     commune = Commune.get(insee)
 
     indice_atmo  = forecast(insee, date_=date_, use_make_resp=False)
-    indice_raep = raep(insee)
+    indice_raep = raep(insee, date_=date_)
     potentiel_radon = PotentielRadon.get(insee)
     episodes = get_episodes(insee, date_=date_, use_make_resp=False)
 
