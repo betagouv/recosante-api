@@ -50,10 +50,12 @@ class Newsletter:
             current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
         if not 'couleur' in self.today_forecast:
             current_app.logger.error(f'No couleur for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
-        if self.episodes and 'data' in self.episodes:
+        if self.episodes:
+            if 'data' in self.episodes:
+                self.episodes = self.episodes['data']
             self.polluants = [
                 e['lib_pol_normalized']
-                for e in self.episodes['data']
+                for e in self.episodes
                 if e['etat'] != 'PAS DE DEPASSEMENT'\
                 and 'date' in e\
                 and e['date'] == str(self.date)
@@ -159,7 +161,7 @@ class Newsletter:
         indices, episodes, allergenes = get_all(date_)
         for inscription in Inscription.export_query(only_to, filter_already_sent, media).yield_per(100):
             indice = indices.get(inscription.commune_id)
-            episode = episodes.get(inscription.commune.zone_pollution_id)
+            episodes = episodes.get(inscription.commune.zone_pollution_id)
             if inscription.commune.departement:
                 raep = allergenes.get(inscription.commune.departement.zone_id, {})
             else:
@@ -169,7 +171,7 @@ class Newsletter:
                 "inscription": inscription,
                 "recommandations": recommandations,
                 "forecast": {"data": [indice.dict()]} if indice else None,
-                "episodes": episode.dict() if episode else None,
+                "episodes": [e.dict() for e in episodes] if episodes else [],
                 "raep": raep_dict.get("total"),
                 "allergenes": raep_dict.get("allergenes"),
                 "validite_raep": raep_dict.get("periode_validite", {}),
