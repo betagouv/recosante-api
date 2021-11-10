@@ -158,10 +158,10 @@ class Newsletter:
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        indices, episodes, allergenes = get_all(date_)
+        indices, all_episodes, allergenes = get_all(date_)
         for inscription in Inscription.export_query(only_to, filter_already_sent, media).yield_per(100):
             indice = indices.get(inscription.commune_id)
-            episodes = episodes.get(inscription.commune.zone_pollution_id)
+            episodes = all_episodes.get(inscription.commune.zone_pollution_id)
             if inscription.commune.departement:
                 raep = allergenes.get(inscription.commune.departement.zone_id, {})
             else:
