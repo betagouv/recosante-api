@@ -466,7 +466,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_formatted or "",
-                'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
+                #'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
                 'SHOW_RAEP': convert_bool_to_yes_no((self.show_raep or False)),
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
