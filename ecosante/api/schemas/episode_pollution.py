@@ -9,7 +9,7 @@ class EpisodeIndiceDetailsSchema(IndiceDetailsSchema):
     @pre_dump
     def dump_details(self, data, **kwargs):
         return {
-            "label": data.lib_pol_normalized.capitalize(),
+            "label": data.lib_pol,
             "level": data.lib_etat.capitalize()
         }
 
@@ -26,7 +26,7 @@ class IndiceSchema(EpisodeIndiceDetailsSchema):
         if len(episodes_etat_haut) > 1 or 'particules' in episodes_etat_haut[0].lib_pol.lower():
             preposition = "aux"
         return  {
-            "label": f"Épisode de pollution {preposition} : {oxford_comma([v.lib_pol_normalized for v in episodes_etat_haut])}",
+            "label": f"Épisode de pollution {preposition} : {oxford_comma([v.lib_pol for v in episodes_etat_haut])}",
             "level": episodes_etat_haut[0].lib_etat.capitalize()
         }
 
