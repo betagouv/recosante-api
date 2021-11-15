@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List
 from indice_pollution.history.models.episode_pollution import EpisodePollution
 from ecosante.api.schemas.indice import FullIndiceSchema, IndiceDetailsSchema, NestedIndiceSchema
@@ -41,3 +42,21 @@ class IndiceSchema(EpisodeIndiceDetailsSchema):
 
 class EpisodePollutionSchema(FullIndiceSchema):
     indice = fields.Nested(IndiceSchema)
+
+
+    @pre_dump
+    def load_sources(self, data, many, **kwargs):
+        regions = set([e.commune.departement.region for e in data["indice"]])
+        data['sources'] = [{
+                   "label":  region.aasqa_nom,
+                   "url": region.aasqa_website
+                } for region in regions
+        ]
+        start = min([e.date_ech for e in data["indice"]])
+        end = max([e.date_ech for e in data["indice"]]) + timedelta(1) - timedelta(seconds=1)
+        data['validity'] = {
+            "start": start,
+            "end": end,
+            "area": data["indice"][0].zone.lib if data["indice"] else ""
+        }
+        return data
