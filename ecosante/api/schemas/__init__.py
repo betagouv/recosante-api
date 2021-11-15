@@ -10,7 +10,7 @@ class ResponseSchema(Schema):
     indice_atmo = fields.Nested(IndiceATMO)
     raep = fields.Nested(IndiceRAEP)
     potentiel_radon = fields.Nested(FullPotentielRadonSchema)
-    episodes_pollution = fields.Nested(EpisodePollutionSchema, multiple=True)
+    episodes_pollution = fields.Nested(EpisodePollutionSchema)
 
 class QuerySchema(Schema):
     insee = fields.String()
