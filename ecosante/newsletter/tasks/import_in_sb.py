@@ -131,7 +131,7 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
             if current_app.config['ENV'] == 'production' and not mail_list_id_set:
                 nldb.mail_list_id = mail_list_id
                 db.session.add(nldb)
-                if i % 100 == 0:
+                if i % 1000 == 0:
                     db.session.flush() # do not use commit, it will raise an error
 
     if current_app.config['ENV'] == 'production' or test:
