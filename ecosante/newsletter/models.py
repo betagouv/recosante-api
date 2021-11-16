@@ -80,8 +80,9 @@ class Newsletter:
         if type(self.recommandations) == list:
             self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
-        self.recommandation_qa = self.get_recommandation(self.recommandations, types=["generale", "episode_pollution"], media='newsletter_quotidienne')
+        self.recommandation_qa = self.get_recommandation(self.recommandations, types=["generale"], media='newsletter_quotidienne')
         self.recommandation_raep = self.get_recommandation(self.recommandations, types=["pollens"], media='newsletter_quotidienne')
+        self.recommandation_episode = self.get_recommandation(self.recommandations, types=["episode_pollution"], media='newsletter_quotidienne')
     
 
     @property
@@ -398,6 +399,8 @@ class NewsletterDB(db.Model, Newsletter):
     recommandation_qa: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_qa_id])
     recommandation_raep_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
     recommandation_raep: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_raep_id])
+    recommandation_episode_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation_episode: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_episode_id])
     date: date = db.Column(db.Date())
     qualif: str = db.Column(db.String())
     label: str = db.Column(db.String())
@@ -428,6 +431,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_qa_id = newsletter.recommandation_qa.id if newsletter.recommandation_qa else None
         self.recommandation_raep = newsletter.recommandation_raep
         self.recommandation_raep_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
+        self.recommandation_episode = newsletter.recommandation_raep
+        self.recommandation_episode_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
@@ -484,6 +489,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
+                'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
                 'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib
             },

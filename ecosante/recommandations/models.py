@@ -199,7 +199,7 @@ class Recommandation(db.Model):
             if self.personne_allergique is not None and self.personne_allergique != ("raep" in inscription.indicateurs):
                 return False
         # Environnement
-        if polluants and self.type_ != "episode_pollution":
+        if polluants and self.type_ != "episode_pollution" and "episode_pollution" in types:
             return False
         if self.type_ == "episode_pollution":
             if polluants:
