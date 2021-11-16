@@ -24,12 +24,14 @@ def test_episode_passe(db_session, inscription):
     assert nldb.polluants_symbols == []
     assert nldb.lien_recommandations_alerte == None
     assert nldb.attributes()['POLLUANT'] == ""
-    assert nldb.attributes()['LIEN_RECOMMANDATIONS_ALERTE'] == ""
     assert nldb.attributes()['RECOMMANDATION'] == '<p>ça va en fait</p>'
     assert nldb.attributes()['DEPARTEMENT'] == 'Mayenne'
 
 def test_formatted_polluants_generale_pm10(db_session, inscription, episode_pm10):
-    recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]
+    recommandations = [
+        published_recommandation(),
+        published_recommandation(particules_fines=True, type_='episode_pollution')
+    ]
     db_session.add_all(recommandations)
     db_session.commit()
     nl = Newsletter(
@@ -41,6 +43,8 @@ def test_formatted_polluants_generale_pm10(db_session, inscription, episode_pm10
     assert nl.polluants_formatted == "aux particules fines"
     assert nl.polluants_symbols == ['pm10']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10'
+    assert nl.recommandation_qa.type_ == "generale"
+    assert nl.recommandation_episode.type_ == "episode_pollution"
 
 def test_formatted_polluants_generale_pm10_no2(db_session, inscription, episode_pm10, episode_azote):
     recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]
