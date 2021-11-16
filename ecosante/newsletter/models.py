@@ -106,6 +106,10 @@ class Newsletter:
         return [label_to_symbols.get(label) for label in self.polluants]
 
     @property
+    def polluants_symbols_formatted(self):
+        return oxford_comma([p.upper() for p in self.polluants_symbols])
+
+    @property
     def today_forecast(self):
         if not self.forecast:
             return dict()
@@ -470,7 +474,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'VILLE': self.inscription.commune.nom or "",
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
-                'POLLUANT': self.polluants_formatted or "",
+                'POLLUANT': self.polluants_symbols_formatted or "",
                 #'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
                 'SHOW_RAEP': convert_bool_to_yes_no((self.show_raep or False)),
                 'RAEP': self.qualif_raep or "",
