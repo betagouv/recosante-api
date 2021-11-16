@@ -1,5 +1,9 @@
-from ecosante.extensions import celery
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
+import os
+from ecosante.extensions import celery, sib
 from ecosante.utils import send_log_mail
+from flask import current_app
 
 @celery.task()
 def send_unsubscribe(mail, send_mail=True):
@@ -14,6 +18,27 @@ L'utilisateur {mail} s'est désinscrit de la newsletter
 
 Bonne journée !
 """)
+    unsubscribe_template_id = int(os.getenv('SIB_UNSUBSCRIBE_TEMPLATE_ID', 1594))
+    email_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
+    try:
+        email_api.send_transac_email(
+            sib_api_v3_sdk.SendSmtpEmail(
+                sender=sib_api_v3_sdk.SendSmtpEmailSender(
+                    name= "Recosanté",
+                    email= "hi@recosante.beta.gouv.fr"
+                ),
+                to=[sib_api_v3_sdk.SendSmtpEmailTo(email=mail)],
+                reply_to=sib_api_v3_sdk.SendSmtpEmailReplyTo(
+                    name="Recosanté",
+                    email="hi@recosante.beta.gouv.fr"
+                ),
+                template_id=unsubscribe_template_id
+            )
+        )
+    except ApiException as e:
+        current_app.logger.error(
+            f"Error: {e}"
+        )
 
 @celery.task()
 def send_unsubscribe_error(mail):
