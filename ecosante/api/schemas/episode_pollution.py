@@ -52,11 +52,17 @@ class EpisodePollutionSchema(FullIndiceSchema):
                    "url": region.aasqa_website
                 } for region in regions
         ]
-        start = min([e.date_ech for e in data["indice"]])
-        end = max([e.date_ech for e in data["indice"]]) + timedelta(1) - timedelta(seconds=1)
+        if data["indice"]:
+            start = min([e.date_ech for e in data["indice"]])
+            end = max([e.date_ech for e in data["indice"]]) + timedelta(1) - timedelta(seconds=1)
+            area = data["indice"][0].zone.lib if data["indice"] else ""
+        else:
+            start = None
+            end = None
+            area = None
         data['validity'] = {
             "start": start,
             "end": end,
-            "area": data["indice"][0].zone.lib if data["indice"] else ""
+            "area": area
         }
         return data
