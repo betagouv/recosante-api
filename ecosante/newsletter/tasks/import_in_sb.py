@@ -107,8 +107,9 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
             }
         )
 
-    for i, nl in enumerate(Newsletter.export()):
-        nldb = NewsletterDB(nl)
+    to_add = []
+    for nl in Newsletter.export():
+        nldb = NewsletterDB(nl, mail_list_id)
         if nldb.label is None and not force_send:
             errors.append({
                 "type": "no_air_quality",
@@ -128,13 +129,15 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
             })
             current_app.logger.error(f"Nothing to show for {nldb.inscription.mail}")
         else:
-            if current_app.config['ENV'] == 'production' and not mail_list_id_set:
-                nldb.mail_list_id = mail_list_id
-                db.session.add(nldb)
-                if i % 1000 == 0:
+            if current_app.config['ENV'] == 'production':
+                to_add.append(nldb)
+                if len(to_add) % 1000 == 0:
+                    db.session.add_all(to_add)
                     db.session.flush() # do not use commit, it will raise an error
+                    to_add = []
 
     if current_app.config['ENV'] == 'production' or test:
+        db.session.add_all(to_add)
         db.session.commit()
         contact_api = sib_api_v3_sdk.ContactsApi(sib)
         request_contact_import = sib_api_v3_sdk.RequestContactImport()

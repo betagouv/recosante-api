@@ -367,16 +367,11 @@ class Newsletter:
                 return False
         if self.qualif not in ['bon', 'moyen']:
             return False
-        last_radon = db.session.query(NewsletterDB.date)\
-            .filter(NewsletterDB.inscription_id == self.inscription.id)\
-            .filter(NewsletterDB.show_radon == True)\
-            .order_by(NewsletterDB.id.desc())\
-            .limit(1)\
-            .first()
-
-        if not last_radon:
+        try:
+            last_radon = next(filter(lambda nl: nl.show_radon, self.inscription.last_month_newsletters))
+        except StopIteration:
             return True
-        days_since_last_sent = (date.today() - last_radon[0]).days
+        days_since_last_sent = (date.today() - last_radon.date).days
         if self.radon == 3 and days_since_last_sent >= 15:
             return True
         if self.radon < 3 and days_since_last_sent >= 30:
@@ -424,7 +419,7 @@ class NewsletterDB(db.Model, Newsletter):
     webpush_subscription_info: WebpushSubscriptionInfo = db.relationship(WebpushSubscriptionInfo)
     mail_list_id: int = db.Column(db.Integer)
 
-    def __init__(self, newsletter: Newsletter):
+    def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
         self.lien_aasqa = newsletter.inscription.commune.departement.region.aasqa_website if newsletter.inscription.commune.departement else "",
@@ -451,6 +446,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.sous_indices = newsletter.sous_indices
         self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
         self.webpush_subscription_info = newsletter.webpush_subscription_info
+        self.mail_list_id = mail_list_id
 
     def attributes(self):
         noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
