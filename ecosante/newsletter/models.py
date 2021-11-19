@@ -468,6 +468,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'PRECISIONS': self.recommandation.precisions or "",
                 'QUALITE_AIR': self.label or "",
                 'VILLE': self.inscription.commune.nom or "",
+                'VILLE_CODE': self.inscription.commune.insee or "",
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
