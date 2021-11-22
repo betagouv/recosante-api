@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from indice_pollution.history.models import zone
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
 from indice_pollution.history.models.raep import RAEP
@@ -71,7 +72,7 @@ def commune(db_session) -> Commune:
     zone_departement = Zone(type='departement', code='53')
     departement = Departement(nom="Mayenne", code="53", codeRegion=region.code, zone=zone_departement)
     zone = Zone(type='commune', code='53130')
-    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, departement=departement)
+    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, zone_pollution=departement.zone, departement=departement)
     db_session.add_all([region, zone_departement, departement, zone, commune])
     return commune
 
@@ -92,11 +93,11 @@ def inscription_alerte(commune) -> Inscription:
     return inscription
 
 @pytest.fixture(scope='function')
-def mauvaise_qualite_air(commune, db_session) -> IndiceATMO:
+def mauvaise_qualite_air(commune_commited, db_session) -> IndiceATMO:
     from indice_pollution.history.models import IndiceATMO
     from datetime import date
     indice = IndiceATMO(
-        zone_id=commune.zone_id,
+        zone_id=commune_commited.zone_id,
         date_ech=date.today(),
         date_dif=date.today(),
         no2=4, so2=4, o3=4, pm10=5, pm25=6,
@@ -105,11 +106,11 @@ def mauvaise_qualite_air(commune, db_session) -> IndiceATMO:
     return indice
 
 @pytest.fixture(scope='function')
-def bonne_qualite_air(commune, db_session) -> IndiceATMO:
+def bonne_qualite_air(commune_commited, db_session) -> IndiceATMO:
     from indice_pollution.history.models import IndiceATMO
     from datetime import date
     indice = IndiceATMO(
-        zone_id=commune.zone_id,
+        zone_id=commune_commited.zone_id,
         date_ech=date.today(),
         date_dif=date.today(),
         no2=1, so2=1, o3=1, pm10=1, pm25=1,
@@ -123,38 +124,41 @@ def recommandation(db_session) -> Recommandation:
     db_session.add(recommandation)
     return recommandation
 
-def make_episode(code_pol):
+def make_episode(code_pol, commune):
+
     episode = EpisodePollution(
         code_pol=code_pol,
         etat="INFORMATION ET RECOMMANDATION",
         date_ech=datetime.now(),
         date_dif=datetime.now(),
+        zone_id=commune.zone_pollution_id,
+        zone=commune.zone_pollution
     )
-    return episode.dict()
+    return episode
 
 @pytest.fixture(scope='function')
-def episode_soufre():
-    return make_episode(1)
+def episode_soufre(commune_commited):
+    return make_episode(1, commune_commited)
 
 @pytest.fixture(scope='function')
-def episode_azote():
-    return make_episode(3)
+def episode_azote(commune_commited):
+    return make_episode(3, commune_commited)
 
 @pytest.fixture(scope='function')
-def episode_carbone():
-    return make_episode(4)
+def episode_carbone(commune_commited):
+    return make_episode(4, commune_commited)
 
 @pytest.fixture(scope='function')
-def episode_pm10():
-    return make_episode(5)
+def episode_pm10(commune_commited):
+    return make_episode(5, commune_commited)
 
 @pytest.fixture(scope='function')
-def episode_ozone():
-    return make_episode(7)
+def episode_ozone(commune_commited):
+    return make_episode(7, commune_commited)
 
 @pytest.fixture(scope='function')
-def episode_azote():
-    return make_episode(8)
+def episode_azote(commune_commited):
+    return make_episode(8, commune_commited)
 
 
 def make_raep(commune, raep):

@@ -188,16 +188,19 @@ class Newsletter:
                     init_dict['webpush_subscription_info_id'] = wp.id
                     init_dict['webpush_subscription_info'] = wp
                     newsletter = cls(**init_dict)
-                    if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                        if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and (newsletter.raep == None or newsletter.raep < 4):
-                            continue
-                    yield newsletter
+                    if not newsletter.filtre_alerte():
+                        yield newsletter
             else:
                 newsletter = cls(**init_dict)
-                if inscription.indicateurs_frequence and "alerte" in inscription.indicateurs_frequence:
-                    if Recommandation.qualif_categorie(newsletter.qualif) != "mauvais" and (newsletter.raep ==None or newsletter.raep < 4):
-                        continue
-                yield newsletter
+                if not newsletter.filtre_alerte():
+                    yield newsletter
+
+    # Renvoie vrai si l’utilisateur est inscrit à la réception en cas d’alerte
+    # et qu’il n’y a pas d’alerte en cours
+    def filtre_alerte(self):
+        if self.inscription.indicateurs_frequence and "alerte" in self.inscription.indicateurs_frequence:
+            return (self.polluants == None or len(self.polluants) == 0) and (self.raep == None or self.raep < 4)
+        return False
 
     @property
     def past_nl_query(self):

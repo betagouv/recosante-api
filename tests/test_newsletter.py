@@ -34,7 +34,7 @@ def test_formatted_polluants_generale_pm10(db_session, inscription, episode_pm10
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_pm10]},
+        episodes={"data": [episode_pm10.dict()]},
         recommandations=recommandations
     )
     assert nl.polluants_formatted == "aux particules fines"
@@ -50,7 +50,7 @@ def test_formatted_polluants_generale_pm10_no2(db_session, inscription, episode_
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_pm10, episode_azote]},
+        episodes={"data": [episode_pm10.dict(), episode_azote.dict()]},
         recommandations=recommandations
     )
     assert nl.polluants_formatted == "aux particules fines et au dioxyde d’azote"
@@ -66,7 +66,7 @@ def test_formatted_polluants_generale_tous(db_session, inscription, episode_souf
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_soufre, episode_pm10, episode_ozone, episode_azote]},
+        episodes={"data": [episode_soufre.dict(), episode_pm10.dict(), episode_ozone.dict(), episode_azote.dict()]},
         recommandations=recommandations
     )
     assert nl.polluants_formatted == "au dioxyde de soufre, aux particules fines, à l’ozone, et au dioxyde d’azote"
@@ -77,11 +77,12 @@ def test_formatted_polluants_generale_pm10_o3_no2(db_session, inscription, episo
     recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]
     db_session.add_all(recommandations)
     db_session.commit()
-    episode_soufre['etat'] = 'PAS DE DEPASSEMENT'
+    episode_dict = episode_soufre.dict()
+    episode_dict['etat'] = 'PAS DE DEPASSEMENT'
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [ episode_soufre, episode_pm10, episode_ozone, episode_azote]},
+        episodes={"data": [ episode_dict, episode_pm10.dict(), episode_ozone.dict(), episode_azote.dict()]},
         recommandations=recommandations
     )
     assert nl.polluants_formatted == "aux particules fines, à l’ozone, et au dioxyde d’azote"
@@ -100,7 +101,7 @@ def test_formatted_polluants_generale_no2(db_session, inscription, episode_azote
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_azote]},
+        episodes={"data": [episode_azote.dict()]},
         recommandations=recommandations
     )
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=vulnerable&polluants=no2'
@@ -118,7 +119,7 @@ def test_avis_oui(db_session, client, inscription, episode_azote):
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_azote]},
+        episodes={"data": [episode_azote.dict()]},
         recommandations=recommandations
     )
     nldb = NewsletterDB(nl)
@@ -141,7 +142,7 @@ def test_avis_non(db_session, client, inscription, episode_azote):
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_azote]},
+        episodes={"data": [episode_azote.dict()]},
         recommandations=recommandations
     )
     nldb = NewsletterDB(nl)
@@ -166,7 +167,7 @@ def test_avis_non(db_session, client, inscription, episode_azote):
 )
 def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delta, indice, request):
     if len(episodes) > 0:
-        episodes = [request.getfixturevalue(episodes[0])]
+        episodes = [request.getfixturevalue(episodes[0]).dict()]
     recommandations=[
         published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, type_='episode_pollution'),
@@ -254,7 +255,7 @@ def test_show_radon_polluants(db_session, inscription, episode_pm10):
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
-        episodes={"data": [episode_pm10]},
+        episodes={"data": [episode_pm10.dict()]},
         raep=0,
         recommandations=[]
     )
@@ -528,7 +529,7 @@ def test_sorted_recommandation_query(db_session, inscription):
     next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 2.0
     next(filter(lambda a: a[1] == today_recommandation.id, sorted_recommandations))[0] == 2.0
 
-def test_export(db_session, inscription):
+def test_export_simple(db_session, inscription):
     db_session.add(published_recommandation())
     db_session.commit()
 
@@ -545,18 +546,20 @@ def test_export_user_hebdo(db_session, inscription):
     assert len(newsletters) == 0
 
 @pytest.mark.parametrize(
-    "inscription, qa, raep, nb_nls",
+    "inscription, episode, raep, nb_nls",
     [
-        ("inscription_alerte", "mauvaise_qualite_air", "raep_faible", 1),
-        ("inscription_alerte", "bonne_qualite_air", "raep_faible", 0),
-        ("inscription_alerte", "mauvaise_qualite_air", "raep_eleve", 1),
-        ("inscription_alerte", "bonne_qualite_air", "raep_eleve", 1)
+        ("inscription_alerte", "episode_soufre", "raep_faible", 1),
+        ("inscription_alerte", "", "raep_faible", 0),
+        ("inscription_alerte", "episode_soufre", "raep_eleve", 1),
+        ("inscription_alerte", "", "raep_eleve", 1)
     ]
 )
-def test_export(recommandation, inscription, qa, raep, nb_nls, request):
+def test_export(db_session, recommandation, bonne_qualite_air, inscription, episode, raep, nb_nls, request):
     inscription = request.getfixturevalue(inscription)
-    qa = request.getfixturevalue(qa)
     raep = request.getfixturevalue(raep)
+    if episode:
+        episode = request.getfixturevalue(episode)
+        db_session.add(episode)
     
     newsletters = list(Newsletter.export())
     assert len(newsletters) == nb_nls
