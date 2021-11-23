@@ -94,14 +94,13 @@ def batch():
             ).options(joinedload(IndiceATMO.zone)
             ).yield_per(100)
         schema = ResponseSchema()
-        communes = dict(db.session.query(Commune.id, Commune).options(joinedload(Commune.departement).joinedload(Departement.region)).populate_existing().all())
         all_episodes = EpisodePollution.get_all(date_)
         yield "["
         first = True
         for commune_id, indice in indices:
             if not first:
                 yield ","
-            commune = communes.get(commune_id)
+            commune = Commune.get_from_id(commune_id)
             indice.region = commune.departement.region
             indice.commune = commune
             episodes = all_episodes.get(commune.zone_pollution_id)
