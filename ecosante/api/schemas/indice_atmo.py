@@ -32,8 +32,8 @@ class IndiceATMO(FullIndiceSchema):
         resp =  {
             "sources": [
                 {
-                   "label":  data["indice"].region.Service.nom_aasqa,
-                   "url": data["indice"].region.Service.website
+                   "label":  data["indice"].region.aasqa_nom,
+                   "url": data["indice"].region.aasqa_website
                 }
             ],
         }

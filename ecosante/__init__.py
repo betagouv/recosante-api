@@ -2,6 +2,7 @@ from flask import Flask, g
 import os
 from celery import Celery
 from .extensions import db, migrate, assets_env, celery, sib, cors, rebar
+from indice_pollution import init_app
 from werkzeug.urls import url_encode
 import logging
 from kombu import Queue
@@ -63,6 +64,7 @@ def create_app(testing=False):
     app.config['APPLICATION_SERVER_KEY'] = os.getenv('APPLICATION_SERVER_KEY')
     app.config['VAPID_PRIVATE_KEY'] = os.getenv('VAPID_PRIVATE_KEY')
 
+    init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     assets_env.init_app(app)

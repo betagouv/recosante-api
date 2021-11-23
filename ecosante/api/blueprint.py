@@ -1,10 +1,15 @@
+from datetime import date
+import json
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.episode_pollution import EpisodePollution
-from ecosante.extensions import rebar
+from sqlalchemy.orm import joinedload
+from ecosante.extensions import rebar, db
 from .schemas import ResponseSchema, QuerySchema
 from indice_pollution import forecast, raep, episodes as get_episodes
-from indice_pollution.history.models import PotentielRadon
+from indice_pollution.history.models import PotentielRadon, IndiceATMO, Departement
 from ecosante.recommandations.models import Recommandation
+from flask.wrappers import Response
+from flask import stream_with_context
 
 registry = rebar.create_handler_registry(prefix='/v1')
 
@@ -73,3 +78,47 @@ def index():
             "advice": advice_episode
         }
     }
+
+
+@registry.handles(
+	rule='/_batch',
+    method='GET',
+    query_string_schema=QuerySchema(),
+)
+def batch():
+    date_ = rebar.validated_args.get('date', date.today())
+
+    def iter():
+        indices = IndiceATMO.get_all_query(
+                date_
+            ).options(joinedload(IndiceATMO.zone)
+            ).yield_per(100)
+        schema = ResponseSchema()
+        communes = dict(db.session.query(Commune.id, Commune).options(joinedload(Commune.departement).joinedload(Departement.region)).populate_existing().all())
+        all_episodes = EpisodePollution.get_all(date_)
+        yield "["
+        first = True
+        for commune_id, indice in indices:
+            if not first:
+                yield ","
+            commune = communes.get(commune_id)
+            indice.region = commune.departement.region
+            indice.commune = commune
+            episodes = all_episodes.get(commune.zone_pollution_id)
+            if episodes:
+                for e in episodes:
+                    e.commune = commune
+            value = {
+                "commune": commune,
+                "indice_atmo": {
+                    "indice": indice
+                },
+                "episodes_pollution": {
+                    "indice": episodes or []
+                }
+            }
+            r = schema.dump(value)
+            yield json.dumps(r)
+            first = False
+        yield ']'
+    return Response(stream_with_context(iter()))
