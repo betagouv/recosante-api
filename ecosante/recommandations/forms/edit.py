@@ -8,7 +8,8 @@ class FormAdd(BaseForm):
         "Statut",
         choices=[
             ('draft', 'Brouillon'),
-            ('published', 'Publiée')
+            ('published', 'Publiée'),
+            ('hidden', 'Non publiée')
         ]
     )
     recommandation = TextAreaField('Recommandation')

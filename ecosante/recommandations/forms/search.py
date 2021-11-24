@@ -17,6 +17,7 @@ class FormSearch(BaseForm):
         "Statut",
         choices=[
             ('published', 'Publiée'),
+            ('hidden', 'Non publiée'),
             ('draft', 'Brouillon'),
             ('', 'Toutes les recommandations')
         ],
