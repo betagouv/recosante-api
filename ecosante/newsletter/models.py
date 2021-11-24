@@ -482,7 +482,6 @@ class NewsletterDB(db.Model, Newsletter):
                 'USER_UID': self.inscription.uid,
                 'DEPARTEMENT': self.inscription.commune.departement.nom or "",
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
-                "OBJECTIF": self.recommandation.objectif,
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),

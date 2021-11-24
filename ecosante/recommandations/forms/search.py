@@ -22,16 +22,6 @@ class FormSearch(BaseForm):
         ],
         default='published'
     )
-    objectif = SelectField(
-        "Objectif",
-        choices = [
-            (None, 'Tous les objectifs'),
-            ("", "(sans)"),
-            ("Améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
-            ("Contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
-            ("Profiter du plein air", "Profiter du plein air")
-        ]
-    )
 
     type = SelectField(
         "Type",

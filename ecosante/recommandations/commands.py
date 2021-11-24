@@ -31,7 +31,6 @@ def import_recommandations():
                 autres_conditions=r['Autres conditions'],
                 sources=r['Sources'],
                 categorie=r['Catégorie'],
-                objectif=r['Objectif']
             ))
             i += 1
     db.session.commit()

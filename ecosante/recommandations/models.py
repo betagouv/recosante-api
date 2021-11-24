@@ -63,7 +63,6 @@ class Recommandation(db.Model):
     autres_conditions: str = db.Column(db.String)
     sources: str = db.Column(db.String)
     categorie: str = db.Column(db.String)
-    objectif: str = db.Column(db.String)
     automne: bool = db.Column(db.Boolean, nullable=True)
     hiver: bool = db.Column(db.Boolean, nullable=True)
     printemps: bool = db.Column(db.Boolean, nullable=True)

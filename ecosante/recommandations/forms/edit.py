@@ -91,20 +91,6 @@ class FormAdd(BaseForm):
     sources = TextAreaField("Sources")
     categorie = TextAreaField("Catégorie")
     ordre = IntegerField("Ordre", description="Si renseigné, une recommandation avec un ordre plus petit sera donnée à l’utilisateur avant celle d’un ordre plus grand. Si pour une journée deux recommandations avec le même ordre sont possibles, l’une ou l’autre sera donnée.")
-    objectif = SelectField(
-        "Objectif",
-        choices=[
-            ("", "(sans)"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour améliorer l’air intérieur de votre logement", "Améliorer l’air intérieur de votre logement"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour contribuer à réduire la pollution de l’air", "Contribuer à réduire la pollution de l’air"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour profiter du plein air", "Profiter du plein air"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour limiter l'effet des pollens sur votre santé", "Limiter l'effet des pollens sur votre santé"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour vos activités physiques", "Vos activités physiques"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour vos déplacements", "Vos déplacements"),
-            ("Aujourd’hui, votre recommandation est un conseil pratique pour limiter les effets de la pollution de l'air sur votre santé", "Limiter les effets de la pollution de l'air sur votre santé"),
-            ("", "Prévenir la présence de radon dans l’air intérieur de votre logement.")
-        ]
-    )
     potentiel_radon = MultiCheckboxField(
         "Potentiel Radon associé",
         choices=[

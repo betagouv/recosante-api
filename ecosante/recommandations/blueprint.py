@@ -115,8 +115,6 @@ def make_query(form):
         else:
             query = query.filter(attr.is_(True))
 
-    if form.objectif.data is not None and form.objectif.data != "None":
-        query = query.filter(Recommandation.objectif==form.objectif.data)
     if form.type.data is not None and form.type.data != "None":
         query = query.filter(Recommandation.type_==form.type.data)
     if form.medias.data is not None and form.medias.data != "None":
