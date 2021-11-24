@@ -42,13 +42,3 @@ class FormSearch(BaseForm):
             ('id', 'Chronologique')
         ]
     )
-
-    medias = SelectMultipleField(
-        "Medias",
-        choices=[
-            ('newsletter_quotidienne', 'Newsletter quotidienne'),
-            ('newsletter_hebdomadaire', 'Newsletter hebdomadaire'),
-            ('widget', 'Widget'),
-            ('dashboard', 'Dashboard')
-        ]
-    )

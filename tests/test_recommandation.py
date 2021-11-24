@@ -7,7 +7,6 @@ from itertools import product
 
 def published_recommandation(**kw):
     kw.setdefault('type_', 'indice_atmo')
-    kw.setdefault('medias', ['newsletter_quotidienne'])
     kw.setdefault('status', 'published')
     return Recommandation(**kw)
 
@@ -269,7 +268,6 @@ def test_get_relevant_last_criteres(db_session, inscription):
 
 def test_min_raep():
     r = published_recommandation(type_="pollens", min_raep=0)
-    r.medias=['dashboard']
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today(), media="dashboard") == True
     assert r.is_relevant(i, "bon", [], 1, date.today(), media="dashboard") == False
@@ -278,7 +276,6 @@ def test_min_raep():
     assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == False
 
     r = published_recommandation(type_="pollens", min_raep=1)
-    r.medias=['dashboard']
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today(), media="dashboard") == False
     assert r.is_relevant(i, "bon", [], 1, date.today(), media="dashboard") == True
@@ -287,18 +284,9 @@ def test_min_raep():
     assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == False
 
     r = published_recommandation(type_="pollens", min_raep=4)
-    r.medias=['dashboard']
     i = Inscription()
     assert r.is_relevant(i, "bon", [], 0, date.today(), media="dashboard") == False
     assert r.is_relevant(i, "bon", [], 1, date.today(), media="dashboard") == False
     assert r.is_relevant(i, "bon", [], 3, date.today(), media="dashboard") == False
     assert r.is_relevant(i, "bon", [], 4, date.today(), media="dashboard") == True
     assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == True
-
-def test_widget():
-    r = published_recommandation(medias=['widget'])
-    assert r.is_relevant(qualif="bon", media='widget', types=['indice_atmo']) == True
-
-def test_dashboard():
-    r = published_recommandation(medias=['dashboard'])
-    assert r.is_relevant(qualif="bon", media='dashboard', types=['indice_atmo']) == True

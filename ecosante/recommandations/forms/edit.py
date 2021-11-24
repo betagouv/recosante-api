@@ -97,15 +97,6 @@ class FormAdd(BaseForm):
         ],
         coerce=coerce_int
     )
-    medias = MultiCheckboxField(
-        "Médias :",
-        choices=[
-            ('newsletter_quotidienne', 'Newsletter quotidienne'),
-            ('newsletter_hebdomadaire', 'Newsletter hebdomadaire'),
-            ('widget', 'Widget'),
-            ('dashboard', 'Dashboard')
-        ]
-    )
 
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)

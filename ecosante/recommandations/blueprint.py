@@ -116,8 +116,6 @@ def make_query(form):
 
     if form.type.data is not None and form.type.data != "None":
         query = query.filter(Recommandation.type_==form.type.data)
-    if form.medias.data is not None and form.medias.data != "None":
-        query = query.filter(Recommandation.medias.contains(form.medias.data))
     if form.order.data == 'random':
         return query.order_by(func.random())
     else:

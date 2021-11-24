@@ -73,7 +73,6 @@ class Recommandation(db.Model):
     min_raep: int = db.Column(db.Integer, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
-    medias: List[str] = db.Column(postgresql.ARRAY(db.String, dimensions=1), default=[])
 
     @property
     def velo(self) -> bool:
@@ -179,7 +178,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'newsletter_quotidienne', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"]):
+    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"]):
         #Inscription
         if inscription:
             if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -218,7 +217,7 @@ class Recommandation(db.Model):
                 return False
             elif self.min_raep == 4 and raep < self.min_raep:
                 return False
-            if "newsletter_quotidienne" in self.medias and media != "dashboard":
+            if media != "dashboard":
                 if 0 < raep < 4: #RAEP Faible
                     if inscription and "raep" in inscription.indicateurs:
                         return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
@@ -246,7 +245,7 @@ class Recommandation(db.Model):
             elif self.automne and season != 4:
                 return False
 
-        return media in self.medias and self.type_ in types
+        return self.type_ in types
 
     def format(self, inscription):
         return self.recommandation_sanitized if inscription.diffusion == 'mail' else self.recommandation_format_SMS
