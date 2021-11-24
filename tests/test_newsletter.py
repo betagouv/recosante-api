@@ -8,7 +8,7 @@ def test_episode_passe(db_session, inscription):
     yesterday = date.today() - timedelta(days=1)
     recommandations = [
         published_recommandation(particules_fines=True, type_="episode_pollution"),
-        published_recommandation(recommandation="ça va en fait", type_="generale")
+        published_recommandation(recommandation="ça va en fait", type_="indice_atmo")
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -27,7 +27,7 @@ def test_episode_passe(db_session, inscription):
     assert nldb.attributes()['RECOMMANDATION'] == '<p>ça va en fait</p>'
     assert nldb.attributes()['DEPARTEMENT'] == 'Mayenne'
 
-def test_formatted_polluants_generale_pm10(db_session, inscription, episode_pm10):
+def test_formatted_polluants_indice_atmo_pm10(db_session, inscription, episode_pm10):
     recommandations = [published_recommandation(), published_recommandation(particules_fines=True, type_='episode_pollution')]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -40,10 +40,10 @@ def test_formatted_polluants_generale_pm10(db_session, inscription, episode_pm10
     assert nl.polluants_formatted == "aux particules fines"
     assert nl.polluants_symbols == ['pm10']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10'
-    assert nl.recommandation_qa.type_ == "generale"
+    assert nl.recommandation_qa.type_ == "indice_atmo"
     assert nl.recommandation_episode.type_ == "episode_pollution"
 
-def test_formatted_polluants_generale_pm10_no2(db_session, inscription, episode_pm10, episode_azote):
+def test_formatted_polluants_indice_atmo_pm10_no2(db_session, inscription, episode_pm10, episode_azote):
     recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -59,7 +59,7 @@ def test_formatted_polluants_generale_pm10_no2(db_session, inscription, episode_
     assert nl.recommandation.particules_fines == True
     assert nl.recommandation_qa.particules_fines == True
 
-def test_formatted_polluants_generale_tous(db_session, inscription, episode_soufre, episode_pm10, episode_ozone, episode_azote):
+def test_formatted_polluants_indice_atmo_tous(db_session, inscription, episode_soufre, episode_pm10, episode_ozone, episode_azote):
     recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -73,7 +73,7 @@ def test_formatted_polluants_generale_tous(db_session, inscription, episode_souf
     assert nl.polluants_symbols == ['so2', 'pm10', 'o3', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=so2&polluants=pm10&polluants=o3&polluants=no2'
 
-def test_formatted_polluants_generale_pm10_o3_no2(db_session, inscription, episode_soufre, episode_pm10, episode_ozone, episode_azote):
+def test_formatted_polluants_indice_atmo_pm10_o3_no2(db_session, inscription, episode_soufre, episode_pm10, episode_ozone, episode_azote):
     recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -90,7 +90,7 @@ def test_formatted_polluants_generale_pm10_o3_no2(db_session, inscription, episo
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=o3&polluants=no2'
 
 
-def test_formatted_polluants_generale_no2(db_session, inscription, episode_azote):
+def test_formatted_polluants_indice_atmo_no2(db_session, inscription, episode_azote):
     recommandations=[
         published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, type_='episode_pollution'),
@@ -172,7 +172,7 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         published_recommandation(particules_fines=True, autres=True, enfants=False, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(particules_fines=True, personnes_sensibles=True, dioxyde_azote=True, type_='episode_pollution'),
         published_recommandation(type_="pollens", min_raep=raep),
-        published_recommandation(type_="generale")
+        published_recommandation()
     ]
     db_session.add_all(recommandations)
     db_session.commit()
@@ -600,7 +600,7 @@ def test_get_recommandation_deja_recue(inscription, db_session):
 
 def test_get_recommandation_par_type(inscription, db_session):
     recommandations = [
-        published_recommandation(type_="generale"),
+        published_recommandation(),
         published_recommandation(type_="raep")
     ]
     db_session.add_all(recommandations)
@@ -610,5 +610,5 @@ def test_get_recommandation_par_type(inscription, db_session):
         episodes={"data": []},
         recommandations=recommandations,
     )
-    eligible_recommandations = list(nl.eligible_recommandations({r.id: r for r in recommandations}, types=["generale"]))
-    assert all([r.type_ == "generale"] for r in eligible_recommandations)
+    eligible_recommandations = list(nl.eligible_recommandations({r.id: r for r in recommandations}, types=["indice_atmo"]))
+    assert all([r.type_ == "indice_atmo"] for r in eligible_recommandations)

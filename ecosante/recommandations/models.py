@@ -182,7 +182,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'newsletter_quotidienne', types: List[str] = ["generale", "episode_pollution", "pollens"]):
+    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'newsletter_quotidienne', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"]):
         #Inscription
         if inscription:
             if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -209,7 +209,7 @@ class Recommandation(db.Model):
             else:
                 if self.polluants:
                     return False
-        if self.type_ == "generale":
+        if self.type_ == "indice_atmo":
             if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
                 if not self.is_relevant_qualif(qualif):
                     return False

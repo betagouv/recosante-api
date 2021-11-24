@@ -27,7 +27,7 @@ class FormSearch(BaseForm):
         "Type",
         choices = [
             (None, 'Tous les types'),
-            ("generale", "Générale"),
+            ("indice_atmo", "Indice ATMO"),
             ("episode_pollution", "Épisode de pollution"),
             ("pollens", "Pollens"),
             ("radon", "Radon")

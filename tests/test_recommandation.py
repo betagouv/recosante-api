@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from itertools import product
 
 def published_recommandation(**kw):
-    kw.setdefault('type_', 'generale')
+    kw.setdefault('type_', 'indice_atmo')
     kw.setdefault('medias', ['newsletter_quotidienne'])
     kw.setdefault('status', 'published')
     return Recommandation(**kw)
@@ -152,7 +152,7 @@ def test_reco_pollen_pollution():
     i = Inscription(allergie_pollens=True)
     assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
-    r = published_recommandation(type_="generale")
+    r = published_recommandation(type_="indice_atmo")
 
     i = Inscription(allergie_pollens=False)
     assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
@@ -314,8 +314,8 @@ def test_personne_allergique(reco_personne_allergique, assert1, assert2, assert3
 
 def test_widget():
     r = published_recommandation(personne_allergique=None, medias=['widget'])
-    assert r.is_relevant(qualif="bon", media='widget', types=['generale']) == True
+    assert r.is_relevant(qualif="bon", media='widget', types=['indice_atmo']) == True
 
 def test_dashboard():
     r = published_recommandation(medias=['dashboard'])
-    assert r.is_relevant(qualif="bon", media='dashboard', types=['generale']) == True
+    assert r.is_relevant(qualif="bon", media='dashboard', types=['indice_atmo']) == True

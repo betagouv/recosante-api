@@ -17,7 +17,7 @@ class FormAdd(BaseForm):
     type_ = RadioField(
         'Type',
         choices=[
-            ("generale", "Indice ATMO"),
+            ("indice_atmo", "Indice ATMO"),
             ("episode_pollution", "Épisode de pollution"),
             ("pollens", "Pollens"),
             ("radon", "Radon")
@@ -113,7 +113,7 @@ class FormAdd(BaseForm):
 
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)
-        if not self.qa.data and not self.polluants.data and self.type_.data == "generale":# and not self.raep.data:
+        if not self.qa.data and not self.polluants.data and self.type_.data == "indice_atmo":# and not self.raep.data:
             rv = False
             self.qa.errors = ["Vous devez remplir soit une qualité de l’air, soit un pic de pollution, sinon la recommandation n’est jamais envoyée"]
         return rv

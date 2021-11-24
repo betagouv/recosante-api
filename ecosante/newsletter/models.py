@@ -80,7 +80,7 @@ class Newsletter:
         if type(self.recommandations) == list:
             self.recommandations = {r.id: r for r in self.recommandations}
         self.recommandation = self.recommandation or self.get_recommandation(self.recommandations)
-        self.recommandation_qa = self.get_recommandation(self.recommandations, types=["generale"], media='newsletter_quotidienne')
+        self.recommandation_qa = self.get_recommandation(self.recommandations, types=["indice_atmo"], media='newsletter_quotidienne')
         self.recommandation_raep = self.get_recommandation(self.recommandations, types=["pollens"], media='newsletter_quotidienne')
         self.recommandation_episode = self.get_recommandation(self.recommandations, types=["episode_pollution"], media='newsletter_quotidienne')
     
@@ -219,7 +219,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def eligible_recommandations(self, recommandations: Dict[int, Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
+    def eligible_recommandations(self, recommandations: Dict[int, Recommandation], types=["indice_atmo", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
         if not recommandations:
             return
             yield # See https://stackoverflow.com/questions/13243766/python-empty-generator-function
@@ -257,7 +257,7 @@ class Newsletter:
                 yield recommandations[r[1]]
 
 
-    def get_recommandation(self, recommandations: List[Recommandation], types=["generale", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
+    def get_recommandation(self, recommandations: List[Recommandation], types=["indice_atmo", "episode_pollution", "pollens"], media="newsletter_quotidienne"):
         try:
             return next(self.eligible_recommandations(recommandations, types, media))
         except StopIteration:
