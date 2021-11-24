@@ -14,7 +14,6 @@ def import_recommandations():
             db.session.add(Recommandation(
                 recommandation=r['Recommandation'],
                 precisions=r['Précisions'],
-                recommandation_format_SMS=r['Recommandation format SMS'],
                 qa_mauvaise=r['QA mauvaise'],
                 menage=r['Ménage'],
                 bricolage=r['Bricolage'],

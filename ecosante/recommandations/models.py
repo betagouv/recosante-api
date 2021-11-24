@@ -43,7 +43,6 @@ class Recommandation(db.Model):
     status: str = db.Column(db.String)
     recommandation: str = db.Column(db.String)
     precisions: str = db.Column(db.String)
-    recommandation_format_SMS: str = db.Column(db.String)
     type_: str = db.Column("type", db.String)
     qa_mauvaise: bool = db.Column(db.Boolean, nullable=True)
     qa_bonne: bool = db.Column(db.Boolean, nullable=True)

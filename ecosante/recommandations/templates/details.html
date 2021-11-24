@@ -13,10 +13,6 @@
         <div>
             {{ recommandation.precisions}}
         </div>
-        <h6 class="article__title">Format SMS</h6>
-        <div>
-            {{ recommandation.recommandation_format_SMS}}
-        </div>
         <a class="button" href="{{ url_for("recommandations.edit", id=recommandation.id) }}">Éditer</a>
     </article>
     {% if newsletters %}

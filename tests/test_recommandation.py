@@ -169,7 +169,7 @@ def test_reco_pollen_pas_pollution_raep_nul(commune):
     i = Inscription(allergie_pollens=True)
     assert not r.is_relevant(i, "bon", [], 0, date.today())
 
-    r = published_recommandation(type_="generale")
+    r = published_recommandation()
 
     i = Inscription(allergie_pollens=False)
     assert r.is_relevant(i, "bon", [], 0, date.today())
