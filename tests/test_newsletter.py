@@ -196,14 +196,11 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
 
     if episode:
         assert nl.show_raep == False
-        assert not nl.recommandation.personne_allergique
     else:
         if not allergie_pollens:
             assert nl.show_raep == False
-            assert not nl.recommandation.personne_allergique
         elif raep == 0:
             assert nl.show_raep == False
-            assert not nl.recommandation.personne_allergique
         elif 0 < raep < 4:
             if allergie_pollens:
                 assert nl.show_raep == True

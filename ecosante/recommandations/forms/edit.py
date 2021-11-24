@@ -49,9 +49,6 @@ class FormAdd(BaseForm):
         choices=[(0, "de 0"), (1, "de 1 à 3"), (4, "4 à 6")],
         coerce=int
     )
-    personne_allergique = OuiNonField(
-        "Montre uniquement aux personnes souhaitant recevoir des recommandations sur les allergies aux pollens :",
-    )
     population = MultiCheckboxField(
         "Montrer aux populations suivantes :",
         choices=[

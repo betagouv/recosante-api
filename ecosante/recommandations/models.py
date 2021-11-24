@@ -72,7 +72,6 @@ class Recommandation(db.Model):
     particules_fines: bool = db.Column(db.Boolean, nullable=True)
     episode_pollution: bool = db.Column(db.Boolean, nullable=True)
     min_raep: int = db.Column(db.Integer, nullable=True)
-    personne_allergique: bool = db.Column(db.Boolean, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
     medias: List[str] = db.Column(postgresql.ARRAY(db.String, dimensions=1), default=[])
@@ -193,8 +192,6 @@ class Recommandation(db.Model):
             if self.autres and inscription.personne_sensible:
                 return False
             if self.enfants and not inscription.has_enfants:
-                return False
-            if self.personne_allergique is not None and self.personne_allergique != ("raep" in inscription.indicateurs):
                 return False
         # Environnement
         if polluants and self.type_ != "episode_pollution" and "episode_pollution" in types:

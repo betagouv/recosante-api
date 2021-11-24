@@ -295,25 +295,8 @@ def test_min_raep():
     assert r.is_relevant(i, "bon", [], 4, date.today(), media="dashboard") == True
     assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == True
 
-@pytest.mark.parametrize(
-    "reco_personne_allergique,assert1,assert2,assert3",
-    [
-        (None, True, True, True),
-        (True, False, True, False),
-        (False, True, False, True),
-    ]
-)
-def test_personne_allergique(reco_personne_allergique, assert1, assert2, assert3):
-    r = published_recommandation(personne_allergique=reco_personne_allergique)
-    i = Inscription(indicateurs=[])
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == assert1
-    i = Inscription(indicateurs=["raep"])
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == assert2
-    i = Inscription(indicateurs=["indice_atmo"])
-    assert r.is_relevant(i, "bon", [], 0, date.today()) == assert3
-
 def test_widget():
-    r = published_recommandation(personne_allergique=None, medias=['widget'])
+    r = published_recommandation(medias=['widget'])
     assert r.is_relevant(qualif="bon", media='widget', types=['indice_atmo']) == True
 
 def test_dashboard():
