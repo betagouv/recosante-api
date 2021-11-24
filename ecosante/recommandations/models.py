@@ -59,7 +59,6 @@ class Recommandation(db.Model):
     enfants: bool = db.Column(db.Boolean)
     personnes_sensibles: bool = db.Column(db.Boolean)
     autres: bool = db.Column(db.Boolean)
-    autres_conditions: str = db.Column(db.String)
     sources: str = db.Column(db.String)
     categorie: str = db.Column(db.String)
     automne: bool = db.Column(db.Boolean, nullable=True)

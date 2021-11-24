@@ -27,7 +27,6 @@ def import_recommandations():
                 allergies=r['Allergies'],
                 enfants=r['Enfants'],
                 personnes_sensibles=r['Personne sensibles'],
-                autres_conditions=r['Autres conditions'],
                 sources=r['Sources'],
                 categorie=r['Catégorie'],
             ))
