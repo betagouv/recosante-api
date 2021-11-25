@@ -10,8 +10,16 @@ from indice_pollution.history.models import PotentielRadon, IndiceATMO, Departem
 from ecosante.recommandations.models import Recommandation
 from flask.wrappers import Response
 from flask import stream_with_context
+from flask_rebar import SwaggerV2Generator
 
-registry = rebar.create_handler_registry(prefix='/v1')
+
+registry = rebar.create_handler_registry(
+    prefix='/v1',
+    swagger_generator=SwaggerV2Generator(
+            title="API recosante.beta.gouv.fr",
+            description='Toutes les données sont diffusées sous la licence <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL v1.0</a>'
+    )
+)
 
 def get_advice(advices, type_, **kwargs):
     kwargs['types'] = [type_]
