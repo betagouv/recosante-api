@@ -137,3 +137,19 @@ def test_make_new_value_webpush_subscriptions_info(inscription):
     assert len(inscription.webpush_subscriptions_info) == 2
     assert any([v.data == old_value[0] for v in inscription.webpush_subscriptions_info])
     assert any([v.data == new_value for v in inscription.webpush_subscriptions_info])
+
+def test_export_query_quotidien(inscription, db_session):
+    inscriptions = Inscription.export_query(type_='quotidien').all()
+    assert len(inscriptions) == 1
+
+def test_export_query_hebdomadaire(inscription, db_session):
+    inscriptions = Inscription.export_query(type_='hebdomadaire').all()
+    assert len(inscriptions) == 1
+
+def test_export_query_hebdomadaire_pas_dinscrit(inscription, db_session):
+    inscription.recommandations_actives = ['non']
+    db_session.add(inscription)
+    db_session.commit()
+
+    inscriptions = Inscription.export_query(type_='hebdomadaire').all()
+    assert len(inscriptions) == 0
