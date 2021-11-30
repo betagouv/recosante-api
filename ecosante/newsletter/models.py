@@ -5,13 +5,8 @@ from datetime import datetime, date, timedelta
 from itertools import chain
 from math import inf
 from flask.helpers import url_for
-from indice_pollution.history.models.commune import Commune
-from indice_pollution.history.models.region import Region
-import requests
 from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import joinedload, selectinload, subqueryload
-from sqlalchemy.sql import or_
 from flask import current_app
 from sqlalchemy.sql.functions import func
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
@@ -23,7 +18,6 @@ from ecosante.utils.funcs import (
 )
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
-from indice_pollution.history.models import Departement
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
