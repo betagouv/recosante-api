@@ -23,13 +23,6 @@ class WebpushSubscriptionInfo(db.Model):
     data = db.Column(postgresql.JSONB)
     inscription_id = db.Column(db.Integer, db.ForeignKey('inscription.id'), index=True)
 
-def last_newsletter_join():
-    from ecosante.newsletter.models import NewsletterDB
-    return and_(
-        Inscription.id == NewsletterDB.inscription_id,
-        NewsletterDB.date >= (date.today() - timedelta(days=30))
-    )
-
 @dataclass
 class Inscription(db.Model):
     ville_insee: str
@@ -76,7 +69,12 @@ class Inscription(db.Model):
     last_month_newsletters = relationship(
         "NewsletterDB",
         order_by='desc(NewsletterDB.date)',
-        primaryjoin=last_newsletter_join,
+        primaryjoin="""and_(
+            Inscription.id == NewsletterDB.inscription_id,
+            NewsletterDB.date >= text("current_date - integer '30'")
+        )""",
+        viewonly=True
+    )
         viewonly=True
     )
 
