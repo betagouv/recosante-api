@@ -75,22 +75,30 @@ def send(campaign_id, test=False):
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
 
-def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
-    mail_list_id_set = mail_list_id is not None
+def create_mail_list(now, test):
+    lists_api = sib_api_v3_sdk.ListsApi(sib)
+    r = lists_api.create_list(
+        sib_api_v3_sdk.CreateList(
+            name=f'{now} - mail',
+            folder_id=int(os.getenv('SIB_FOLDERID', 5)) if not test else int(os.getenv('SIB_FOLDERID', 1653))
+        )
+    )
+    return r.id
+
+def get_mail_list_id(newsletter, template_id_mail_list_id, now, test):
+    return template_id_mail_list_id.setdefault(
+        newsletter.newsletter_hebdo_template.sib_id if newsletter.newsletter_hebdo_template else None,
+        create_mail_list(now, test)
+    )
+
+def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None):
     errors = []
     
     now = datetime.now()
     nb_requests = 0
-    if mail_list_id == None:
-        lists_api = sib_api_v3_sdk.ListsApi(sib)
-        r = lists_api.create_list(
-            sib_api_v3_sdk.CreateList(
-                name=f'{now} - mail',
-                folder_id=int(os.getenv('SIB_FOLDERID', 5)) if not test else int(os.getenv('SIB_FOLDERID', 1653))
-            )
-        )
-        mail_list_id = r.id
-        nb_requests += 1
+    template_id_mail_list_id = dict()
+    if mail_list_id:
+        template_id_mail_list_id[None] = mail_list_id
     if task:
         task.update_state(
             state='STARTED',
@@ -100,9 +108,9 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
         )
 
     to_add = []
-    for nl in Newsletter.export():
-        nldb = NewsletterDB(nl, mail_list_id)
-        if nldb.label is None and not force_send:
+    for nl in (newsletters or Newsletter.export(type_=type_)):
+        nldb = NewsletterDB(nl, get_mail_list_id(nl, template_id_mail_list_id, now, test))
+        if type_ == 'quotidien' and nldb.label is None and not force_send:
             errors.append({
                 "type": "no_air_quality",
                 "nl_id": nldb.id,
@@ -111,7 +119,7 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
                 "insee": nldb.inscription.commune.insee
             })
             current_app.logger.error(f"No qai for {nldb.inscription.mail}")
-        elif not nldb.something_to_show and force_send:
+        elif type_ == 'quotidien' and not nldb.something_to_show and force_send:
             errors.append({
                 "type": "nothing_to_show",
                 "nl_id": nldb.id,
@@ -120,6 +128,13 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
                 "insee": nldb.inscription.commune.insee
             })
             current_app.logger.error(f"Nothing to show for {nldb.inscription.mail}")
+        elif type_ == 'hebdomadaire' and nldb.newsletter_hebdo_template == None:
+            errors.append({
+                "type": "no_template_weekly_nl",
+                "inscription_id": nldb.inscription.id,
+                "mail": nldb.inscription.mail
+            })
+            current_app.logger.error(f"Pas de template pour nl hebdo pour : {nldb.inscription.mail}")
         else:
             if current_app.config['ENV'] == 'production':
                 to_add.append(nldb)
@@ -131,35 +146,9 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
     if current_app.config['ENV'] == 'production' or test:
         db.session.add_all(to_add)
         db.session.commit()
-        contact_api = sib_api_v3_sdk.ContactsApi(sib)
-        request_contact_import = sib_api_v3_sdk.RequestContactImport()
-        request_contact_import.list_ids = [mail_list_id]
-        request_contact_import.email_blacklist = False
-        request_contact_import.sms_blacklist = False
-        request_contact_import.update_existing_contacts = True
-        request_contact_import.empty_contacts_attributes = True
-        request_contact_import.file_url = url_for(
-            'newsletter.export',
-            secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
-            mail_list_id=mail_list_id,
-            _external=True,
-            _scheme='https'
-        )
-        request_contact_import.notify_url = url_for(
-            'newsletter.send_campaign',
-            secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
-            now=now,
-            mail_list_id=mail_list_id,
-            _external=True,
-            _scheme='https'
-        )
-        current_app.logger.debug("About to send newsletter with params")
-        current_app.logger.debug(request_contact_import)
-        try:
-            contact_api.import_contacts(request_contact_import)
-            current_app.logger.debug("Newsletter sent")
-        except ApiException as e:
-            current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
+
+    import_contacts_in_sb(template_id_mail_list_id, now, type_, test)
+
     return {
         "state": "STARTED",
         "progress": 100,
@@ -168,10 +157,54 @@ def import_(task, force_send=False, overhead=0, test=False, mail_list_id=None):
     }
 
 
-
-def create_campaign(now, mail_list_id, test=False):
+def import_contacts_in_sb(template_id_mail_list_id, now, type_, test):
     if current_app.config['ENV'] == 'production' or test:
-        template_id = int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 526))
+        contact_api = sib_api_v3_sdk.ContactsApi(sib)
+        for template_id, mail_list_id in template_id_mail_list_id.items():
+            request_contact_import = sib_api_v3_sdk.RequestContactImport()
+            request_contact_import.list_ids = [mail_list_id]
+            request_contact_import.email_blacklist = False
+            request_contact_import.sms_blacklist = False
+            request_contact_import.update_existing_contacts = True
+            request_contact_import.empty_contacts_attributes = True
+            request_contact_import.file_url = url_for(
+                'newsletter.export',
+                secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
+                mail_list_id=mail_list_id,
+                _external=True,
+                _scheme='https'
+            )
+            request_contact_import.notify_url = url_for(
+                'newsletter.send_campaign',
+                secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
+                now=now,
+                mail_list_id=mail_list_id,
+                template_id=template_id,
+                type_=type_,
+                _external=True,
+                _scheme='https'
+            )
+            current_app.logger.debug("About to send newsletter with params")
+            current_app.logger.debug(request_contact_import)
+            try:
+                contact_api.import_contacts(request_contact_import)
+                current_app.logger.debug("Newsletter sent")
+            except ApiException as e:
+                current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
+
+
+
+def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test=False):
+    def get_tag(test, type_):
+        if test:
+            return "test_newsletter"
+        if type_ == 'hebdomadaire':
+            return "newsletter_hebdo"
+        else:
+            return "newsletter"
+
+    if current_app.config['ENV'] == 'production' or test:
+        template_id = template_id or int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 526))
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         template = transactional_api.get_smtp_template(int(template_id))
@@ -188,8 +221,8 @@ def create_campaign(now, mail_list_id, test=False):
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
                     list_ids=[mail_list_id]
                 ),
-                header="Aujourd'hui, la qualité de l'air autour de chez vous est…",
-                tag='newsletter' if not test else 'test_newsletter'
+                header="Aujourd’hui, la qualité de l’air autour de chez vous est…" if type_ == 'quotidien' else "",
+                tag=get_tag(test, type_)
             )
         )
         email_campaign_id = r.id
@@ -221,6 +254,7 @@ def format_errors(errors):
         r += f'La région {region} a eu {i} erreurs\n'
     r += '\n'
     r += r2
+
     return r
 
 @celery.task(bind=True)
@@ -234,7 +268,7 @@ def import_send_and_report(self, type_='quotidien', force_send=False, report=Fal
             "details": f"Lancement de la tache: '{new_task_id}'",
         }
     )
-    result = import_and_send(self, str(uuid4()), None, [], only_to, force_send)
+    result = import_and_send(self, type_=type_, force_send=force_send)
     if report:
         errors = format_errors(result['errors'])
         body = """

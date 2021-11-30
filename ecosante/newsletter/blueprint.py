@@ -97,7 +97,9 @@ def export_avis():
 def send_campaign(secret_slug):
     now = request.args.get('now')
     mail_list_id = request.args.get('mail_list_id', type=int)
-    campaign_id = create_campaign(now, mail_list_id)
+    template_id = request.args.get('template_id', type=int)
+    type_ = request.args.get('type_')
+    campaign_id = create_campaign(now, mail_list_id=mail_list_id, template_id=template_id, type_=type_)
     send(campaign_id)
     return "ok"
 
@@ -167,7 +169,7 @@ def test():
             }
         )
         if media == "mail":
-            import_(None, [NewsletterDB(nl)], force_send=True, test=True)
+            import_(None, newsletters=[NewsletterDB(nl)], force_send=True, test=True)
             nb_mails += 1
         elif media == "notifications_web":
             for wp in inscription.webpush_subscriptions_info:
