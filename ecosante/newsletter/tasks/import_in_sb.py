@@ -213,9 +213,13 @@ def format_errors(errors):
     regions = dict()
     errors_types = {
         "no_air_quality": "Pas de qualité de l’air",
-        "nothing_to_show": "Aucune donnée à montrer"
+        "nothing_to_show": "Aucune donnée à montrer",
+        "no_template_weekly_nl": "Pas de template pour la newsletter hebdomadaire"
     }
     for error in errors:
+        if error['type'] == 'no_template_weekly_nl':
+            r += f"Pas de template de newsletter hebdomadaire pour {error['mail']} (Inscription[{error['inscription_id']})"
+            continue
         r += f"{errors_types.get(error['type'], error['type'])} pour la ville de {error['ville']} ({error['insee']}) région: '{error['region']}'\n"
         r2 += f"{error['ville']}, {error['insee']}, {error['region']}\n"
         regions.setdefault(error['region'], 0)
