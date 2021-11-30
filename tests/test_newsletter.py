@@ -533,14 +533,48 @@ def test_export_simple(db_session, inscription):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
 
-def test_export_user_hebdo(db_session, inscription):
-    inscription.indicateurs_frequence = ["hebdomadaire"]
+def test_export_user_hebdo(db_session, inscription, templates):
+    inscription.recommandations_actives = ["oui"]
     db_session.add(inscription)
-    db_session.add(published_recommandation())
     db_session.commit()
 
-    newsletters = list(Newsletter.export())
+    newsletters = list(Newsletter.export(type_='hebdomadaire'))
+    assert len(newsletters) == 1
+    nl = newsletters[0]
+    assert nl.newsletter_hebdo_template is not None
+    assert nl.newsletter_hebdo_template.ordre == 1
+
+    db_session.add(NewsletterDB(nl))
+    db_session.commit()
+
+    newsletters = list(Newsletter.export(type_='hebdomadaire'))
     assert len(newsletters) == 0
+
+
+def test_export_user_hebdo_ordre(db_session, inscription, templates):
+    yesterday = date.today() - timedelta(days=1)
+    nl1 = Newsletter(
+        inscription=inscription,
+        date=yesterday,
+        newsletter_hebdo_template=templates[1]
+    )
+    db_session.add(NewsletterDB(nl1))
+    db_session.commit()
+
+    newsletters = list(Newsletter.export(type_='hebdomadaire'))
+    nl2 = newsletters[0]
+    assert nl2.newsletter_hebdo_template.ordre > nl1.newsletter_hebdo_template.ordre
+
+
+def test_export_user_hebdo_quotidien(inscription, templates):
+    newsletters_hebdo = list(Newsletter.export(type_='hebdomadaire'))
+    assert len(newsletters_hebdo) == 1
+    assert newsletters_hebdo[0].newsletter_hebdo_template is not None
+
+    newsletters_quotidien = list(Newsletter.export(type_='quotidien'))
+    assert len(newsletters_quotidien) == 1
+    assert newsletters_quotidien[0].newsletter_hebdo_template is None
+
 
 @pytest.mark.parametrize(
     "inscription, episode, raep, nb_nls",

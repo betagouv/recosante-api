@@ -44,6 +44,8 @@ class NewsletterHebdoTemplate(db.Model):
         if dernier_ordre >= max([t.ordre for t in templates]):
             return None
         return [t for t in templates if t.ordre > dernier_ordre][0]
+
+
 @dataclass
 class Newsletter:
     webpush_subscription_info_id: int = None
@@ -179,28 +181,38 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien'):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         indices, all_episodes, allergenes = get_all(date_)
-        for inscription in Inscription.export_query(only_to, filter_already_sent, media).yield_per(100):
-            indice = indices.get(inscription.commune_id)
-            episodes = all_episodes.get(inscription.commune.zone_pollution_id)
-            if inscription.commune.departement:
-                raep = allergenes.get(inscription.commune.departement.zone_id, {})
-            else:
-                raep = None
-            raep_dict = raep.to_dict() if raep else {}
-            init_dict = {
-                "inscription": inscription,
-                "recommandations": recommandations,
-                "forecast": {"data": [indice.dict()]} if indice else None,
-                "episodes": [e.dict() for e in episodes] if episodes else [],
-                "raep": raep_dict.get("total"),
-                "allergenes": raep_dict.get("allergenes"),
-                "validite_raep": raep_dict.get("periode_validite", {}),
-            }
-            if date_:
-                init_dict['date'] = date_
+        templates = NewsletterHebdoTemplate.get_templates()
+        for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_).yield_per(100):
+            if type_ == 'quotidien':
+                indice = indices.get(inscription.commune_id)
+                episodes = all_episodes.get(inscription.commune.zone_pollution_id)
+                if inscription.commune.departement:
+                    raep = allergenes.get(inscription.commune.departement.zone_id, {})
+                else:
+                    raep = None
+                raep_dict = raep.to_dict() if raep else {}
+                init_dict = {
+                    "inscription": inscription,
+                    "recommandations": recommandations,
+                    "forecast": {"data": [indice.dict()]} if indice else None,
+                    "episodes": [e.dict() for e in episodes] if episodes else [],
+                    "raep": raep_dict.get("total"),
+                    "allergenes": raep_dict.get("allergenes"),
+                    "validite_raep": raep_dict.get("periode_validite", {}),
+                }
+                if date_:
+                    init_dict['date'] = date_
+            elif type_ == 'hebdomadaire':
+                next_template = NewsletterHebdoTemplate.next_template(inscription, templates)
+                if not next_template:
+                    continue
+                init_dict = {
+                    'newsletter_hebdo_template': next_template,
+                    'inscription': inscription
+                }
             if media == 'notifications_web' and 'notifications_web' in inscription.indicateurs_media:
                 for wp in WebpushSubscriptionInfo.query.filter_by(inscription_id=inscription.id):
                     init_dict['webpush_subscription_info_id'] = wp.id
