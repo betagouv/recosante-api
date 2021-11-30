@@ -412,7 +412,7 @@ class Inscription(db.Model):
         return isinstance(self.indicateurs, list) and indicateur in self.indicateurs
 
     @classmethod
-    def export_query(cls, only_to=None, filter_already_sent=True, media='mail'):
+    def export_query(cls, only_to=None, filter_already_sent=True, media='mail', type_='quotidien'):
         from ecosante.newsletter.models import NewsletterDB
         query = Inscription.active_query()
         if only_to:
@@ -421,12 +421,18 @@ class Inscription(db.Model):
             query_nl = NewsletterDB.query\
                 .filter(
                     NewsletterDB.date==date.today(),
-                    NewsletterDB.label != None,
-                    NewsletterDB.label != "",
                     NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
                 .with_entities(
                     NewsletterDB.inscription_id
             )
+            if type_ == 'quotidien':
+                query_nl = query_nl.filter(
+                    NewsletterDB.label != None,
+                    NewsletterDB.label != "",
+                    NewsletterDB.newsletter_hebdo_template_id == None
+                )
+            elif type_ == 'hebdomadaire':
+                query_nl = query_nl.filter(NewsletterDB.newsletter_hebdo_template_id != None)
             query = query.filter(Inscription.id.notin_(query_nl))
         query = query\
             .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
