@@ -12,7 +12,7 @@ import concurrent.futures as cf
 import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
-from ecosante.newsletter.models import NewsletterDB
+from ecosante.newsletter.models import NewsletterDB, NewsletterHebdoTemplate
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
@@ -198,3 +198,15 @@ def raep_faible(db_session, commune_commited):
     raep = make_raep(commune_commited, 1)
     db_session.add(raep)
     return raep
+
+@pytest.fixture(scope='function')
+def templates(db_session):
+    templates = [
+        NewsletterHebdoTemplate(ordre=10, sib_id=10),
+        NewsletterHebdoTemplate(ordre=7, sib_id=7),
+	    NewsletterHebdoTemplate(ordre=9, sib_id=9),
+	    NewsletterHebdoTemplate(ordre=5, sib_id=5),
+	    NewsletterHebdoTemplate(ordre=1, sib_id=1)
+    ]
+    db_session.add_all(templates)
+    return templates

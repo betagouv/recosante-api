@@ -27,6 +27,29 @@ from indice_pollution.history.models import Departement
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
+
+@dataclass
+class NewsletterHebdoTemplate(db.Model):
+    id: int = db.Column(db.Integer, primary_key=True)
+    sib_id: int = db.Column(db.Integer, nullable=False)
+    ordre: int = db.Column(db.Integer, nullable=False)
+
+    @classmethod
+    def get_templates(cls):
+        return cls.query.order_by(cls.ordre).all()
+
+    @classmethod
+    def next_template(cls, inscription: Inscription, templates=None):
+        templates = templates or cls.get_templates()
+
+        if len(templates) == 0:
+            return None
+        if len(inscription.last_newsletters_hebdo) == 0:
+            return templates[0]
+        dernier_ordre =  inscription.last_newsletters_hebdo[-1].newsletter_hebdo_template.ordre
+        if dernier_ordre >= max([t.ordre for t in templates]):
+            return None
+        return [t for t in templates if t.ordre > dernier_ordre][0]
 @dataclass
 class Newsletter:
     webpush_subscription_info_id: int = None
@@ -44,6 +67,7 @@ class Newsletter:
     radon: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
+    newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
 
     def __post_init__(self):
         if not 'label' in self.today_forecast:
@@ -421,6 +445,8 @@ class NewsletterDB(db.Model, Newsletter):
     webpush_subscription_info_id: int = db.Column(db.Integer, db.ForeignKey('webpush_subscription_info.id'), index=True)
     webpush_subscription_info: WebpushSubscriptionInfo = db.relationship(WebpushSubscriptionInfo)
     mail_list_id: int = db.Column(db.Integer)
+    newsletter_hebdo_template_id: int = db.Column(db.Integer(), db.ForeignKey('newsletter_hebdo_template.id'))
+    newsletter_hebdo_template: NewsletterHebdoTemplate = db.relationship(NewsletterHebdoTemplate)
 
     def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
@@ -450,6 +476,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
         self.webpush_subscription_info = newsletter.webpush_subscription_info
         self.mail_list_id = mail_list_id
+        self.newsletter_hebdo_template = newsletter.newsletter_hebdo_template
+        self.newsletter_hebdo_template_id = newsletter.newsletter_hebdo_template.id if newsletter.newsletter_hebdo_template else None
 
     def attributes(self):
         noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
