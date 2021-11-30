@@ -228,8 +228,8 @@ def format_errors(errors):
     return r
 
 @celery.task(bind=True)
-def import_send_and_report(self, only_to=None, force_send=False, report=False):
-    current_app.logger.error("Début !")
+def import_send_and_report(self, type_='quotidien', force_send=False, report=False):
+    current_app.logger.info("Début !")
     new_task_id = str(uuid4())
     self.update_state(
         state='STARTED',
