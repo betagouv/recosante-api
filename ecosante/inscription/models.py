@@ -75,6 +75,14 @@ class Inscription(db.Model):
         )""",
         viewonly=True
     )
+
+    last_newsletters_hebdo = relationship(
+        "NewsletterDB",
+        order_by='desc(NewsletterDB.date)',
+        primaryjoin="""and_(
+            Inscription.id == NewsletterDB.inscription_id,
+            NewsletterDB.newsletter_hebdo_template_id != None
+        )""",
         viewonly=True
     )
 
@@ -426,11 +434,22 @@ class Inscription(db.Model):
             .filter(Inscription.date_inscription < str(date.today()))\
             .filter(Inscription.indicateurs_media.contains([media]))
 
-        return query.options(
-            selectinload(
-                Inscription.last_month_newsletters,
+        if type_ == 'hebdomadaire':
+            query = query.filter(
+                Inscription.recommandations_actives.contains(['oui'])
+            ).options(
+                selectinload(
+                    Inscription.last_newsletters_hebdo
+                )
             )
-        ).options(
+        elif type_ == 'quotidien':
+	        query = query.options(
+                selectinload(
+                    Inscription.last_month_newsletters
+                )
+            )
+
+        return query.options(
             joinedload(
                 Inscription.commune
             ).joinedload(
