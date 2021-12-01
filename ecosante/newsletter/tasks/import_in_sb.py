@@ -86,10 +86,10 @@ def create_mail_list(now, test):
     return r.id
 
 def get_mail_list_id(newsletter, template_id_mail_list_id, now, test):
-    return template_id_mail_list_id.setdefault(
-        newsletter.newsletter_hebdo_template.sib_id if newsletter.newsletter_hebdo_template else None,
-        create_mail_list(now, test)
-    )
+    template_sib_id = newsletter.newsletter_hebdo_template.sib_id if newsletter.newsletter_hebdo_template else None
+    if not template_sib_id in template_id_mail_list_id:
+        template_id_mail_list_id[template_sib_id] = create_mail_list(now, test)
+    return template_id_mail_list_id[template_sib_id]
 
 def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None):
     errors = []
