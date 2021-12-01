@@ -43,11 +43,12 @@ def index():
     advices = Recommandation.published_query().all()
     insee = rebar.validated_args.get('insee')
     date_ = rebar.validated_args.get('date')
+    show_raep = rebar.validated_args.get('show_raep')
 
     commune = Commune.get(insee)
 
     indice_atmo  = forecast(insee, date_=date_, use_make_resp=False)
-    indice_raep = raep(insee, date_=date_)
+    indice_raep = raep(insee, date_=date_) if show_raep else None
     potentiel_radon = PotentielRadon.get(insee)
     episodes = get_episodes(insee, date_=date_, use_make_resp=False)
 
@@ -56,19 +57,11 @@ def index():
     advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
     advice_episode = get_advice(advices, "episode_pollution", polluants=[e.lib_pol_normalized for e in EpisodePollution.filter_etat_haut(episodes)])
 
-    return {
+    resp =  {
         "commune": commune,
         "indice_atmo": {
             "indice": indice_atmo,
             "advice": advice_atmo
-        },
-        "raep": {
-            "indice": indice_raep,
-            "advice": advice_raep,
-            "sources": [{
-                "label": "Le Réseau national de surveillance aérobiologique (RNSA)",
-                "url": "https://www.pollens.fr/"
-            }]
         },
         "potentiel_radon": {
             "indice": potentiel_radon,
@@ -86,6 +79,16 @@ def index():
             "advice": advice_episode
         }
     }
+    if show_raep:
+        resp['raep'] = {
+            "indice": indice_raep,
+            "advice": advice_raep,
+            "sources": [{
+                "label": "Le Réseau national de surveillance aérobiologique (RNSA)",
+                "url": "https://www.pollens.fr/"
+            }]
+        }
+    return resp
 
 
 @registry.handles(
