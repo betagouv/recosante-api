@@ -99,6 +99,32 @@ class FormAdd(BaseForm):
         coerce=coerce_int
     )
 
+    vigilance_couleur_id = MultiCheckboxField(
+        "Niveau de vigilance",
+        choices=[
+            (1, "Verte"),
+            (2, "Jaune"),
+            (3, "Orange"),
+            (4, "Rouge")
+        ],
+        coerce=coerce_int
+    )
+
+    vigilance_phenomene_id = MultiCheckboxField(
+        "Phénomène",
+        choices=[
+            (1, "Vent"),
+            (2, "Pluie-Inondantion"),
+            (3, "Orages"),
+            (4, "Inondations"),
+            (5, "Neige"),
+            (6, "Canicule"),
+            (7, "Grand Froid"),
+            (8, "Avalanches"),
+            (9, "Vagues-Submersion")
+        ]
+    )
+
     def validate(self, extra_validators=[]):
         rv = super().validate(extra_validators=extra_validators)
         if not self.qa.data and not self.polluants.data and self.type_.data == "indice_atmo":# and not self.raep.data:

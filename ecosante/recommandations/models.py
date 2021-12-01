@@ -73,6 +73,8 @@ class Recommandation(db.Model):
     min_raep: int = db.Column(db.Integer, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
+    vigilance_couleur_id: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
+    vigilance_phenomene_id: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
 
     @property
     def velo(self) -> bool:

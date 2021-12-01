@@ -70,6 +70,15 @@
                 <button class="button-outline primary raz">RàZ du panel</button>
             </div>
         </div>
+        <div class="panel" id="vigilance_meteo">
+            <h4 class="subtitle">Précisions pour la vigilance météo</h4>
+            {{ render_field(form.vigilance_couleur_id) }}
+            {{ render_field(form.vigilance_phenomene_id) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+                <button class="button-outline primary raz">RàZ du panel</button>
+            </div>
+        </div>
         <div class="panel" id="inscription">
             <h4 class="subtitle">Inscription</h4>
             {{ render_field(form.population) }}
