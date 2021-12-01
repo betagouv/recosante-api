@@ -15,3 +15,4 @@ class ResponseSchema(Schema):
 class QuerySchema(Schema):
     insee = fields.String()
     date = fields.Date()
+    show_raep = fields.Boolean()
