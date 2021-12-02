@@ -516,7 +516,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
-                'DEPARTEMENT': self.inscription.commune.departement.nom or "",
+                'DEPARTEMENT': self.inscription.commune.departement_nom,
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
