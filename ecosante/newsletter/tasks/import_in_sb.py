@@ -221,7 +221,7 @@ def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test
                 recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
                     list_ids=[mail_list_id]
                 ),
-                header="Aujourd’hui, la qualité de l’air autour de chez vous est…" if type_ == 'quotidien' else "",
+                header="Aujourd’hui, la qualité de l’air autour de chez vous est…" if type_ == 'quotidien' else "Découvrez les bons gestes de Recosanté",
                 tag=get_tag(test, type_)
             )
         )
