@@ -218,16 +218,18 @@ class Newsletter:
                     init_dict['webpush_subscription_info_id'] = wp.id
                     init_dict['webpush_subscription_info'] = wp
                     newsletter = cls(**init_dict)
-                    if not newsletter.filtre_alerte():
+                    if not newsletter.filtre_alerte(type_):
                         yield newsletter
             else:
                 newsletter = cls(**init_dict)
-                if not newsletter.filtre_alerte():
+                if not newsletter.filtre_alerte(type_):
                     yield newsletter
 
     # Renvoie vrai si l’utilisateur est inscrit à la réception en cas d’alerte
     # et qu’il n’y a pas d’alerte en cours
-    def filtre_alerte(self):
+    def filtre_alerte(self, type_):
+        if type_ == 'hebdomadaire':
+            return False
         if self.inscription.indicateurs_frequence and "alerte" in self.inscription.indicateurs_frequence:
             return (self.polluants == None or len(self.polluants) == 0) and (self.raep == None or self.raep < 4)
         return False

@@ -578,6 +578,14 @@ def test_export_user_hebdo_quotidien(inscription, templates):
     assert len(newsletters_quotidien) == 1
     assert newsletters_quotidien[0].newsletter_hebdo_template is None
 
+def test_export_user_hebdo_alerte(db_session, inscription, templates):
+    inscription.indicateurs_frequence = ['alerte']
+    db_session.add(inscription)
+
+    newsletters_hebdo = list(Newsletter.export(type_='hebdomadaire'))
+    assert len(newsletters_hebdo) == 1
+    assert newsletters_hebdo[0].newsletter_hebdo_template is not None
+
 
 @pytest.mark.parametrize(
     "inscription, episode, raep, nb_nls",
