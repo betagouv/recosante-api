@@ -1,7 +1,7 @@
 from flask.globals import current_app
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
-from ecosante.newsletter.models import NewsletterDB
+from ecosante.newsletter.models import NewsletterDB, NewsletterHebdoTemplate
 from ecosante.extensions import db, celery
 from faker import Faker
 import os
@@ -96,7 +96,7 @@ def import_indices_generic(last_week, prod_session, model, date_col, staging_ins
             if zones and cloned_data['zone_id'] in zones:
                 cloned_data['zone_id'] = zones[cloned_data['zone_id']]
             indices.append(cloned_data)
-            if len(indices) == 10000:
+            if len(indices) == 1000:
                 query = insert(
                         model.__table__,
                         indices
@@ -133,6 +133,16 @@ def import_indices(prod_session):
     staging_inscriptions = set([i.id for i in Inscription.query.all()])
     import_indices_generic(last_week, prod_session, NewsletterDB, NewsletterDB.date, staging_inscriptions=staging_inscriptions)
 
+def import_newsletter_hebdo_template(prod_session):
+    staging_nlts = {w.id: w for w in NewsletterHebdoTemplate.query.all()}
+    for nlt in prod_session.query(NewsletterHebdoTemplate).all():
+        if nlt.id in staging_nlts:
+            continue
+        new_nlt = clone_model(nlt)
+        db.session.add(new_nlt)
+    db.session.commit()
+
+
 @celery.task
 def import_from_production():
     prod_url = os.getenv('SQLALCHEMY_PROD_DATABASE_URI')
@@ -155,4 +165,5 @@ def import_from_production():
         return
     import_webpush_subcriptions(prod_session)
     import_recommandations(prod_session)
+    import_newsletter_hebdo_template(prod_session)
     import_indices(prod_session)
