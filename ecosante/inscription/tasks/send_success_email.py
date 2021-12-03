@@ -7,9 +7,15 @@ from sib_api_v3_sdk.rest import ApiException
 from time import sleep
 import json
 
+
 @celery.task()
 def send_success_email(inscription_id, new_version=False):
     inscription = Inscription.query.get(inscription_id)
+    if not inscription:
+        current_app.logger.error(
+            f"Unable to send success email to inscription[{inscription_id}] there's no such id"
+        )
+        return
     if not new_version:
         success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108))
     else:
@@ -18,6 +24,9 @@ def send_success_email(inscription_id, new_version=False):
         else:
             success_template_id = int(os.getenv('SIB_SUCCESS_INDICATEURS_TEMPLATE_ID', 1452))
     if not success_template_id:
+        current_app.logger.error(
+            f"Unable to find template id to send a success email to {inscription.mail}"
+        )
         return
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
