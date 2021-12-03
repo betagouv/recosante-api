@@ -4,6 +4,7 @@ from .indice_atmo import IndiceATMO
 from .indice_raep import IndiceRAEP
 from .potentiel_radon import FullPotentielRadonSchema
 from .episode_pollution import EpisodePollutionSchema
+from .vigilance_meteo import VigilanceMeteoSchema
 
 class ResponseSchema(Schema):
     commune = fields.Nested(CommuneSchema)
@@ -11,6 +12,7 @@ class ResponseSchema(Schema):
     raep = fields.Nested(IndiceRAEP)
     potentiel_radon = fields.Nested(FullPotentielRadonSchema)
     episodes_pollution = fields.Nested(EpisodePollutionSchema)
+    vigilance_meteo = fields.Nested(VigilanceMeteoSchema)
 
 class QuerySchema(Schema):
     insee = fields.String()
