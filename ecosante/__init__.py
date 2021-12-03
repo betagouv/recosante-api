@@ -1,6 +1,5 @@
 from flask import Flask, g
 import os
-from celery import Celery
 from .extensions import db, migrate, assets_env, celery, sib, cors, rebar
 from indice_pollution import init_app
 from werkzeug.urls import url_encode
@@ -37,13 +36,13 @@ def configure_celery(flask_app):
     celery.conf.task_default_exchange_type = 'topic'
     celery.conf.task_default_routing_key = 'task.default'
 
-
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with flask_app.app_context():
                 return self.run(*args, **kwargs)
 
     celery.Task = ContextTask
+    celery.log.level = logging.INFO
 
 
 def create_app(testing=False):
@@ -63,6 +62,7 @@ def create_app(testing=False):
     app.config['SERVER_NAME'] = os.getenv("SERVER_NAME")
     app.config['APPLICATION_SERVER_KEY'] = os.getenv('APPLICATION_SERVER_KEY')
     app.config['VAPID_PRIVATE_KEY'] = os.getenv('VAPID_PRIVATE_KEY')
+    app.logger.setLevel(logging.INFO)
 
     init_app(app)
     db.init_app(app)
