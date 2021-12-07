@@ -534,6 +534,7 @@ def test_export_simple(db_session, inscription):
     assert len(newsletters) == 1
 
 def test_export_user_hebdo(db_session, inscription, templates):
+    inscription.recommandations_actives = ["non"]
     newsletters = list(Newsletter.export(type_='hebdomadaire'))
     assert len(newsletters) == 0
 
