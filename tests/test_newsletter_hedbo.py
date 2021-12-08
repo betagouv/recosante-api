@@ -23,3 +23,10 @@ def test_next_template_last(db_session, inscription, templates):
     db_session.add(NewsletterDB(nl))
 
     assert NewsletterHebdoTemplate.next_template(inscription) == None
+
+def test_hebdo_notification_web(db_session, inscription, templates):
+    inscription.indicateurs_media = ['notification_web']
+    db_session.add(inscription)
+    db_session.commit()
+
+    assert len(list(Newsletter.export(type_='hebdomadaire'))) == 1

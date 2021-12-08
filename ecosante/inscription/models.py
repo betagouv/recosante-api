@@ -437,8 +437,7 @@ class Inscription(db.Model):
         query = query\
             .filter(or_(Inscription.indicateurs_frequence == None, ~Inscription.indicateurs_frequence.contains(["hebdomadaire"])))\
             .filter(Inscription.commune_id != None)\
-            .filter(Inscription.date_inscription < str(date.today()))\
-            .filter(Inscription.indicateurs_media.contains([media]))
+            .filter(Inscription.date_inscription < str(date.today()))
 
         if type_ == 'hebdomadaire':
             query = query.filter(
@@ -449,7 +448,9 @@ class Inscription(db.Model):
                 )
             )
         elif type_ == 'quotidien':
-	        query = query.options(
+	        query = query\
+                .filter(Inscription.indicateurs_media.contains([media]))\
+                .options(
                 selectinload(
                     Inscription.last_month_newsletters
                 )
