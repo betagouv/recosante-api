@@ -59,13 +59,17 @@ class Newsletter:
     inscription: Inscription = field(default=None, init=True)
     forecast: dict = field(default_factory=dict, init=True)
     episodes: List[dict] = field(default=None, init=True)
+    polluants: List[str] = field(default=None, init=True)
     raep: int = field(default=0, init=True)
     radon: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
+    type_: str = field(default="quotidien", init=True)
 
     def __post_init__(self):
+        if self.type_ != "quotidien":
+            return
         if not 'label' in self.today_forecast:
             current_app.logger.error(f'No label for forecast for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
         if not 'couleur' in self.today_forecast:
@@ -186,6 +190,7 @@ class Newsletter:
         indices, all_episodes, allergenes = get_all(date_)
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_).yield_per(100):
+            init_dict = {"type_": type_}
             if type_ == 'quotidien':
                 indice = indices.get(inscription.commune_id)
                 episodes = all_episodes.get(inscription.commune.zone_pollution_id)
@@ -194,7 +199,7 @@ class Newsletter:
                 else:
                     raep = None
                 raep_dict = raep.to_dict() if raep else {}
-                init_dict = {
+                init_dict.update({
                     "inscription": inscription,
                     "recommandations": recommandations,
                     "forecast": {"data": [indice.dict()]} if indice else None,
@@ -202,21 +207,24 @@ class Newsletter:
                     "raep": raep_dict.get("total"),
                     "allergenes": raep_dict.get("allergenes"),
                     "validite_raep": raep_dict.get("periode_validite", {}),
-                }
+                })
                 if date_:
                     init_dict['date'] = date_
             elif type_ == 'hebdomadaire':
                 next_template = NewsletterHebdoTemplate.next_template(inscription, templates)
                 if not next_template:
                     continue
-                init_dict = {
+                init_dict.update({
                     'newsletter_hebdo_template': next_template,
                     'inscription': inscription
-                }
+                })
             if media == 'notifications_web' and 'notifications_web' in inscription.indicateurs_media:
                 for wp in WebpushSubscriptionInfo.query.filter_by(inscription_id=inscription.id):
-                    init_dict['webpush_subscription_info_id'] = wp.id
-                    init_dict['webpush_subscription_info'] = wp
+                    init_dict.update({
+                        'webpush_subscription_info_id': wp.id,
+                        'webpush_subscription_info': wp
+                        }
+                    )
                     newsletter = cls(**init_dict)
                     if not newsletter.filtre_alerte(type_):
                         yield newsletter
