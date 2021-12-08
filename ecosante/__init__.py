@@ -6,7 +6,6 @@ from werkzeug.urls import url_encode
 import logging
 from kombu import Queue
 
-
 def configure_celery(flask_app):
     """Configure tasks.celery:
     * read configuration from flask_app.config and update celery config
@@ -42,7 +41,15 @@ def configure_celery(flask_app):
                 return self.run(*args, **kwargs)
 
     celery.Task = ContextTask
-    celery.log.level = logging.INFO
+
+
+    def set_log_level(logger=None, loglevel=logging.DEBUG, **kwargs):
+        logger.setLevel(logging.DEBUG)
+        return logger
+
+    from celery.signals import after_setup_task_logger, after_setup_logger
+    after_setup_task_logger.connect(set_log_level)
+    after_setup_logger.connect(set_log_level)
 
 
 def create_app(testing=False):
