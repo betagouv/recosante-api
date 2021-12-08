@@ -116,7 +116,7 @@ class FormAdd(BaseForm):
             (1, "Vent"),
             (2, "Pluie-Inondantion"),
             (3, "Orages"),
-            (4, "Inondations"),
+            (4, "Crues"),
             (5, "Neige"),
             (6, "Canicule"),
             (7, "Grand Froid"),
