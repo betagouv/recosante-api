@@ -509,10 +509,10 @@ class NewsletterDB(db.Model, Newsletter):
         return {
             **{
                 'EMAIL': self.inscription.mail,
-                'RECOMMANDATION': self.recommandation.format(self.inscription) or "",
+                'RECOMMANDATION': (self.recommandation.format(self.inscription) or "") if self.recommandation else "",
                 'LIEN_AASQA': self.lien_aasqa,
                 'NOM_AASQA': self.nom_aasqa,
-                'PRECISIONS': self.recommandation.precisions or "",
+                'PRECISIONS': (self.recommandation.precisions or "") if self.recommandation else "",
                 'QUALITE_AIR': self.label or "",
                 'VILLE': self.inscription.commune.nom or "",
                 'VILLE_CODE': self.inscription.commune.insee or "",
@@ -534,7 +534,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
                 'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
-                'RECOMMANDATION_QA': self.recommandation_qa.format(self.inscription) or "",
+                'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
