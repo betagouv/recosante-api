@@ -31,7 +31,8 @@ class FormSearch(BaseForm):
             ("indice_atmo", "Indice ATMO"),
             ("episode_pollution", "Épisode de pollution"),
             ("pollens", "Pollens"),
-            ("radon", "Radon")
+            ("radon", "Radon"),
+            ("vigilance_meteo", "Vigilance météo")
         ]
     )
 
