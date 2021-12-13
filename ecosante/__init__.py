@@ -1,6 +1,6 @@
 from flask import Flask, g
 import os
-from .extensions import db, migrate, assets_env, celery, sib, cors, rebar
+from .extensions import db, migrate, assets_env, celery, sib, cors, rebar, cache
 from indice_pollution import init_app
 from werkzeug.urls import url_encode
 import logging
@@ -52,6 +52,22 @@ def configure_celery(flask_app):
     after_setup_logger.connect(set_log_level)
 
 
+def configure_cache(app):
+    conf = {
+        "CACHE_TYPE": os.getenv("CACHE_TYPE", "SimpleCache"),
+        "CACHE_DEFAULT_TIMEOUT": os.getenv("CACHE_DEFAULT_TIMEOUT", 86400),
+    }
+    if conf["CACHE_TYPE"] == "RedisCache":
+        conf["CACHE_REDIS_HOST"] = os.getenv("REDIS_HOST")
+        conf["CACHE_REDIS_PASSWORD"] = os.getenv("REDIS_PASSWORD")
+        conf["CACHE_REDIS_PORT"] = os.getenv("REDIS_PORT")
+        conf["CACHE_REDIS_TOKEN"] = os.getenv("REDIS_TOKEN")
+        conf["CACHE_REDIS_URL"] = os.getenv("REDIS_URL")
+    elif conf["CACHE_TYPE"] == "SimpleCache":
+        conf["CACHE_THRESHOLD"] = 100000
+    cache.init_app(app, conf)
+
+
 def create_app(testing=False):
     app = Flask(
         __name__,
@@ -78,6 +94,7 @@ def create_app(testing=False):
     cors.init_app(app)
     sib.configuration.api_key['api-key'] = os.getenv('SIB_APIKEY')
     celery = configure_celery(app)
+    configure_cache(app)
 
     with app.app_context():
         from .inscription import models, blueprint as inscription_bp, tasks

@@ -12,6 +12,7 @@ DEPENDENCIES = [
     'Faker',
     'Flask',
     'Flask-Assets',
+    'Flask-caching',
     'flask-cors',
     'Flask-Migrate',
     'Flask-SQLAlchemy',
