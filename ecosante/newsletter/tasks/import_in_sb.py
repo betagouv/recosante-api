@@ -8,6 +8,7 @@ from sib_api_v3_sdk.rest import ApiException
 from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
 from ecosante.extensions import db, sib, celery
 from ecosante.utils import send_log_mail
+from ecosante.utils.cache import cache_lock, cache_unlock
 
 def get_all_contacts(limit=100):
     contacts_api = sib_api_v3_sdk.ContactsApi(sib)
@@ -260,6 +261,10 @@ def format_errors(errors):
 @celery.task(bind=True)
 def import_send_and_report(self, type_='quotidien', force_send=False, report=False):
     current_app.logger.info("Début !")
+    lock_id = f"type={type_}"
+    with cache_lock(lock_id, self.app.oid) as aquired:
+        if not aquired:
+            current_app.logger.error(f"Import et envoi déjà en cours (type: {type_})")
     new_task_id = str(uuid4())
     self.update_state(
         state='STARTED',
@@ -290,6 +295,7 @@ Bonne journée
             "details": f"Fin",
         }
     )
+    cache_unlock(lock_id)
     return result
 
 def get_lists_ids_to_delete():
