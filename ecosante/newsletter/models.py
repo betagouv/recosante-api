@@ -121,6 +121,8 @@ class Newsletter:
 
     @property
     def polluants_symbols(self):
+        if not isinstance(self.polluants, list):
+            return []
         label_to_symbols = {
             'ozone': "o3",
             'particules_fines': "pm10",
