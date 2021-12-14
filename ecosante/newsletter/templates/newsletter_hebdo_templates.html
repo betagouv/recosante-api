@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="section">
+    <div class="panel">
+      <a href="{{ url_for("newsletter.newsletter_hebdo_form") }}">Ajouter un template</a>
+      <table class="table">
+        <thead>
+          <tr>
+            <td>ID Send in blue</td>
+            <td>Ordre</td>
+            <td>Actif</td>
+            <td>Édition</td>
+          </tr>
+        </thead>
+        <tbody>
+          {% for template in templates %}
+            <tr>
+              <td><a href="https://my.sendinblue.com/camp/template/{{template.db.sib_id}}/message-setup" target="_blank">{{ template.db.sib_id }}</a></td>
+              <td>{{ template.db.ordre }}</td>
+              <td>{{ "✅" if template.is_active else "❌" }}</td>
+              <td><a href="{{ url_for("newsletter.newsletter_hebdo_form", id_=template.db.id) }}">Edition</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

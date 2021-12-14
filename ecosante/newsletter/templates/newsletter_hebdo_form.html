@@ -1,0 +1,20 @@
+{% extends "base_form.html" %}
+
+{% block block_form %}
+
+<div class="section">
+  <div class="container">
+    <div class="panel">
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ render_field(form.sib_id)}}
+        {{ render_field(form.ordre)}}
+        <div class="form__group">
+          <button class="button" type="submit" id="submit">Envoyer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

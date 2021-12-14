@@ -6,6 +6,7 @@ from flask import (
     url_for,
     stream_with_context,
 )
+from flask.helpers import flash
 from flask.wrappers import Response
 from datetime import datetime, timedelta
 import csv
@@ -18,11 +19,13 @@ from ecosante.inscription.models import Inscription
 
 from ecosante.utils.decorators import admin_capability_url, admin_capability_url_no_redirect
 from ecosante.utils import Blueprint
-from .forms import FormAvis
-from .models import Newsletter, NewsletterDB, db
+from ecosante.extensions import sib
+from .forms import FormAvis, FormTemplateAdd, FormTemplateEdit
+from .models import Newsletter, NewsletterDB, NewsletterHebdoTemplate, db
 from .tasks.import_in_sb import create_campaign, import_, send
 from .tasks.send_webpush_notifications import send_webpush_notification, vapid_claims
 from indice_pollution.history.models import IndiceATMO
+import sib_api_v3_sdk
 
 bp = Blueprint("newsletter", __name__)
 
@@ -180,3 +183,48 @@ def test():
                 nb_notifications += 1
 
     return render_template("test_ok.html", nb_mails=nb_mails, nb_notifications=nb_notifications, nb_notifications_sent=nb_notifications_sent)
+
+@bp.route('<secret_slug>/newsletter_hebdo_templates', methods=['GET', 'POST'])
+@bp.route('/newsletter_hebdo_templates', methods=['GET', 'POST'])
+@admin_capability_url
+def newsletter_hebdo():
+    templates_db = NewsletterHebdoTemplate.query.order_by(NewsletterHebdoTemplate.ordre).all()
+    templates = []
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib)
+    for t in templates_db:
+        template = {"db": t, "is_active": False}
+        try:
+            api_response = api_instance.get_smtp_template(t.sib_id)
+            template["is_active"] = api_response.is_active
+        except sib_api_v3_sdk.ApiException as e:
+            continue
+        templates.append(template)
+    return render_template("newsletter_hebdo_templates.html", templates=templates)
+
+
+@bp.route('<secret_slug>/newsletter_hebdo/_add', methods=['GET', 'POST'])
+@bp.route('/newsletter_hebdo/_add', methods=['GET', 'POST'])
+@bp.route('<secret_slug>/newsletter_hebdo/<int:id_>/_edit', methods=['GET', 'POST'])
+@bp.route('/newsletter_hebdo/<int:id_>/_edit', methods=['GET', 'POST'])
+@admin_capability_url
+def newsletter_hebdo_form(id_=None):
+    form_cls = FormTemplateEdit if id_ else FormTemplateAdd
+    form = form_cls(
+        request.form,
+        obj=NewsletterHebdoTemplate.query.get(id_)
+    )
+    if request.method == "GET":
+        return render_template("newsletter_hebdo_form.html", form=form)
+    else:
+        if form.validate_on_submit():
+            template = NewsletterHebdoTemplate.query.get(id_) or NewsletterHebdoTemplate()
+            form.populate_obj(template)
+            db.session.add(template)
+            db.session.commit()
+            flash(
+                "Template édité !" if id_ else "Template ajouté"
+            )
+            return redirect(url_for("newsletter.newsletter_hebdo"))
+        else:
+	        return render_template("newsletter_hebdo_form.html", form=form)
+
