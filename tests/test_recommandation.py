@@ -293,7 +293,7 @@ def test_min_raep():
     assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == True
 
 def test_vigilances():
-    r = published_recommandation(type_="vigilance_meteo", vigilance_couleur_id=1, vigilance_phenomene_id=1)
+    r = published_recommandation(type_="vigilance_meteo", vigilance_couleur_ids=[1], vigilance_phenomene_ids=[1])
     assert r.is_relevant(media="dashboard", types=["vigilance_meteo"]) == False
 
     v1 =  VigilanceMeteo(couleur_id=1, phenomene_id=1)

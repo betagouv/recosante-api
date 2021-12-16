@@ -73,8 +73,8 @@ class Recommandation(db.Model):
     min_raep: int = db.Column(db.Integer, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
-    vigilance_couleur_id: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
-    vigilance_phenomene_id: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
+    vigilance_couleur_ids: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
+    vigilance_phenomene_ids: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
 
     @property
     def velo(self) -> bool:
@@ -245,7 +245,7 @@ class Recommandation(db.Model):
         if not isinstance(vigilances, list):
             return True
         return any([
-            (v.couleur_id == self.vigilance_couleur_id and v.phenomene_id == self.vigilance_phenomene_id)
+            (v.couleur_id in self.vigilance_couleur_ids and v.phenomene_id in self.vigilance_phenomene_ids)
             for v in vigilances
         ])
 

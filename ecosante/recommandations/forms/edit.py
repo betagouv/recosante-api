@@ -99,7 +99,7 @@ class FormAdd(BaseForm):
         coerce=coerce_int
     )
 
-    vigilance_couleur_id = MultiCheckboxField(
+    vigilance_couleur_ids = MultiCheckboxField(
         "Niveau de vigilance",
         choices=[
             (1, "Verte"),
@@ -110,7 +110,7 @@ class FormAdd(BaseForm):
         coerce=coerce_int
     )
 
-    vigilance_phenomene_id = MultiCheckboxField(
+    vigilance_phenomene_ids = MultiCheckboxField(
         "Phénomène",
         choices=[
             (1, "Vent"),
@@ -122,7 +122,8 @@ class FormAdd(BaseForm):
             (7, "Grand Froid"),
             (8, "Avalanches"),
             (9, "Vagues-Submersion")
-        ]
+        ],
+        coerce=coerce_int
     )
 
     def validate(self, extra_validators=[]):
