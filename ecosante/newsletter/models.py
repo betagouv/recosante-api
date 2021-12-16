@@ -40,7 +40,7 @@ class NewsletterHebdoTemplate(db.Model):
             return None
         if len(inscription.last_newsletters_hebdo) == 0:
             return templates[0]
-        dernier_ordre =  inscription.last_newsletters_hebdo[-1].newsletter_hebdo_template.ordre
+        dernier_ordre = inscription.last_newsletters_hebdo[0].newsletter_hebdo_template.ordre
         if dernier_ordre >= max([t.ordre for t in templates]):
             return None
         return [t for t in templates if t.ordre > dernier_ordre][0]
