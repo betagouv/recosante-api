@@ -84,6 +84,7 @@ def create_mail_list(now, test):
             folder_id=int(os.getenv('SIB_FOLDERID', 5)) if not test else int(os.getenv('SIB_FOLDERID', 1653))
         )
     )
+    current_app.logger.info(f"Création de la liste send in blue '{r.id}'")
     return r.id
 
 def get_mail_list_id(newsletter, template_id_mail_list_id, now, test):
@@ -139,14 +140,17 @@ def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=
         else:
             if current_app.config['ENV'] == 'production':
                 to_add.append(nldb)
+                current_app.logger.info(f"Création de l’objet NewsletterDB pour {nldb.inscription_id}, template: {nldb.newsletter_hebdo_template_id}, mail_list_id: {nldb.mail_list_id} ")
                 if len(to_add) % 1000 == 0:
                     db.session.add_all(to_add)
                     db.session.flush() # do not use commit, it will raise an error
+                    current_app.logger.info("Flush des newsletters dans la base de données")
                     to_add = []
 
     if current_app.config['ENV'] == 'production' or test:
         db.session.add_all(to_add)
         db.session.commit()
+        current_app.logger.info("Commit des newsletters dans la base de données")
 
     import_contacts_in_sb(template_id_mail_list_id, now, type_, test)
 
