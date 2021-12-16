@@ -2,6 +2,7 @@ import pytest
 from ecosante.recommandations.models import Recommandation
 from ecosante.inscription.models import Inscription
 from ecosante.newsletter.models import NewsletterDB, Newsletter
+from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
 from datetime import date, timedelta
 from itertools import product
 
@@ -290,3 +291,18 @@ def test_min_raep():
     assert r.is_relevant(i, "bon", [], 3, date.today(), media="dashboard") == False
     assert r.is_relevant(i, "bon", [], 4, date.today(), media="dashboard") == True
     assert r.is_relevant(i, "bon", [], 6, date.today(), media="dashboard") == True
+
+def test_vigilances():
+    r = published_recommandation(type_="vigilance_meteo", vigilance_couleur_id=1, vigilance_phenomene_id=1)
+    assert r.is_relevant(media="dashboard", types=["vigilance_meteo"]) == False
+
+    v1 =  VigilanceMeteo(couleur_id=1, phenomene_id=1)
+    assert r.is_relevant(media="dashboard", vigilances=[v1], types=["vigilance_meteo"]) == True
+
+    v2 =  VigilanceMeteo(couleur_id=1, phenomene_id=2)
+    assert r.is_relevant(media="dashboard", vigilances=[v2], types=["vigilance_meteo"]) == False
+
+    v3 =  VigilanceMeteo(couleur_id=2, phenomene_id=1)
+    assert r.is_relevant(media="dashboard", vigilances=[v3], types=["vigilance_meteo"]) == False
+
+    assert r.is_relevant(media="dashboard", vigilances=[v2, v1, v3], types=["vigilance_meteo"]) == True

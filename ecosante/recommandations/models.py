@@ -239,6 +239,16 @@ class Recommandation(db.Model):
                 return False
         return True
 
+    def is_relevant_vigilance_meteo(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+        if self.type_ != "vigilance_meteo":
+            return True
+        if not isinstance(vigilances, list):
+            return True
+        return any([
+            (v.couleur_id == self.vigilance_couleur_id and v.phenomene_id == self.vigilance_phenomene_id)
+            for v in vigilances
+        ])
+
     def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
         if not self.is_relevant_inscription(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
             return False
@@ -255,7 +265,12 @@ class Recommandation(db.Model):
         # Radon
         if self.type_ == "radon" and potentiel_radon not in self.potentiel_radon:
                 return False
-
+        # Saison
+        if not self.is_relevant_season(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+            return False
+        # Vigilance météo
+        if not self.is_relevant_vigilance_meteo(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+            return False
         return self.type_ in types
 
     def format(self, inscription):
