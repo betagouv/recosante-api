@@ -255,7 +255,7 @@ class Recommandation(db.Model):
         # Environnement
         if polluants and self.type_ != "episode_pollution" and "episode_pollution" in types:
             return False
-        if self.type_ == "episode_pollution":
+        if self.type_ == "episode_pollution" and isinstance(polluants, list):
             return any([getattr(self, polluant) for polluant in polluants])
         if not self.is_relevant_qualif(qualif):
             return False
