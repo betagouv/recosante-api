@@ -561,7 +561,7 @@ class NewsletterDB(db.Model, Newsletter):
         return {
             "title": title,
             "body": "\n".join(array_body),
-            "link": f"https://recosante.beta.gouv.fr/places/{commune.insee}/{commune.nom.lower()}/"
+            "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.nom.lower()}/"
         }
 
     @classmethod
