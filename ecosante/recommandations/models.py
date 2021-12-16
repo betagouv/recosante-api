@@ -152,27 +152,12 @@ class Recommandation(db.Model):
     @staticmethod
     def qualif_categorie(qualif):
         # On garde "tres_bon" et "mediocre" dans un souci de retro-compatibilité
-        if not isinstance(qualif, str):
-            return None
         if qualif in (['bon', 'moyen'] + ['tres_bon', 'mediocre']):
             return "bon"
         elif qualif in ['degrade', 'mauvais', 'tres_mauvais', 'extrement_mauvais']:
             return "mauvais"
-
-    def is_relevant_qualif(self, qualif):
-        if not qualif and self.qa_bonne is None and self.qa_mauvaise is None:
-            return True
-        # Si la qualité de l’air est bonne
-        # que la reco concerne la qualité de l’air bonne
-        if self.qualif_categorie(qualif) == "bon" and self.qa_bonne:
-            return True
-        # Si la qualité de l’air est mauvaise
-        # que la reco concerne la qualité de l’air mauvaise
-        elif self.qualif_categorie(qualif) == "mauvais" and self.qa_mauvaise:
-            return True
-        # Sinon c’est pas bon
         else:
-            return False
+            return None
 
     @property
     def criteres(self) -> Set[str]:
@@ -180,7 +165,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"]):
+    def is_relevant_inscription(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
         #Inscription
         if inscription:
             if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -193,50 +178,56 @@ class Recommandation(db.Model):
                 return False
             if self.enfants and not inscription.has_enfants:
                 return False
-        # Environnement
-        if polluants and self.type_ != "episode_pollution" and "episode_pollution" in types:
+        return True
+
+    def is_relevant_qualif(self, qualif):
+        #On ne prend pas en compte si ce n’est pas du type indice_atmo
+        if self.type_ != "indice_atmo":
+            return True
+        # S’il n’y a pas de catégorie spécifiée, c’est qu’on ne s’en occupe pas
+        if self.qa_bonne == None and self.qa_mauvaise == None:
+            return True
+        qualif_categorie = self.qualif_categorie(qualif)
+        # Si la qualité de l’air est bonne
+        # que la reco concerne la qualité de l’air bonne
+        if (qualif_categorie == "bon" and self.qa_bonne):
+            return True
+        # Si la qualité de l’air est mauvaise
+        # que la reco concerne la qualité de l’air mauvaise
+        elif qualif_categorie == "mauvais" and self.qa_mauvaise:
+            return True
+        # Sinon c’est pas bon
+        else:
             return False
-        if self.type_ == "episode_pollution":
-            if polluants:
-                for polluant in polluants:
-                    if getattr(self, polluant):
-                        return True
-                return False
-            else:
-                if self.polluants:
+
+    def is_relevant_pollens(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+        if self.type_ != "pollens":
+            return True
+        if type(self.min_raep) != int or type(raep) != int:
+            return False
+        if self.min_raep == 0 and raep != 0:
+            return False
+        elif self.min_raep == 1 and not (1 <= raep <= 3):
+            return False
+        elif self.min_raep == 4 and raep < self.min_raep:
+            return False
+        if media != "dashboard":
+            if 0 < raep < 4: #RAEP Faible
+                if inscription and "raep" in inscription.indicateurs:
+                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
+                else:
                     return False
-        if self.type_ == "indice_atmo":
-            if qualif and (not self.qa_bonne == None or not self.qa_mauvaise == None):
-                if not self.is_relevant_qualif(qualif):
+            if raep >= 4:
+                if inscription and "raep" in inscription.indicateurs:
+                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
+                else:
                     return False
-        # Pollens
-        if self.type_ == "pollens":
-            if type(self.min_raep) != int or type(raep) != int:
-                return False
-            if self.min_raep == 0 and raep != 0:
-                return False
-            elif self.min_raep == 1 and not (1 <= raep <= 3):
-                return False
-            elif self.min_raep == 4 and raep < self.min_raep:
-                return False
-            if media != "dashboard":
-                if 0 < raep < 4: #RAEP Faible
-                    if inscription and "raep" in inscription.indicateurs:
-                        return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
-                    else:
-                        return False
-                if raep >= 4:
-                    if inscription and "raep" in inscription.indicateurs:
-                        return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
-                    else:
-                        return False
-        # Radon
-        if self.type_ == "radon":
-            if potentiel_radon not in self.potentiel_radon:
-                return False
-        # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
-        # Pour déterminer la saison
+        return True
+
+    def is_relevant_season(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
         if date_:
+	        # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
+            # Pour déterminer la saison
             season = date_.month%12//3 + 1
             if self.hiver and season != 1:
                 return False
@@ -245,6 +236,24 @@ class Recommandation(db.Model):
             elif self.ete and season != 3:
                 return False
             elif self.automne and season != 4:
+                return False
+        return True
+
+    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+        if not self.is_relevant_inscription(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+            return False
+        # Environnement
+        if polluants and self.type_ != "episode_pollution" and "episode_pollution" in types:
+            return False
+        if self.type_ == "episode_pollution":
+            return any([getattr(self, polluant) for polluant in polluants])
+        if not self.is_relevant_qualif(qualif):
+            return False
+        # Pollens
+        if not self.is_relevant_pollens(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+            return False
+        # Radon
+        if self.type_ == "radon" and potentiel_radon not in self.potentiel_radon:
                 return False
 
         return self.type_ in types
