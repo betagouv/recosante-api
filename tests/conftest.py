@@ -13,7 +13,7 @@ import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
 from ecosante.newsletter.models import NewsletterDB, NewsletterHebdoTemplate
-from ecosante.inscription.models import Inscription
+from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
 
@@ -70,7 +70,7 @@ def commune(db_session) -> Commune:
     from indice_pollution.history.models import Commune, Departement, Region, Zone
     region = Region(nom="Pays de la Loire", code="52")
     zone_departement = Zone(type='departement', code='53')
-    departement = Departement(nom="Mayenne", code="53", codeRegion=region.code, zone=zone_departement)
+    departement = Departement(nom="Mayenne", code="53", region=region, zone=zone_departement)
     zone = Zone(type='commune', code='53130')
     commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, zone_pollution=departement.zone, departement=departement)
     db_session.add_all([region, zone_departement, departement, zone, commune])
@@ -83,13 +83,34 @@ def commune_commited(commune, db_session) -> Commune:
 
 @pytest.fixture(scope='function')
 def inscription(commune) -> Inscription:
-    inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=["mail"], commune_id=commune.id, commune=commune, mail='test@example.com')
+    inscription = Inscription(date_inscription='2021-09-28', indicateurs_media=["mail"], commune_id=commune.id, commune=commune, mail='test@example.com')
     return inscription
 
 @pytest.fixture(scope='function')
 def inscription_alerte(commune) -> Inscription:
     inscription = Inscription(ville_insee=commune.code, date_inscription='2021-09-28', indicateurs_media=['mail'], commune_id=commune.id, commune=commune, mail='test@example.com')
     inscription.indicateurs_frequence = ["alerte"]
+    return inscription
+
+
+
+@pytest.fixture(scope='function')
+def inscription_notifications(db_session, inscription: Inscription) -> Inscription:
+    inscription.indicateurs_media = ['notifications_web']
+    db_session.add(inscription)
+    db_session.commit()
+    wp = WebpushSubscriptionInfo(
+        inscription_id=inscription.id,
+        data={
+            "keys": {
+                "auth": "Cbx6kg7FdlZHKZjaCUc_QQ", 
+                "p256dh": "BNSBF5mKSirivNxvBtgzqviOcuFGvSHh21JGLr5m8G0Gb4lrW0jb0Uu5mk6pjTjk5ak2fMkgAOZs1_UfLXmv3K0"
+            },
+            "endpoint": "https://updates.push.services.mozilla.com/wpush/v2/pouet"
+        }
+    )
+    db_session.add(wp)
+    db_session.commit()
     return inscription
 
 @pytest.fixture(scope='function')

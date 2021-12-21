@@ -312,6 +312,7 @@ class Recommandation(db.Model):
             result = result.replace(f'{punc} ', f'{punc} ')
         result = result.replace("'", '’')
         result = result.replace("  ", " ")
+        result = result.strip()
         return markdown.reset().convert(s)
 
     @property
