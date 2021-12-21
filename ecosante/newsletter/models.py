@@ -444,7 +444,7 @@ class Newsletter:
     def show_radon(self):
         if self.polluants:
             return False
-        if type(self.raep) == int:
+        if type(self.raep) == int and isinstance(self.inscription.indicateurs, list):
             if "raep" in self.inscription.indicateurs and self.raep != 0:
                 return False
             if not "raep" in self.inscription.indicateurs and self.raep >= 4:
