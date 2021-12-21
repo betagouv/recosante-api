@@ -110,42 +110,18 @@ def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=
         )
 
     to_add = []
-    for nl in (newsletters or Newsletter.export(type_=type_)):
+    for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send)):
         nldb = NewsletterDB(nl, get_mail_list_id(nl, template_id_mail_list_id, now, test))
-        if type_ == 'quotidien' and nldb.label is None and not force_send:
-            errors.append({
-                "type": "no_air_quality",
-                "nl_id": nldb.id,
-                "region": nldb.inscription.commune.departement.region.nom if nldb.inscription.commune.departement else "",
-                "ville": nldb.inscription.commune.nom,
-                "insee": nldb.inscription.commune.insee
-            })
-            current_app.logger.error(f"No qai for {nldb.inscription.mail}")
-        elif type_ == 'quotidien' and not nldb.something_to_show and force_send:
-            errors.append({
-                "type": "nothing_to_show",
-                "nl_id": nldb.id,
-                "region": nldb.inscription.commune.departement.region.nom if nldb.inscription.commune.departement else "",
-                "ville": nldb.inscription.commune.nom,
-                "insee": nldb.inscription.commune.insee
-            })
-            current_app.logger.error(f"Nothing to show for {nldb.inscription.mail}")
-        elif type_ == 'hebdomadaire' and nldb.newsletter_hebdo_template == None:
-            errors.append({
-                "type": "no_template_weekly_nl",
-                "inscription_id": nldb.inscription.id,
-                "mail": nldb.inscription.mail
-            })
-            current_app.logger.error(f"Pas de template pour nl hebdo pour : {nldb.inscription.mail}")
-        else:
-            if current_app.config['ENV'] == 'production':
-                to_add.append(nldb)
-                current_app.logger.info(f"Création de l’objet NewsletterDB pour {nldb.inscription_id}, template: {nldb.newsletter_hebdo_template_id}, mail_list_id: {nldb.mail_list_id} ")
-                if len(to_add) % 1000 == 0:
-                    db.session.add_all(to_add)
-                    db.session.flush() # do not use commit, it will raise an error
-                    current_app.logger.info("Flush des newsletters dans la base de données")
-                    to_add = []
+        if nldb.errors:
+            errors.extend(nldb.errors)
+        if current_app.config['ENV'] == 'production':
+            to_add.append(nldb)
+            current_app.logger.info(f"Création de l’objet NewsletterDB pour {nldb.inscription_id}, template: {nldb.newsletter_hebdo_template_id}, mail_list_id: {nldb.mail_list_id} ")
+            if len(to_add) % 1000 == 0:
+                db.session.add_all(to_add)
+                db.session.flush() # do not use commit, it will raise an error
+                current_app.logger.info("Flush des newsletters dans la base de données")
+                to_add = []
 
     if current_app.config['ENV'] == 'production' or test:
         db.session.add_all(to_add)
