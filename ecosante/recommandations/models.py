@@ -274,7 +274,7 @@ class Recommandation(db.Model):
         return self.type_ in types
 
     def format(self, inscription):
-        return self.recommandation_sanitized if inscription.diffusion == 'mail' else self.recommandation_format_SMS
+        return self.recommandation_sanitized
 
     @property
     def filtres(self):
