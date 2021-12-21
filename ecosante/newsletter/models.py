@@ -187,7 +187,7 @@ class Newsletter:
 
 
     @classmethod
-    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien'):
+    def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         indices, all_episodes, allergenes = get_all(date_)
         templates = NewsletterHebdoTemplate.get_templates()
@@ -228,11 +228,11 @@ class Newsletter:
                         }
                     )
                     newsletter = cls(**init_dict)
-                    if not newsletter.filtre_alerte(type_):
+                    if newsletter.to_send(type_, force_send):
                         yield newsletter
             else:
                 newsletter = cls(**init_dict)
-                if not newsletter.filtre_alerte(type_):
+                if newsletter.to_send(type_, force_send):
                     yield newsletter
 
     # Renvoie vrai si l’utilisateur est inscrit à la réception en cas d’alerte
@@ -244,6 +244,18 @@ class Newsletter:
             return (self.polluants == None or len(self.polluants) == 0) and (self.raep == None or self.raep < 4)
         return False
 
+    def to_send(self, type_, force_send):
+        if type_ == 'hebdomadaire':
+            return self.newsletter_hebdo_template is not None
+        if self.filtre_alerte(type_):
+            return False
+        if force_send and 'quotidien' in self.inscription.indicateurs_frequence:
+            return True
+        if self.inscription.has_indicateur("indice_atmo") and not self.label:
+            return False
+        if self.inscription.has_indicateur("raep") and not self.show_raep:
+            return False
+        return True
 
     def errors(self, type_):
         errors = []
@@ -270,6 +282,7 @@ class Newsletter:
                     "mail": self.inscription.mail
                 })
         return errors
+
     @property
     def past_nl_query(self):
         return db.session.query(
@@ -617,7 +630,3 @@ class NewsletterDB(db.Model, Newsletter):
             .all()
         for newsletter in newsletters:
             yield newsletter.csv_line()
-
-    @property
-    def something_to_show(self):
-        return self.label or self.polluants_formatted or self.show_radon or self.show_raep
