@@ -139,10 +139,14 @@ def test_make_new_value_webpush_subscriptions_info(inscription):
     assert any([v.data == new_value for v in inscription.webpush_subscriptions_info])
 
 def test_export_query_quotidien(inscription, db_session):
+    db_session.add(inscription)
+    db_session.commit()
     inscriptions = Inscription.export_query(type_='quotidien').all()
     assert len(inscriptions) == 1
 
 def test_export_query_hebdomadaire(inscription, db_session):
+    db_session.add(inscription)
+    db_session.commit()
     inscriptions = Inscription.export_query(type_='hebdomadaire').all()
     assert len(inscriptions) == 1
 

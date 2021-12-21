@@ -19,7 +19,7 @@ def test_cas_send_wepush_notification(inscription_notifications, recommandation,
     assert mock.call_count == 1
 
 @requests_mock.Mocker(kw='mock')
-def test_cas_send_wepush_notifications(inscription_notifications, recommandation, bonne_qualite_air, **kw):
+def test_cas_send_wepush_notifications(inscription_notifications, recommandation, bonne_qualite_air, raep_eleve, **kw):
     mock = kw['mock']
     mock.post('https://updates.push.services.mozilla.com/wpush/v2/pouet', text='data')
 

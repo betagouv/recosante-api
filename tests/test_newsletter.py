@@ -526,8 +526,9 @@ def test_sorted_recommandation_query(db_session, inscription):
     next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 2.0
     next(filter(lambda a: a[1] == today_recommandation.id, sorted_recommandations))[0] == 2.0
 
-def test_export_simple(db_session, inscription):
+def test_export_simple(db_session, inscription, bonne_qualite_air, raep_eleve):
     db_session.add(published_recommandation())
+    db_session.add(inscription)
     db_session.commit()
 
     newsletters = list(Newsletter.export())
@@ -570,7 +571,9 @@ def test_export_user_hebdo_ordre(db_session, inscription, templates):
     assert nl2.newsletter_hebdo_template.ordre > nl1.newsletter_hebdo_template.ordre
 
 
-def test_export_user_hebdo_quotidien(inscription, templates):
+def test_export_user_hebdo_quotidien(db_session, inscription, templates, bonne_qualite_air, raep_eleve):
+    db_session.add(inscription)
+    db_session.commit()
     newsletters_hebdo = list(Newsletter.export(type_='hebdomadaire'))
     assert len(newsletters_hebdo) == 1
     assert newsletters_hebdo[0].newsletter_hebdo_template is not None
@@ -599,10 +602,12 @@ def test_export_user_hebdo_alerte(db_session, inscription, templates):
 )
 def test_export(db_session, recommandation, bonne_qualite_air, inscription, episode, raep, nb_nls, request):
     inscription = request.getfixturevalue(inscription)
+    db_session.add(inscription)
     raep = request.getfixturevalue(raep)
     if episode:
         episode = request.getfixturevalue(episode)
         db_session.add(episode)
+    db_session.commit()
     
     newsletters = list(Newsletter.export())
     assert len(newsletters) == nb_nls
