@@ -1,4 +1,3 @@
-from operator import and_
 from sqlalchemy.orm import joinedload, relationship, selectinload
 from indice_pollution.history.models import Commune, Departement
 from ecosante.extensions import db
@@ -13,7 +12,7 @@ from dataclasses import dataclass
 from typing import List
 import requests
 from datetime import date
-from sqlalchemy import text, or_
+from sqlalchemy import and_, text, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm.attributes import flag_modified
 import json
@@ -412,24 +411,34 @@ class Inscription(db.Model):
         return isinstance(self.indicateurs, list) and indicateur in self.indicateurs
 
     @classmethod
-    def export_query(cls, only_to=None, filter_already_sent=True, media='mail', type_='quotidien'):
+    def export_query(cls, only_to=None, filter_already_sent=True, media='mail', type_='quotidien', date_=None):
         from ecosante.newsletter.models import NewsletterDB
+        date_ = date_ or date.today()
         query = Inscription.active_query()
         if only_to:
             query = query.filter(Inscription.mail.in_(only_to))
         if filter_already_sent:
             query_nl = NewsletterDB.query\
                 .filter(
-                    NewsletterDB.date==date.today(),
+                    NewsletterDB.date==date_,
                     NewsletterDB.inscription.has(Inscription.indicateurs_media.contains([media])))\
                 .with_entities(
                     NewsletterDB.inscription_id
             )
             if type_ == 'quotidien':
                 query_nl = query_nl.filter(
-                    NewsletterDB.label != None,
-                    NewsletterDB.label != "",
-                    NewsletterDB.newsletter_hebdo_template_id == None
+                    NewsletterDB.newsletter_hebdo_template_id == None,
+                    or_(
+                        and_(
+                            NewsletterDB.inscription.has(Inscription.indicateurs.contains(['indice_atmo'])),
+                            NewsletterDB.label != None,
+                            NewsletterDB.label != ""
+                        ),
+                        and_(
+                            NewsletterDB.inscription.has(Inscription.indicateurs.contains(['raep'])),
+                            NewsletterDB.raep != None
+                        )
+                    )
                 )
             elif type_ == 'hebdomadaire':
                 query_nl = query_nl.filter(NewsletterDB.newsletter_hebdo_template_id != None)
