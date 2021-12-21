@@ -244,6 +244,32 @@ class Newsletter:
             return (self.polluants == None or len(self.polluants) == 0) and (self.raep == None or self.raep < 4)
         return False
 
+
+    def errors(self, type_):
+        errors = []
+        if type_ == 'quotidien':
+            if self.inscription.has_indicateur("indice_atmo") and not self.label:
+                errors.append({
+                    "type": "no_air_quality",
+                    "region": self.inscription.commune.departement.region.nom if self.inscription.commune.departement else "",
+                    "ville": self.inscription.commune.nom,
+                    "insee": self.inscription.commune.insee
+                })
+            if self.inscription.has_indicateur("raep") and self.raep is None:
+                errors.append({
+                    "type": "no_raep",
+                    "region": self.inscription.commune.departement.nom if self.inscription.commune.departement else "",
+                    "ville": self.inscription.commune.nom,
+                    "insee": self.inscription.commune.insee
+                })
+        elif type_ == 'hebdomadaire':
+            if self.newsletter_hebdo_template == None:
+                errors.append({
+                    "type": "no_template_weekly_nl",
+                    "inscription_id": self.inscription.id,
+                    "mail": self.inscription.mail
+                })
+        return errors
     @property
     def past_nl_query(self):
         return db.session.query(
