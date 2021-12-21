@@ -235,22 +235,14 @@ class Newsletter:
                 if newsletter.to_send(type_, force_send):
                     yield newsletter
 
-    # Renvoie vrai si l’utilisateur est inscrit à la réception en cas d’alerte
-    # et qu’il n’y a pas d’alerte en cours
-    def filtre_alerte(self, type_):
-        if type_ == 'hebdomadaire':
-            return False
-        if self.inscription.indicateurs_frequence and "alerte" in self.inscription.indicateurs_frequence:
-            return (self.polluants == None or len(self.polluants) == 0) and (self.raep == None or self.raep < 4)
-        return False
-
     def to_send(self, type_, force_send):
         if type_ == 'hebdomadaire':
             return self.newsletter_hebdo_template is not None
-        if self.filtre_alerte(type_):
-            return False
         if force_send and 'quotidien' in self.inscription.indicateurs_frequence:
             return True
+        if self.inscription.indicateurs_frequence and "alerte" in self.inscription.indicateurs_frequence:
+            if self.polluants or self.raep >= 4:
+                return True
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
             return False
         if self.inscription.has_indicateur("raep") and not self.show_raep:
@@ -432,7 +424,7 @@ class Newsletter:
             return False
         if self.raep == 0:
             return False
-        elif self.raep < 4 and "alerte" in self.inscription.indicateurs_frequence:
+        elif self.raep < 4 and isinstance(self.inscription.indicateurs_frequence, list) and "alerte" in self.inscription.indicateurs_frequence:
             return False
         return True
 
