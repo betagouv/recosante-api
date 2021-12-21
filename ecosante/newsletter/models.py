@@ -191,7 +191,7 @@ class Newsletter:
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         indices, all_episodes, allergenes = get_all(date_)
         templates = NewsletterHebdoTemplate.get_templates()
-        for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_).yield_per(100):
+        for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
             init_dict = {"type_": type_}
             if type_ == 'quotidien':
                 indice = indices.get(inscription.commune_id)
