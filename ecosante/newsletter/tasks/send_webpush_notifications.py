@@ -38,11 +38,9 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
             return None
 
 @celery.task(bind=True)
-def send_webpush_notifications(self, only_to=None, filter_already_sent=True):
-    for nl in Newsletter.export(media='notifications_web', only_to=only_to, filter_already_sent=filter_already_sent):
+def send_webpush_notifications(self, only_to=None, filter_already_sent=True, force_send=False):
+    for nl in Newsletter.export(media='notifications_web', only_to=only_to, filter_already_sent=filter_already_sent, force_send=force_send):
         nldb = NewsletterDB(nl)
-        if not nldb.something_to_show:
-            continue
         nldb = send_webpush_notification(nldb, vapid_claims)
         if nldb:
             db.session.add(nldb)
