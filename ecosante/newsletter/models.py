@@ -252,9 +252,10 @@ class Newsletter:
             return False
         return True
 
-    def errors(self, type_):
+    @property
+    def errors(self):
         errors = []
-        if type_ == 'quotidien':
+        if self.type_ == 'quotidien':
             if self.inscription.has_indicateur("indice_atmo") and not self.label:
                 errors.append({
                     "type": "no_air_quality",
@@ -269,7 +270,7 @@ class Newsletter:
                     "ville": self.inscription.commune.nom,
                     "insee": self.inscription.commune.insee
                 })
-        elif type_ == 'hebdomadaire':
+        elif self.type_ == 'hebdomadaire':
             if self.newsletter_hebdo_template == None:
                 errors.append({
                     "type": "no_template_weekly_nl",

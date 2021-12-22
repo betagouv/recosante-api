@@ -112,8 +112,7 @@ def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=
     to_add = []
     for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send)):
         nldb = NewsletterDB(nl, get_mail_list_id(nl, template_id_mail_list_id, now, test))
-        if nldb.errors:
-            errors.extend(nldb.errors)
+        errors.extend(nldb.errors)
         if current_app.config['ENV'] == 'production':
             to_add.append(nldb)
             current_app.logger.info(f"Création de l’objet NewsletterDB pour {nldb.inscription_id}, template: {nldb.newsletter_hebdo_template_id}, mail_list_id: {nldb.mail_list_id} ")
