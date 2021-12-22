@@ -73,8 +73,10 @@ def import_and_send(task, type_='quotidien', force_send=False):
 
 def send(campaign_id, test=False):
     if current_app.config['ENV'] == 'production' or test:
+        current_app.logger.info(f"Envoi en cours de la campagne: {campaign_id}")
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         send_email_api.send_email_campaign_now(campaign_id=campaign_id)
+        current_app.logger.info(f"Envoi terminé de la campagne: {campaign_id}")
 
 def create_mail_list(now, test):
     lists_api = sib_api_v3_sdk.ListsApi(sib)
@@ -164,11 +166,11 @@ def import_contacts_in_sb(template_id_mail_list_id, now, type_, test):
                 _external=True,
                 _scheme='https'
             )
-            current_app.logger.debug("About to send newsletter with params")
-            current_app.logger.debug(request_contact_import)
+            current_app.logger.info("About to send newsletter with params")
+            current_app.logger.info(request_contact_import)
             try:
                 contact_api.import_contacts(request_contact_import)
-                current_app.logger.debug("Newsletter sent")
+                current_app.logger.info("Newsletter sent")
             except ApiException as e:
                 current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
 
@@ -188,6 +190,7 @@ def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         template = transactional_api.get_smtp_template(int(template_id))
+        current_app.logger.info(f"Appel à Send in blue pour l’envoi de la campagne avec la liste {mail_list_id}, now: {now}, template_id:{template_id}")
         r = email_campaign_api.create_email_campaign(
             sib_api_v3_sdk.CreateEmailCampaign(
                 sender=sib_api_v3_sdk.CreateEmailCampaignSender(
@@ -208,6 +211,7 @@ def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test
         email_campaign_id = r.id
     else:
         email_campaign_id = 0
+    current_app.logger.info(f"Campagne créée {email_campaign_id} avec la liste {mail_list_id}, now: {now}, template_id:{template_id}")
     return email_campaign_id
 
 def format_errors(errors):
