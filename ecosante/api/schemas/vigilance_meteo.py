@@ -41,23 +41,10 @@ class IndiceSchema(Schema):
 
     @pre_dump
     def dict_to_dicts(self, data, *a, **kw):
-        max_couleur = max([v.couleur_id for v in data['details']]) if data['details'] else 1
+        max_couleur = VigilanceMeteo.make_max_couleur(data['details'])
         data['color'] = VigilanceMeteo.couleurs.get(max_couleur)
-        data['label'] = self.make_label(max_couleur, data['details'])
+        data['label'] = VigilanceMeteo.make_label(data['details'])
         return data
-
-    @classmethod
-    def make_label(cls, max_couleur, vigilances):
-        if not vigilances:
-            return ""
-        if max_couleur == 1:
-            label = "Pas d’alerte"
-        else:
-            couleur = VigilanceMeteo.couleurs.get(max_couleur)
-            if couleur:
-                couleur = couleur.lower()
-            label = f"Alerte {couleur} {oxford_comma([v.phenomene.lower() for v in vigilances if v.couleur_id == max_couleur])}"
-        return label
 
 class VigilanceMeteoSchema(FullIndiceSchema):
     indice = fields.Nested(IndiceSchema)
