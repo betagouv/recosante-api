@@ -526,7 +526,7 @@ def test_sorted_recommandation_query(db_session, inscription):
     next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 2.0
     next(filter(lambda a: a[1] == today_recommandation.id, sorted_recommandations))[0] == 2.0
 
-def test_export_simple(db_session, inscription, bonne_qualite_air, raep_eleve):
+def test_export_simple(db_session, inscription, bonne_qualite_air, raep_nul):
     db_session.add(published_recommandation())
     db_session.add(inscription)
     db_session.commit()

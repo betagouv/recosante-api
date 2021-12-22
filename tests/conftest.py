@@ -221,6 +221,12 @@ def raep_faible(db_session, commune_commited):
     return raep
 
 @pytest.fixture(scope='function')
+def raep_nul(db_session, commune_commited):
+    raep = make_raep(commune_commited, 0)
+    db_session.add(raep)
+    return raep
+
+@pytest.fixture(scope='function')
 def templates(db_session):
     templates = [
         NewsletterHebdoTemplate(ordre=10, sib_id=10),

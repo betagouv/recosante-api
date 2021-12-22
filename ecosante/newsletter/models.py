@@ -245,7 +245,7 @@ class Newsletter:
                 return True
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
             return False
-        if self.inscription.has_indicateur("raep") and not self.show_raep:
+        if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
             return False
         return True
 
