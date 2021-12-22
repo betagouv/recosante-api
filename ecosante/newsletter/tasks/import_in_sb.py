@@ -174,7 +174,15 @@ def import_contacts_in_sb(template_id_mail_list_id, now, type_, test):
             except ApiException as e:
                 current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
 
-
+def check_campaign_already_sent(email_campaign_api, mail_list_id):
+    api_response = email_campaign_api.get_email_campaigns(limit=20)
+    return any(
+        [
+            mail_list_id in c['recipients']['lists']
+            for c in api_response.campaigns
+            if 'recipients' in c and 'lists' in c['recipients'] and isinstance(c['recipients']['lists'], list)
+        ]
+    )
 
 def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test=False):
     def get_tag(test, type_):
@@ -188,6 +196,9 @@ def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test
     if current_app.config['ENV'] == 'production' or test:
         template_id = template_id or int(os.getenv('SIB_EMAIL_TEMPLATE_ID', 526))
         email_campaign_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
+        if check_campaign_already_sent(email_campaign_api, mail_list_id):
+            current_app.logger.info(f"Campagne déjà envoyée pour la liste {mail_list_id}")
+            return
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         template = transactional_api.get_smtp_template(int(template_id))
         current_app.logger.info(f"Appel à Send in blue pour l’envoi de la campagne avec la liste {mail_list_id}, now: {now}, template_id:{template_id}")
