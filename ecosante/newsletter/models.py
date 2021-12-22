@@ -241,8 +241,11 @@ class Newsletter:
         if force_send and 'quotidien' in self.inscription.indicateurs_frequence:
             return True
         if self.inscription.indicateurs_frequence and "alerte" in self.inscription.indicateurs_frequence:
-            if self.polluants or self.raep >= 4:
+            if self.inscription.has_indicateur("indice_atmo") and self.polluants:
                 return True
+            if self.inscription.has_indicateur("raep") and isinstance(self.raep, int) and self.raep >= 4:
+                return True
+            return False
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
             return False
         if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
