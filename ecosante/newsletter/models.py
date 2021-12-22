@@ -270,7 +270,7 @@ class Newsletter:
                     "ville": self.inscription.commune.nom,
                     "insee": self.inscription.commune.insee
                 })
-        elif self.type_ == 'hebdomadaire':
+        elif type_ == 'hebdomadaire':
             if self.newsletter_hebdo_template == None:
                 errors.append({
                     "type": "no_template_weekly_nl",

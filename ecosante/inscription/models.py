@@ -464,7 +464,6 @@ class Inscription(db.Model):
                     Inscription.last_month_newsletters
                 )
             )
-
         return query.options(
             joinedload(
                 Inscription.commune
