@@ -103,7 +103,7 @@ def send_campaign(secret_slug):
     template_id = request.args.get('template_id', type=int)
     type_ = request.args.get('type_')
     campaign_id = create_campaign(now, mail_list_id=mail_list_id, template_id=template_id, type_=type_)
-    #send(campaign_id)
+    send(campaign_id)
     return "ok"
 
 @bp.route('<secret_slug>/<int:mail_list_id>/export.csv', methods=['GET', 'POST'])
