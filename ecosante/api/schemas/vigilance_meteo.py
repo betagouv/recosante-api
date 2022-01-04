@@ -48,3 +48,10 @@ class IndiceSchema(Schema):
 
 class VigilanceMeteoSchema(FullIndiceSchema):
     indice = fields.Nested(IndiceSchema)
+
+    @pre_dump
+    def add_advice(self, data, *a, **kw):
+        max_couleur = VigilanceMeteo.make_max_couleur(data['indice']['details'])
+        if max_couleur <= 2:
+            data['advice'] = Recommandation.published_query().filter(Recommandation.vigilance_couleur_ids.contains([max_couleur])).first()
+        return data
