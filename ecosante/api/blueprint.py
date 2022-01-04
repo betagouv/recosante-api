@@ -43,6 +43,7 @@ def index():
     advices = Recommandation.published_query().all()
     insee = rebar.validated_args.get('insee')
     date_ = rebar.validated_args.get('date')
+    time_ = rebar.validated_args.get('time')
     show_raep = rebar.validated_args.get('show_raep')
 
     commune = Commune.get(insee)
@@ -51,7 +52,7 @@ def index():
     indice_raep = raep(insee, date_=date_) if show_raep else None
     potentiel_radon = PotentielRadon.get(insee)
     episodes = get_episodes(insee, date_=date_, use_make_resp=False)
-    vigilance_meteo = VigilanceMeteo.get(insee=insee, date_=date_)
+    vigilance_meteo = VigilanceMeteo.get(insee=insee, date_=date_, time_=time_)
 
     advice_atmo = get_advice(advices, "indice_atmo", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
