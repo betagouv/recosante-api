@@ -48,3 +48,9 @@ class IndiceSchema(Schema):
 
 class VigilanceMeteoSchema(FullIndiceSchema):
     indice = fields.Nested(IndiceSchema)
+
+    @pre_dump
+    def add_validity(self, data, *a, **kw):
+        data['validity']['start'] = VigilanceMeteo.make_start_date(data.get('indice', {}).get('details'))
+        data['validity']['end'] = VigilanceMeteo.make_end_date(data.get('indice', {}).get('details'))
+        return data
