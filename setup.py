@@ -6,7 +6,7 @@ DEPENDENCIES = [
     'idna<3',
     'kombu==5.0.2',
     'amqp==5.0.1',
-    'celery==5.0.3',
+    'celery==5.2.2',
     'celery[redis]',
     'email_validator',
     'Faker',
