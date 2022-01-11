@@ -42,8 +42,8 @@ class IndiceSchema(Schema):
     @pre_dump
     def dict_to_dicts(self, data, *a, **kw):
         max_couleur = VigilanceMeteo.make_max_couleur(data['details'])
-        data['color'] = VigilanceMeteo.couleurs.get(max_couleur)
-        data['label'] = VigilanceMeteo.make_label(data['details'])
+        data['color'] = VigilanceMeteo.couleurs.get(max_couleur) or ''
+        data['label'] = VigilanceMeteo.make_label(max_couleur)
         return data
 
 class VigilanceMeteoSchema(FullIndiceSchema):
