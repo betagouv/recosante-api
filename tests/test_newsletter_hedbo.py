@@ -1,4 +1,6 @@
 from ecosante.newsletter.models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
+from datetime import date
+from psycopg2.extras import DateRange
 
 def test_get_templates(templates):
     last_t = None
@@ -30,3 +32,73 @@ def test_hebdo_notification_web(db_session, inscription, templates):
     db_session.commit()
 
     assert len(list(Newsletter.export(type_='hebdomadaire'))) == 1
+
+def test_hebdo_periode_validite_default(db_session, templates):
+    db_session.add_all(templates)
+    db_session.commit()
+    t = templates[0]
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=1, day=12)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=1, day=1)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=12, day=31)
+    )
+
+def test_hebdo_periode_validite_one_month(db_session, templates):
+    t = templates[0]
+    t._periode_validite = DateRange(date(2022, 1, 1), date(2022, 2, 1))
+    db_session.add(t)
+    db_session.commit()
+
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=1, day=1)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=1, day=10)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=1, day=31)
+    )
+
+def test_hebdo_periode_validite_two_month(db_session, templates):
+    t = templates[0]
+    t._periode_validite = DateRange(date(2022, 7, 1), date(2022, 9, 1))
+    db_session.add(t)
+    db_session.commit()
+
+    for month in [7, 8]:
+        assert t.periode_validite.__contains__(
+            date.today().replace(month=month, day=1)
+        )
+        assert t.periode_validite.__contains__(
+            date.today().replace(month=month, day=10)
+        )
+        assert t.periode_validite.__contains__(
+            date.today().replace(month=month, day=31)
+        )
+
+def test_hebdo_periode_validite_two_years(db_session, templates):
+    t = templates[0]
+    t._periode_validite = DateRange(date(2022, 10, 1), date(2023, 2, 1))
+    db_session.add(t)
+    db_session.commit()
+
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=10, day=1)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=10, day=10)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(month=12, day=31)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(year=date.today().year+1, month=1, day=1)
+    )
+    assert t.periode_validite.__contains__(
+        date.today().replace(year=date.today().year+1, month=1, day=31)
+    )
+    

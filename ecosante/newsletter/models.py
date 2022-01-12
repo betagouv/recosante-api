@@ -9,6 +9,9 @@ from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from flask import current_app
 from sqlalchemy.sql.functions import func
+from sqlalchemy.sql.expression import cast
+from psycopg2.extras import DateRange
+from sqlalchemy.dialects.postgresql import DATERANGE
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from ecosante.utils.funcs import (
@@ -27,6 +30,12 @@ class NewsletterHebdoTemplate(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     sib_id: int = db.Column(db.Integer, nullable=False)
     ordre: int = db.Column(db.Integer, nullable=False)
+    _periode_validite: DateRange = db.Column(
+        "periode_validite",
+        DATERANGE(),
+        nullable=False,
+        default=lambda: DateRange('2022-01-01', '2023-01-01')
+    )
 
     @classmethod
     def get_templates(cls):
@@ -44,6 +53,13 @@ class NewsletterHebdoTemplate(db.Model):
         if dernier_ordre >= max([t.ordre for t in templates]):
             return None
         return [t for t in templates if t.ordre > dernier_ordre][0]
+
+    @property
+    def periode_validite(self) -> DateRange:
+        current_year = datetime.today().year
+        # Si les dates sont sur deux années différentes ont veut conserver le saut d’année
+        year_upper = current_year + (self._periode_validite.upper.year - self._periode_validite.lower.year)
+        return DateRange(self._periode_validite.lower.replace(year=current_year), self._periode_validite.upper.replace(year=year_upper))
 
 
 @dataclass
