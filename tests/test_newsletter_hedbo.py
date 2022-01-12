@@ -1,5 +1,6 @@
+from sqlalchemy.sql.sqltypes import Date
 from ecosante.newsletter.models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
-from datetime import date
+from datetime import date, timedelta
 from psycopg2.extras import DateRange
 
 def test_get_templates(templates):
@@ -33,6 +34,18 @@ def test_hebdo_notification_web(db_session, inscription, templates):
 
     assert len(list(Newsletter.export(type_='hebdomadaire'))) == 1
 
+def test_hebdo_en_dehors_periode_validite(db_session, templates, inscription):
+    for t in templates:
+        t._periode_validite = DateRange(
+            date.today() + timedelta(days=1),
+            date.today() + timedelta(days=31)
+        )
+        db_session.add(t)
+    db_session.commit()
+
+    assert NewsletterHebdoTemplate.next_template(inscription) == None
+    assert len(list(Newsletter.export(type_='hebdomadaire'))) == 0
+
 def test_hebdo_periode_validite_default(db_session, templates):
     db_session.add_all(templates)
     db_session.commit()
@@ -47,7 +60,7 @@ def test_hebdo_periode_validite_default(db_session, templates):
         date.today().replace(month=12, day=31)
     )
 
-def test_hebdo_periode_validite_one_month(db_session, templates):
+def test_periode_validite_contains_periode_validite_one_month(db_session, templates):
     t = templates[0]
     t._periode_validite = DateRange(date(2022, 1, 1), date(2022, 2, 1))
     db_session.add(t)
@@ -63,7 +76,7 @@ def test_hebdo_periode_validite_one_month(db_session, templates):
         date.today().replace(month=1, day=31)
     )
 
-def test_hebdo_periode_validite_two_month(db_session, templates):
+def test_periode_validite_contains_periode_validite_two_month(db_session, templates):
     t = templates[0]
     t._periode_validite = DateRange(date(2022, 7, 1), date(2022, 9, 1))
     db_session.add(t)
@@ -80,7 +93,7 @@ def test_hebdo_periode_validite_two_month(db_session, templates):
             date.today().replace(month=month, day=31)
         )
 
-def test_hebdo_periode_validite_two_years(db_session, templates):
+def test_periode_validite_contains_periode_validite_two_years(db_session, templates):
     t = templates[0]
     t._periode_validite = DateRange(date(2022, 10, 1), date(2023, 2, 1))
     db_session.add(t)

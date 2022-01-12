@@ -44,13 +44,13 @@ class NewsletterHebdoTemplate(db.Model):
     @classmethod
     def next_template(cls, inscription: Inscription, templates=None):
         templates = templates or cls.get_templates()
-
-        if len(templates) == 0:
+        valid_templates = [t for t in templates if t.periode_validite.__contains__(date.today())]
+        if len(valid_templates) == 0:
             return None
         if len(inscription.last_newsletters_hebdo) == 0:
-            return templates[0]
+            return valid_templates[0]
         dernier_ordre = inscription.last_newsletters_hebdo[0].newsletter_hebdo_template.ordre
-        if dernier_ordre >= max([t.ordre for t in templates]):
+        if dernier_ordre >= max([t.ordre for t in valid_templates]):
             return None
         return [t for t in templates if t.ordre > dernier_ordre][0]
 
