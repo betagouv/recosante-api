@@ -44,7 +44,7 @@ class NewsletterHebdoTemplate(db.Model):
     @classmethod
     def next_template(cls, inscription: Inscription, templates=None):
         templates = templates or cls.get_templates()
-        valid_templates = [t for t in templates if t.periode_validite.__contains__(date.today())]
+        valid_templates = [t for t in templates if date.today() in t.periode_validite]
         if len(valid_templates) == 0:
             return None
         if len(inscription.last_newsletters_hebdo) == 0:
@@ -61,6 +61,19 @@ class NewsletterHebdoTemplate(db.Model):
         year_upper = current_year + (self._periode_validite.upper.year - self._periode_validite.lower.year)
         return DateRange(self._periode_validite.lower.replace(year=current_year), self._periode_validite.upper.replace(year=year_upper))
 
+    @property
+    def debut_periode_validite(self):
+        return self.periode_validite.lower
+    @debut_periode_validite.setter
+    def debut_periode_validite(self, value):
+        self._periode_validite = DateRange(value, self._periode_validite.upper)
+
+    @property
+    def fin_periode_validite(self):
+        return self.periode_validite.upper
+    @fin_periode_validite.setter
+    def fin_periode_validite(self, value):
+        self._periode_validite = DateRange(self._periode_validite.lower, value)
 
 @dataclass
 class Newsletter:
