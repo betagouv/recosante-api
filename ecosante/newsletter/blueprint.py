@@ -196,7 +196,7 @@ def newsletter_hebdo():
         try:
             api_response = api_instance.get_smtp_template(t.sib_id)
             template["is_active"] = api_response.is_active
-        except sib_api_v3_sdk.ApiException as e:
+        except sib_api_v3_sdk.rest.ApiException as e:
             continue
         templates.append(template)
     return render_template("newsletter_hebdo_templates.html", templates=templates)
