@@ -47,9 +47,15 @@ class RadioField(SelectField):
     widget = BlankListWidget(prefix_label=False, class_labels="label-inline")
     option_widget = widgets.RadioInput()
 
+class BlankListWithUnselectWidget(BlankListWidget):
+    def __call__(self, field, **kwargs):
+        return super().__call__(field, **kwargs) + Markup(f"""
+<a onclick="(function(){{document.getElementsByName('{field.id}').forEach(i => i.checked = false)}})()">Déselectionner</a>
+""")
+
 class OuiNonField(SelectMultipleField):
     option_widget = widgets.RadioInput()
-    widget = BlankListWidget(prefix_label=False, class_labels="label-inline")
+    widget = BlankListWithUnselectWidget(prefix_label=False, class_labels="label-inline")
 
     def __init__(self, *args, **kwargs):
         kwargs['choices']= [('oui', 'Oui'), ('non', 'Non')]
@@ -61,7 +67,7 @@ class OuiNonField(SelectMultipleField):
         elif value == False:
             self.data = ['non']
         else:
-            self.data = []
+            self.data = None
 
     def process_formdata(self, valuelist):
         if len(valuelist) == 1:
