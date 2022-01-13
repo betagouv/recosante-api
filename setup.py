@@ -65,6 +65,7 @@ setup(
             'pytest-alembic',
             'pytest-flask-sqlalchemy',
             'pytest-postgresql',
+            'pytest-mock',
             'requests-mock'
         ]
     },
