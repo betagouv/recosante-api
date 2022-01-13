@@ -30,6 +30,13 @@ class NewsletterHebdoTemplate(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     sib_id: int = db.Column(db.Integer, nullable=False)
     ordre: int = db.Column(db.Integer, nullable=False)
+
+    deplacement: List[str] = db.Column(postgresql.ARRAY(db.String))
+    activites: List[str] = db.Column(postgresql.ARRAY(db.String))
+    _enfants: List[str] = db.Column("enfants", postgresql.ARRAY(db.String))
+    chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
+    _animaux_domestiques: List[str] = db.Column("animaux_domestiques", postgresql.ARRAY(db.String))
+
     _periode_validite: DateRange = db.Column(
         "periode_validite",
         DATERANGE(),
@@ -41,10 +48,23 @@ class NewsletterHebdoTemplate(db.Model):
     def get_templates(cls):
         return cls.query.order_by(cls.ordre).all()
 
+    def filtre_date(self, date_):
+        return date_ in self.periode_validite
+
+    def filtre_criteres(self, inscription):
+        for critere in ['chauffage', 'activites', 'deplacement']:
+            if isinstance(getattr(self, critere), list):
+                return isinstance(getattr(inscription, critere), list) and len(set(getattr(self, critere)).intersection(getattr(inscription, critere))) > 0
+        if isinstance(self.enfants, bool):
+            return self.enfants == inscription.enfants
+        if isinstance(self.animaux_domestiques, bool):
+            return self.animaux_domestiques == inscription.animaux_domestiques
+        return True
+
     @classmethod
     def next_template(cls, inscription: Inscription, templates=None):
         templates = templates or cls.get_templates()
-        valid_templates = [t for t in templates if date.today() in t.periode_validite]
+        valid_templates = [t for t in templates if t.filtre_date(date.today()) and t.filtre_criteres(inscription)]
         if len(valid_templates) == 0:
             return None
         if len(inscription.last_newsletters_hebdo) == 0:
@@ -74,6 +94,30 @@ class NewsletterHebdoTemplate(db.Model):
     @fin_periode_validite.setter
     def fin_periode_validite(self, value):
         self._periode_validite = DateRange(self._periode_validite.lower, value)
+
+    @property
+    def animaux_domestiques(self):
+        if isinstance(self._animaux_domestiques, list):
+            return self._animaux_domestiques[0] == 'true' if self._animaux_domestiques else False
+        return None
+    @animaux_domestiques.setter
+    def animaux_domestiques(self, value):
+        if isinstance(value, bool):
+            self._animaux_domestiques = ["true" if value else "false"]
+        else:
+            self._animaux_domestiques = None
+
+    @property
+    def enfants(self):
+        if isinstance(self._enfants, list):
+            return self._enfants[0] == 'true' if self._enfants else False
+        return None
+    @enfants.setter
+    def enfants(self, value):
+        if isinstance(value, bool):
+            self._enfants = ["true" if value else "false"]
+        else:
+            self._enfants = None
 
 @dataclass
 class Newsletter:

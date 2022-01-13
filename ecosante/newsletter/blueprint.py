@@ -209,10 +209,7 @@ def newsletter_hebdo():
 @admin_capability_url
 def newsletter_hebdo_form(id_=None):
     form_cls = FormTemplateEdit if id_ else FormTemplateAdd
-    form = form_cls(
-        request.form,
-        obj=NewsletterHebdoTemplate.query.get(id_)
-    )
+    form = form_cls(obj=NewsletterHebdoTemplate.query.get(id_))
     if request.method == "GET":
         return render_template("newsletter_hebdo_form.html", form=form)
     else:
