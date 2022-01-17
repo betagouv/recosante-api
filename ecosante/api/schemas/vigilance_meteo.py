@@ -54,6 +54,6 @@ class VigilanceMeteoSchema(FullIndiceSchema):
         data['validity']['start'] = VigilanceMeteo.make_start_date(data.get('indice', {}).get('details'))
         data['validity']['end'] = VigilanceMeteo.make_end_date(data.get('indice', {}).get('details'))
         max_couleur = VigilanceMeteo.make_max_couleur(data['indice']['details'])
-        if max_couleur <= 2:
+        if isinstance(max_couleur, int) and max_couleur <= 2:
             data['advice'] = Recommandation.published_query().filter(Recommandation.vigilance_couleur_ids.contains([max_couleur])).first()
         return data
