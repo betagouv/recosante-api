@@ -86,14 +86,19 @@ class NewsletterHebdoTemplate(db.Model):
         return self.periode_validite.lower
     @debut_periode_validite.setter
     def debut_periode_validite(self, value):
-        self._periode_validite = DateRange(value, self._periode_validite.upper)
+        self._periode_validite = DateRange(
+            value,
+            self._periode_validite.upper if self._periode_validite else None)
 
     @property
     def fin_periode_validite(self):
         return self.periode_validite.upper
     @fin_periode_validite.setter
     def fin_periode_validite(self, value):
-        self._periode_validite = DateRange(self._periode_validite.lower, value)
+        self._periode_validite = DateRange(
+            self._periode_validite.lower if self._periode_validite else None,
+            value
+        )
 
     @property
     def animaux_domestiques(self):
