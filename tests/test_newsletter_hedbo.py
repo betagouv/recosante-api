@@ -162,9 +162,9 @@ def test_deplacement(templates, inscription):
     inscription.deplacement = ["voiture"]
     assert t.filtre_criteres(inscription) == True
 
-    t.deplacement = ["velo_trott_skate", "transport_en_commun"]
+    t.deplacement = ["velo", "tec"]
     assert t.filtre_criteres(inscription) == False
-    inscription.deplacement = ["velo_trott_skate", "transport_en_commun"]
+    inscription.deplacement = ["velo", "tec"]
     assert t.filtre_criteres(inscription) == True
 
 def test_animaux_domestiques(templates, inscription):

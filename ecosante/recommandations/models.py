@@ -16,8 +16,8 @@ RECOMMANDATION_FILTERS = [
     ("bricolage", "🔨", "Bricolage"),
     ("chauffage", "🔥", "Chauffage"),
     ("jardinage", "🌳", "Jardinage"),
-    ("velo_trott_skate", "🚴", "Vélo, trotinette, skateboard"),
-    ("transport_en_commun", "🚇", "Transport en commun"),
+    ("velo", "🚴", "Vélo, trotinette, skateboard"),
+    ("tec", "🚇", "Transport en commun"),
     ("voiture", "🚗", "Voiture"),
     ("activite_physique", "‍🏋", "Activité physique"),
     ("enfants", "🧒", "Enfants"),
@@ -79,6 +79,16 @@ class Recommandation(db.Model):
     @property
     def velo(self) -> bool:
         return self.velo_trott_skate
+    @velo.setter
+    def velo(self, value):
+        self.velo_trott_skate = value
+
+    @property
+    def tec(self) -> bool:
+        return self.transport_en_commun
+    @tec.setter
+    def tec(self, value):
+        self.transport_en_commun = value
 
     @property
     def sport(self) -> bool:
@@ -143,11 +153,11 @@ class Recommandation(db.Model):
 
     @property
     def deplacement(self):
-        return self._multi_getter("", ['velo_trott_skate', 'transport_en_commun', 'voiture'])
+        return self._multi_getter("", ['velo', 'tec', 'voiture'])
 
     @deplacement.setter
     def deplacement(self, value):
-        return self._multi_setter("", ['velo_trott_skate', 'transport_en_commun', 'voiture'], value)
+        return self._multi_setter("", ['velo', 'tec', 'voiture'], value)
 
     @staticmethod
     def qualif_categorie(qualif):
@@ -161,7 +171,7 @@ class Recommandation(db.Model):
 
     @property
     def criteres(self) -> Set[str]:
-        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun", "voiture", "sport"]
+        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "tec", "voiture", "sport"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
