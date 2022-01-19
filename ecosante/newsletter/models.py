@@ -2,7 +2,7 @@ from calendar import different_locale
 from dataclasses import dataclass, field
 from typing import Dict, List
 from datetime import datetime, date, timedelta
-from itertools import chain
+from itertools import chain, groupby
 from math import inf
 from flask.helpers import url_for
 from sqlalchemy import text
@@ -145,7 +145,28 @@ class Newsletter:
     validite_raep: dict = field(default_factory=dict, init=True)
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
     type_: str = field(default="quotidien", init=True)
-    vigilances: List[VigilanceMeteo] = field(default=None, init=True)
+
+    vigilances: List[VigilanceMeteo]= field(default=None, init=True)
+    vigilance_vent: VigilanceMeteo = field(default=None, init=True)
+    vigilance_vent_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_pluie: VigilanceMeteo = field(default=None, init=True)
+    vigilance_pluie_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_orages: VigilanceMeteo = field(default=None, init=True)
+    vigilance_orages_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_crues: VigilanceMeteo = field(default=None, init=True)
+    vigilance_crues_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_neige: VigilanceMeteo = field(default=None, init=True)
+    vigilance_neige_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_canicule: VigilanceMeteo = field(default=None, init=True)
+    vigilance_canicule_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_froid: VigilanceMeteo = field(default=None, init=True)
+    vigilance_froid_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_avalanches: VigilanceMeteo = field(default=None, init=True)
+    vigilance_avalanches_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_vagues: VigilanceMeteo = field(default=None, init=True)
+    vigilance_vagues_recommandation: Recommandation = field(default=None, init=True)
+    
+    phenomenes_sib = {1: 'vent', 2: 'pluie', 3: 'orages', 4: 'crues', 5: 'neige', 6: 'canicule', 7: 'froid', 8: 'avalanches', 9: 'vagues'}
 
     def __post_init__(self):
         if self.type_ != "quotidien":
@@ -187,6 +208,28 @@ class Newsletter:
         self.recommandation_qa = self.get_recommandation(self.recommandations, types=["indice_atmo"])
         self.recommandation_raep = self.get_recommandation(self.recommandations, types=["pollens"])
         self.recommandation_episode = self.get_recommandation(self.recommandations, types=["episode_pollution"])
+        self.fill_vigilances()
+
+
+    def fill_vigilances(self):
+        vigilances_par_phenomenes = {k: list(g) for k, g in groupby(sorted(self.vigilances, key=lambda v: v.phenomene_id), lambda v: v.phenomene_id)}
+        vigilances_max_couleur = {
+            k: max(v, key=lambda v: v.couleur_id) if len(v) > 0 else None 
+            for k, v in vigilances_par_phenomenes.items()
+        }
+        vigilances_que_max = {k: [v for v in vs if v.couleur_id == vigilances_max_couleur.get(k)] for k, vs in vigilances_par_phenomenes.items()}
+        for ph_id, vigilances in vigilances_que_max.items():
+            if len(vigilances) == 0:
+                continue
+            vigilance = vigilances[0]
+            phenomene = self.phenomenes_sib.get(ph_id)
+            try:
+                recommandation = next(filter(lambda r: r.is_relevant(types=["vigilance_meteo"], vigilances=[vigilance]), self.recommandations))
+            except StopIteration:
+                current_app.logger.info(f"Impossible de trouver une recommandation pour {vigilance.id}")
+                recommandation = None
+            setattr(self, f"vigilance_{phenomene}", vigilance)
+            setattr(self, f"vigilance_{phenomene}_recommandation", recommandation)
     
 
     @property
@@ -583,7 +626,51 @@ class NewsletterDB(db.Model, Newsletter):
     mail_list_id: int = db.Column(db.Integer)
     newsletter_hebdo_template_id: int = db.Column(db.Integer(), db.ForeignKey('newsletter_hebdo_template.id'))
     newsletter_hebdo_template: NewsletterHebdoTemplate = db.relationship(NewsletterHebdoTemplate)
-    vigilances_ids: List[int] = db.Column(postgresql.ARRAY(db.Integer()))
+
+    vigilance_vent_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_vent: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_vent_id])
+    vigilance_vent_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_vent_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_vent_recommandation_id])
+
+    vigilance_pluie_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_pluie: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_pluie_id])
+    vigilance_pluie_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_pluie_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_pluie_recommandation_id])
+
+    vigilance_orages_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_orages: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_orages_id])
+    vigilance_orages_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_orages_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_orages_recommandation_id])
+
+    vigilance_crues_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_crues: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_crues_id])
+    vigilance_crues_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_crues_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_crues_recommandation_id])
+
+    vigilance_neige_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_neige: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_neige_id])
+    vigilance_neige_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_neige_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_neige_recommandation_id])
+
+    vigilance_canicule_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_canicule: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_canicule_id])
+    vigilance_canicule_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_canicule_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_canicule_recommandation_id])
+
+    vigilance_froid_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_froid: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_froid_id])
+    vigilance_froid_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_froid_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_froid_recommandation_id])
+
+    vigilance_avalanches_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_avalanches: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_avalanches_id])
+    vigilance_avalanches_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_avalanches_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_avalanches_recommandation_id])
+
+    vigilance_vagues_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_vagues: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_vagues_id])
+    vigilance_vagues_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_vagues_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_vagues_recommandation_id])
 
     def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
@@ -615,14 +702,30 @@ class NewsletterDB(db.Model, Newsletter):
         self.mail_list_id = mail_list_id
         self.newsletter_hebdo_template = newsletter.newsletter_hebdo_template
         self.newsletter_hebdo_template_id = newsletter.newsletter_hebdo_template.id if newsletter.newsletter_hebdo_template else None
-        self.vigilances_ids = [v.id for v in newsletter.vigilances]
-        self._vigilances = newsletter.vigilances
-    
+        for phenomene in self.phenomenes_sib.values():
+            key = f"vigilance_{phenomene}"
+            setattr(self, key, getattr(newsletter, key))
+            setattr(self, f"{key}_id", getattr(self, key).id)
+            key = f"vigilance_{phenomene}_recommandation"
+            setattr(self, key, getattr(newsletter, key))
+            setattr(self, f"{key}_id", getattr(self, key).id)
+
     @property
-    def vigilances(self):
-        if hasattr(self, '_vigilances'):
-            return self._vigilances
-        return VigilanceMeteo.query.filter(VigilanceMeteo.id.in_(self.vigilances_ids)).all()
+    def vigilances_dict(self):
+        max_couleur = VigilanceMeteo.make_max_couleur(
+            [getattr(self, "vigilance_{ph}") for ph in self.phenomenes_sib.values()]
+        )
+        to_return = dict()
+        for phenomene in self.phenomenes_sib.values():
+            key = f"vigilance_{phenomene}"
+            vigilance = getattr(self, key)
+            if vigilance.couleur_id != max_couleur:
+                to_return[f"VIGILANCE_{key.upper()}_RECOMMANDATION"] = ""
+                to_return[f"VIGILANCE_{key.upper()}_COULEUR"] = ""
+            else:
+                to_return[f"VIGILANCE_{key.upper()}_COULEUR"] = vigilance.couleur
+                to_return[f"VIGILANCE_{key.upper()}_RECOMMANDATION"] = getattr(self, f"{key}_recommandation").recommandation
+        return to_return
 
     def attributes(self):
         noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
@@ -670,7 +773,8 @@ class NewsletterDB(db.Model, Newsletter):
                 'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
-            **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
+            **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices])),
+            **self.vigilances_dict
         }
 
     header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT','LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE','RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP', 'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule','ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier','ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL','SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR','SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR']
