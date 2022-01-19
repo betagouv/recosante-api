@@ -229,11 +229,11 @@ def raep_nul(db_session, commune_commited):
 @pytest.fixture(scope='function')
 def templates(db_session):
     templates = [
-        NewsletterHebdoTemplate(ordre=10, sib_id=10),
-        NewsletterHebdoTemplate(ordre=7, sib_id=7),
-	    NewsletterHebdoTemplate(ordre=9, sib_id=9),
-	    NewsletterHebdoTemplate(ordre=5, sib_id=5),
-	    NewsletterHebdoTemplate(ordre=1, sib_id=1)
+        NewsletterHebdoTemplate(ordre=10, sib_id=10, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
+        NewsletterHebdoTemplate(ordre=7, sib_id=7, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
+	    NewsletterHebdoTemplate(ordre=9, sib_id=9, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
+	    NewsletterHebdoTemplate(ordre=5, sib_id=5, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
+	    NewsletterHebdoTemplate(ordre=1, sib_id=1, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)))
     ]
     db_session.add_all(templates)
     return templates

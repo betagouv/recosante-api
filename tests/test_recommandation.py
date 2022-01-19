@@ -42,16 +42,16 @@ def test_is_relevant_sport():
     help_activites('sport')
 
 def test_is_relevant_velo():
-    r = published_recommandation(velo_trott_skate=True)
+    r = published_recommandation(velo=True)
     i = Inscription(deplacement=["velo"])
     assert r.is_relevant(i, None, [], 0, date.today())
 
-    r = published_recommandation(velo_trott_skate=True)
+    r = published_recommandation(velo=True)
     i = Inscription(deplacement=[])
     assert not r.is_relevant(i, None, [], 0, date.today())
 
 def test_is_relevant_transport_en_commun():
-    help_deplacement("transport_en_commun", "tec")
+    help_deplacement("tec", "tec")
 
 def test_is_relevant_voiture(db_session):
     help_deplacement("voiture")
@@ -244,7 +244,7 @@ def test_get_relevant_recent(db_session, inscription):
 def test_get_relevant_last_criteres(db_session, inscription):
     r1 = published_recommandation(menage=True)
     r2 = published_recommandation(menage=True)
-    r3 = published_recommandation(velo_trott_skate=True)
+    r3 = published_recommandation(velo=True)
     inscription.activites = ["menage"]
     inscription.deplacement = ["velo"]
     db_session.add_all([r1, r2, r3, inscription])

@@ -9,6 +9,15 @@
         {{ form.hidden_tag() }}
         {{ render_field(form.sib_id)}}
         {{ render_field(form.ordre)}}
+        {{ render_field(form.debut_periode_validite)}}
+        {{ render_field(form.fin_periode_validite)}}
+
+        {{ render_field(form.activites) }}
+        {{ render_field(form.chauffage) }}
+        {{ render_field(form.deplacement) }}
+        {{ render_field(form.animaux_domestiques) }}
+        {{ render_field(form.enfants) }}
+
         <div class="form__group">
           <button class="button" type="submit" id="submit">Envoyer</button>
         </div>

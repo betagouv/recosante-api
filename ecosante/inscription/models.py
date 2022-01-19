@@ -104,7 +104,7 @@ class Inscription(db.Model):
         return self.has_deplacement("velo")
 
     @property
-    def transport_en_commun(self):
+    def tec(self): # Transport en commun
         return self.has_deplacement("tec")
 
     def has_activite(self, activite):
@@ -121,8 +121,7 @@ class Inscription(db.Model):
 
     @property
     def criteres(self):
-        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "transport_en_commun",
-            "voiture", "sport"]
+        liste_criteres = ["menage", "bricolage", "jardinage", "velo", "tec", "voiture", "sport"]
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 

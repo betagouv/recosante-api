@@ -9,6 +9,9 @@ from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 from flask import current_app
 from sqlalchemy.sql.functions import func
+from sqlalchemy.sql.expression import cast
+from psycopg2.extras import DateRange
+from sqlalchemy.dialects.postgresql import DATERANGE
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from ecosante.utils.funcs import (
@@ -28,23 +31,98 @@ class NewsletterHebdoTemplate(db.Model):
     sib_id: int = db.Column(db.Integer, nullable=False)
     ordre: int = db.Column(db.Integer, nullable=False)
 
+    deplacement: List[str] = db.Column(postgresql.ARRAY(db.String))
+    activites: List[str] = db.Column(postgresql.ARRAY(db.String))
+    _enfants: List[str] = db.Column("enfants", postgresql.ARRAY(db.String))
+    chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
+    _animaux_domestiques: List[str] = db.Column("animaux_domestiques", postgresql.ARRAY(db.String))
+
+    _periode_validite: DateRange = db.Column(
+        "periode_validite",
+        DATERANGE(),
+        nullable=False,
+        default=lambda: DateRange('2022-01-01', '2023-01-01')
+    )
+
     @classmethod
     def get_templates(cls):
         return cls.query.order_by(cls.ordre).all()
 
+    def filtre_date(self, date_):
+        return date_ in self.periode_validite
+
+    def filtre_criteres(self, inscription):
+        for critere in ['chauffage', 'activites', 'deplacement']:
+            if isinstance(getattr(self, critere), list):
+                return isinstance(getattr(inscription, critere), list) and len(set(getattr(self, critere)).intersection(getattr(inscription, critere))) > 0
+        if isinstance(self.enfants, bool):
+            return self.enfants == inscription.enfants
+        if isinstance(self.animaux_domestiques, bool):
+            return self.animaux_domestiques == inscription.animaux_domestiques
+        return True
+
     @classmethod
     def next_template(cls, inscription: Inscription, templates=None):
         templates = templates or cls.get_templates()
-
-        if len(templates) == 0:
+        valid_templates = [t for t in templates if t.filtre_date(date.today()) and t.filtre_criteres(inscription)]
+        if len(valid_templates) == 0:
             return None
         if len(inscription.last_newsletters_hebdo) == 0:
-            return templates[0]
+            return valid_templates[0]
         dernier_ordre = inscription.last_newsletters_hebdo[0].newsletter_hebdo_template.ordre
-        if dernier_ordre >= max([t.ordre for t in templates]):
+        if dernier_ordre >= max([t.ordre for t in valid_templates]):
             return None
         return [t for t in templates if t.ordre > dernier_ordre][0]
 
+    @property
+    def periode_validite(self) -> DateRange:
+        current_year = datetime.today().year
+        # Si les dates sont sur deux années différentes ont veut conserver le saut d’année
+        year_upper = current_year + (self._periode_validite.upper.year - self._periode_validite.lower.year)
+        return DateRange(self._periode_validite.lower.replace(year=current_year), self._periode_validite.upper.replace(year=year_upper))
+
+    @property
+    def debut_periode_validite(self):
+        return self.periode_validite.lower
+    @debut_periode_validite.setter
+    def debut_periode_validite(self, value):
+        self._periode_validite = DateRange(
+            value,
+            self._periode_validite.upper if self._periode_validite else None)
+
+    @property
+    def fin_periode_validite(self):
+        return self.periode_validite.upper
+    @fin_periode_validite.setter
+    def fin_periode_validite(self, value):
+        self._periode_validite = DateRange(
+            self._periode_validite.lower if self._periode_validite else None,
+            value
+        )
+
+    @property
+    def animaux_domestiques(self):
+        if isinstance(self._animaux_domestiques, list):
+            return self._animaux_domestiques[0] == 'true' if self._animaux_domestiques else False
+        return None
+    @animaux_domestiques.setter
+    def animaux_domestiques(self, value):
+        if isinstance(value, bool):
+            self._animaux_domestiques = ["true" if value else "false"]
+        else:
+            self._animaux_domestiques = None
+
+    @property
+    def enfants(self):
+        if isinstance(self._enfants, list):
+            return self._enfants[0] == 'true' if self._enfants else False
+        return None
+    @enfants.setter
+    def enfants(self, value):
+        if isinstance(value, bool):
+            self._enfants = ["true" if value else "false"]
+        else:
+            self._enfants = None
 
 @dataclass
 class Newsletter:

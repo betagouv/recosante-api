@@ -71,8 +71,8 @@ class FormAdd(BaseForm):
     deplacement = MultiCheckboxField(
         "Montrer pour les modes de déplacement suivants :",
         choices=[
-            ("velo_trott_skate", "Vélo"),
-            ("transport_en_commun", "Transport en commun"),
+            ("velo", "Vélo"),
+            ("tec", "Transport en commun"),
             ("voiture", "Voiture")
         ]
     )

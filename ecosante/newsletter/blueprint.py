@@ -1,5 +1,7 @@
+from asyncio import current_task
 from flask import (
     abort,
+    current_app,
     render_template,
     request,
     redirect,
@@ -196,8 +198,9 @@ def newsletter_hebdo():
         try:
             api_response = api_instance.get_smtp_template(t.sib_id)
             template["is_active"] = api_response.is_active
-        except sib_api_v3_sdk.ApiException as e:
-            continue
+        except sib_api_v3_sdk.rest.ApiException as e:
+            current_app.logger.info(f"Template SIB {t.sib_id} inexistant")
+            pass
         templates.append(template)
     return render_template("newsletter_hebdo_templates.html", templates=templates)
 
@@ -209,10 +212,7 @@ def newsletter_hebdo():
 @admin_capability_url
 def newsletter_hebdo_form(id_=None):
     form_cls = FormTemplateEdit if id_ else FormTemplateAdd
-    form = form_cls(
-        request.form,
-        obj=NewsletterHebdoTemplate.query.get(id_)
-    )
+    form = form_cls(obj=NewsletterHebdoTemplate.query.get(id_))
     if request.method == "GET":
         return render_template("newsletter_hebdo_form.html", form=form)
     else:
