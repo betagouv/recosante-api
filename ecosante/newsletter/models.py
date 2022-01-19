@@ -21,6 +21,7 @@ from ecosante.utils.funcs import (
 )
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
+from indice_pollution.history.models import VigilanceMeteo
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
@@ -144,6 +145,7 @@ class Newsletter:
     validite_raep: dict = field(default_factory=dict, init=True)
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
     type_: str = field(default="quotidien", init=True)
+    vigilances: List[VigilanceMeteo] = field(default=None, init=True)
 
     def __post_init__(self):
         if self.type_ != "quotidien":
@@ -267,7 +269,7 @@ class Newsletter:
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        indices, all_episodes, allergenes = get_all(date_)
+        indices, all_episodes, allergenes, vigilances = get_all(date_)
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
             init_dict = {"type_": type_}
@@ -275,9 +277,11 @@ class Newsletter:
                 indice = indices.get(inscription.commune_id)
                 episodes = all_episodes.get(inscription.commune.zone_pollution_id)
                 if inscription.commune.departement:
-                    raep = allergenes.get(inscription.commune.departement.zone_id, {})
+                    raep = allergenes.get(inscription.commune.departement.zone_id, None)
+                    vigilances_dep = vigilances.get(inscription.commune.departement.zone_id, [])
                 else:
                     raep = None
+                    vigilances_dep = []
                 raep_dict = raep.to_dict() if raep else {}
                 init_dict.update({
                     "inscription": inscription,
@@ -287,6 +291,7 @@ class Newsletter:
                     "raep": raep_dict.get("total"),
                     "allergenes": raep_dict.get("allergenes"),
                     "validite_raep": raep_dict.get("periode_validite", {}),
+                    "vigilances": vigilances_dep
                 })
                 if date_:
                     init_dict['date'] = date_
@@ -578,6 +583,7 @@ class NewsletterDB(db.Model, Newsletter):
     mail_list_id: int = db.Column(db.Integer)
     newsletter_hebdo_template_id: int = db.Column(db.Integer(), db.ForeignKey('newsletter_hebdo_template.id'))
     newsletter_hebdo_template: NewsletterHebdoTemplate = db.relationship(NewsletterHebdoTemplate)
+    vigilances_ids: List[int] = db.Column(postgresql.ARRAY(db.Integer()))
 
     def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
@@ -609,6 +615,14 @@ class NewsletterDB(db.Model, Newsletter):
         self.mail_list_id = mail_list_id
         self.newsletter_hebdo_template = newsletter.newsletter_hebdo_template
         self.newsletter_hebdo_template_id = newsletter.newsletter_hebdo_template.id if newsletter.newsletter_hebdo_template else None
+        self.vigilances_ids = [v.id for v in newsletter.vigilances]
+        self._vigilances = newsletter.vigilances
+    
+    @property
+    def vigilances(self):
+        if hasattr(self, '_vigilances'):
+            return self._vigilances
+        return VigilanceMeteo.query.filter(VigilanceMeteo.id.in_(self.vigilances_ids)).all()
 
     def attributes(self):
         noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
