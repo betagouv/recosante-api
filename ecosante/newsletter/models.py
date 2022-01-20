@@ -590,8 +590,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_qa_id = newsletter.recommandation_qa.id if newsletter.recommandation_qa else None
         self.recommandation_raep = newsletter.recommandation_raep
         self.recommandation_raep_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
-        self.recommandation_episode = newsletter.recommandation_raep
-        self.recommandation_episode_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
+        self.recommandation_episode = newsletter.recommandation_episode
+        self.recommandation_episode_id = newsletter.recommandation_episode.id if newsletter.recommandation_episode else None
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
