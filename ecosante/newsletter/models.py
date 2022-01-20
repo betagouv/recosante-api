@@ -132,6 +132,7 @@ class Newsletter:
     recommandation: Recommandation = field(default=None, init=True)
     recommandation_qa: Recommandation = field(default=None, init=True)
     recommandation_raep: Recommandation = field(default=None, init=True)
+    recommandation_episode: Recommandation = field(default=None, init=True)
     recommandations: List[Recommandation] = field(default=None, init=True)
     user_seed: str = field(default=None, init=True)
     inscription: Inscription = field(default=None, init=True)
