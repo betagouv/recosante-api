@@ -165,6 +165,8 @@ class Newsletter:
     vigilance_avalanches_recommandation: Recommandation = field(default=None, init=True)
     vigilance_vagues: VigilanceMeteo = field(default=None, init=True)
     vigilance_vagues_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_globale: VigilanceMeteo = field(default=None, init=True)
+    vigilance_globale_recommandation: Recommandation = field(default=None, init=True)
     
     phenomenes_sib = {1: 'vent', 2: 'pluie', 3: 'orages', 4: 'crues', 5: 'neige', 6: 'canicule', 7: 'froid', 8: 'avalanches', 9: 'vagues'}
 
@@ -210,26 +212,45 @@ class Newsletter:
         self.recommandation_episode = self.get_recommandation(self.recommandations, types=["episode_pollution"])
         self.fill_vigilances()
 
-
     def fill_vigilances(self):
-        vigilances_par_phenomenes = {k: list(g) for k, g in groupby(sorted(self.vigilances, key=lambda v: v.phenomene_id), lambda v: v.phenomene_id)}
+        if not self.vigilances:
+            return
+        for phenomene, v in self.vigilances.items():
+            setattr(self, f"vigilance_{phenomene}", v['vigilance'])
+            setattr(self, f"vigilance_{phenomene}_recommandation", v['recommandation'])
+        self.vigilance_globale = self.vigilances['globale']['vigilance']
+        self.vigilance_globale_recommandation = self.vigilances['globale']['recommandation']
+
+    @classmethod
+    def get_vigilances_recommandations(cls, vigilances, recommandations):
+        vigilances_par_phenomenes = {
+            k: list(g)
+            for k, g in groupby(sorted(vigilances, key=lambda v: v.phenomene_id), lambda v: v.phenomene_id)}
         vigilances_max_couleur = {
             k: max(v, key=lambda v: v.couleur_id) if len(v) > 0 else None 
             for k, v in vigilances_par_phenomenes.items()
         }
-        vigilances_que_max = {k: [v for v in vs if v.couleur_id == vigilances_max_couleur.get(k)] for k, vs in vigilances_par_phenomenes.items()}
-        for ph_id, vigilances in vigilances_que_max.items():
-            if len(vigilances) == 0:
+        to_return = dict()
+        for ph_id, vigilance in vigilances_max_couleur.items():
+            if not isinstance(vigilance, VigilanceMeteo):
                 continue
-            vigilance = vigilances[0]
-            phenomene = self.phenomenes_sib.get(ph_id)
+            phenomene = cls.phenomenes_sib.get(ph_id)
             try:
-                recommandation = next(filter(lambda r: r.is_relevant(types=["vigilance_meteo"], vigilances=[vigilance]), self.recommandations))
+                recommandation = next(filter(lambda r: r.is_relevant(types=["vigilance_meteo"], media=["dashboard"], vigilances=[vigilance]), recommandations))
             except StopIteration:
                 current_app.logger.info(f"Impossible de trouver une recommandation pour {vigilance.id}")
                 recommandation = None
-            setattr(self, f"vigilance_{phenomene}", vigilance)
-            setattr(self, f"vigilance_{phenomene}_recommandation", recommandation)
+            to_return[phenomene] = {
+                "vigilance": vigilance,
+                "recommandation": recommandation
+            }
+        to_return['globale'] = {"vigilance": None, 'recommandation': None}
+        to_return['globale']['vigilance'] = max(chain(vigilances_max_couleur.values()), key=lambda v: v.couleur_id)
+        if to_return['globale']['vigilance'] and to_return['globale']['vigilance'].couleur_id <= 2:
+            to_return['globale']['recommandation'] = Recommandation.published_query().filter(
+                Recommandation.vigilance_couleur_ids.contains([to_return['globale']['vigilance'].couleur_id])
+            ).first()
+        return to_return
     
 
     @property
@@ -313,6 +334,10 @@ class Newsletter:
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         indices, all_episodes, allergenes, vigilances = get_all(date_)
+        vigilances_recommandations = {
+            dep_code: cls.get_vigilances_recommandations(v, recommandations)
+            for dep_code, v in vigilances.items()
+        }
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
             init_dict = {"type_": type_}
@@ -321,10 +346,10 @@ class Newsletter:
                 episodes = all_episodes.get(inscription.commune.zone_pollution_id)
                 if inscription.commune.departement:
                     raep = allergenes.get(inscription.commune.departement.zone_id, None)
-                    vigilances_dep = vigilances.get(inscription.commune.departement.zone_id, [])
+                    vigilances_recommandations_dep = vigilances_recommandations.get(inscription.commune.departement.zone_id, {})
                 else:
                     raep = None
-                    vigilances_dep = []
+                    vigilances_recommandations_dep = {}
                 raep_dict = raep.to_dict() if raep else {}
                 init_dict.update({
                     "inscription": inscription,
@@ -334,7 +359,7 @@ class Newsletter:
                     "raep": raep_dict.get("total"),
                     "allergenes": raep_dict.get("allergenes"),
                     "validite_raep": raep_dict.get("periode_validite", {}),
-                    "vigilances": vigilances_dep
+                    "vigilances": vigilances_recommandations_dep
                 })
                 if date_:
                     init_dict['date'] = date_
@@ -371,10 +396,14 @@ class Newsletter:
                 return True
             if self.inscription.has_indicateur("raep") and isinstance(self.raep, int) and self.raep >= 4:
                 return True
+            if self.inscription.has_indicateur("vigilances_meteo") and isinstance(self.vigilance_globale, VigilanceMeteo) and self.vigilance_globale.couleur_id > 2:
+                return True
             return False
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
             return False
         if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
+            return False
+        if self.inscription.has_indicateur("vigilance_meteo") and not isinstance(self.vigilance_globale, VigilanceMeteo):
             return False
         return True
 
@@ -672,6 +701,11 @@ class NewsletterDB(db.Model, Newsletter):
     vigilance_vagues_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
     vigilance_vagues_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_vagues_recommandation_id])
 
+    vigilance_globale_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_globale: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_globale_id])
+    vigilance_globale_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_globale_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_globale_recommandation_id])
+
     def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
@@ -705,26 +739,39 @@ class NewsletterDB(db.Model, Newsletter):
         for phenomene in self.phenomenes_sib.values():
             key = f"vigilance_{phenomene}"
             setattr(self, key, getattr(newsletter, key))
-            setattr(self, f"{key}_id", getattr(self, key).id)
+            if getattr(self, key):
+                setattr(self, f"{key}_id", getattr(self, key).id)
             key = f"vigilance_{phenomene}_recommandation"
             setattr(self, key, getattr(newsletter, key))
-            setattr(self, f"{key}_id", getattr(self, key).id)
+            if getattr(self, key):
+                setattr(self, f"{key}_id", getattr(self, key).id)
+        self.vigilance_globale = newsletter.vigilance_globale
+        self.vigilance_globale_id = newsletter.vigilance_globale.id if self.vigilance_globale else None
+        self.vigilance_globale_recommandation = newsletter.vigilance_globale_recommandation
+        self.vigilance_globale_recommandation_id = newsletter.vigilance_globale_recommandation.id if self.vigilance_globale_recommandation else None
 
     @property
     def vigilances_dict(self):
         max_couleur = VigilanceMeteo.make_max_couleur(
-            [getattr(self, "vigilance_{ph}") for ph in self.phenomenes_sib.values()]
+            list(filter(None, map(lambda ph: getattr(self, f"vigilance_{ph}"), self.phenomenes_sib.values())))
         )
         to_return = dict()
         for phenomene in self.phenomenes_sib.values():
             key = f"vigilance_{phenomene}"
             vigilance = getattr(self, key)
-            if vigilance.couleur_id != max_couleur:
-                to_return[f"VIGILANCE_{key.upper()}_RECOMMANDATION"] = ""
-                to_return[f"VIGILANCE_{key.upper()}_COULEUR"] = ""
-            else:
-                to_return[f"VIGILANCE_{key.upper()}_COULEUR"] = vigilance.couleur
-                to_return[f"VIGILANCE_{key.upper()}_RECOMMANDATION"] = getattr(self, f"{key}_recommandation").recommandation
+            recommandation = getattr(self, f"{key}_recommandation")
+            to_return[f"{key.upper()}_RECOMMANDATION"] = ""
+            to_return[f"{key.upper()}_COULEUR"] = ""
+            if vigilance and vigilance.couleur_id == max_couleur:
+                to_return[f"{key.upper()}_COULEUR"] = vigilance.couleur
+            if recommandation:
+                to_return[f"{key.upper()}_RECOMMANDATION"] = recommandation.recommandation_sanitized
+        to_return['VIGILANCE_GLOBALE_COULEUR'] = ""
+        if self.vigilance_globale:
+            to_return['VIGILANCE_GLOBALE_COULEUR'] = self.vigilance_globale.couleur
+        to_return['VIGILANCE_GLOBALE_RECOMMANDATION'] = ""
+        if self.vigilance_globale_recommandation:
+            to_return['VIGILANCE_GLOBALE_RECOMMANDATION'] = self.vigilance_globale_recommandation.recommandation_sanitized
         return to_return
 
     def attributes(self):
@@ -751,7 +798,6 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
-                #'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
                 'SHOW_RAEP': convert_bool_to_yes_no((self.show_raep or False)),
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
@@ -777,7 +823,14 @@ class NewsletterDB(db.Model, Newsletter):
             **self.vigilances_dict
         }
 
-    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT','LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE','RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP', 'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule','ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier','ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL','SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR','SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR']
+    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
+'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
+'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
+'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',
+'ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier',
+'ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL',
+'SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR',
+'SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR'] + [f'VIGILANCE_{ph.upper()}_COULEUR' for ph in Newsletter.phenomenes_sib.values()] + [f'VIGILANCE_{ph.upper()}_RECOMMANDATION' for ph in Newsletter.phenomenes_sib.values()]
 
     @property
     def webpush_data(self):

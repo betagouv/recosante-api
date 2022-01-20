@@ -1,8 +1,10 @@
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from .utils import published_recommandation
 import os, pytest
 from itertools import product
+from indice_pollution.history.models import VigilanceMeteo
+from psycopg2.extras import DateTimeTZRange
 
 def test_episode_passe(db_session, inscription):
     yesterday = date.today() - timedelta(days=1)
@@ -660,3 +662,72 @@ def test_get_recommandation_par_type(inscription, db_session):
     )
     eligible_recommandations = list(nl.eligible_recommandations({r.id: r for r in recommandations}, types=["indice_atmo"]))
     assert all([r.type_ == "indice_atmo"] for r in eligible_recommandations)
+
+def test_vigilance(db_session, inscription, bonne_qualite_air, raep_nul):
+    db_session.add(published_recommandation())
+    db_session.add(inscription)
+    db_session.commit()
+
+    for phenomene_id in VigilanceMeteo.phenomenes.keys():
+        v = VigilanceMeteo(
+            zone_id=inscription.commune.departement.zone_id,
+            phenomene_id=phenomene_id,
+            couleur_id=1,
+            date_export=datetime.now() - timedelta(hours=1),
+            validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+        )
+        db_session.add(v)
+        db_session.commit()
+        newsletters = list(Newsletter.export())
+        assert len(newsletters) == 1
+        attributes = NewsletterDB(newsletters[0]).attributes()
+        key = f'VIGILANCE_{Newsletter.phenomenes_sib[phenomene_id].upper()}'
+        assert f'{key}_COULEUR' in attributes
+        assert attributes[f'{key}_COULEUR'] == 'Vert'
+        assert attributes[f'{key}_COULEUR'] == attributes['VIGILANCE_GLOBALE_COULEUR']
+
+        db_session.delete(v)
+        db_session.commit()
+
+def test_vigilance_alerte(db_session, inscription, bonne_qualite_air, raep_nul):
+    db_session.add(published_recommandation())
+    inscription.indicateurs_frequence = ['alerte']
+    inscription.indicateurs = ['vigilances_meteo']
+    db_session.add(inscription)
+    db_session.commit()
+
+    for phenomene_id in VigilanceMeteo.phenomenes.keys():
+        v = VigilanceMeteo(
+            zone_id=inscription.commune.departement.zone_id,
+            phenomene_id=phenomene_id,
+            couleur_id=1,
+            date_export=datetime.now() - timedelta(hours=1),
+            validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+        )
+        db_session.add(v)
+        db_session.commit()
+        newsletters = list(Newsletter.export())
+        assert len(newsletters) == 0
+        db_session.delete(v)
+        db_session.commit()
+
+    for phenomene_id in VigilanceMeteo.phenomenes.keys():
+        v = VigilanceMeteo(
+            zone_id=inscription.commune.departement.zone_id,
+            phenomene_id=phenomene_id,
+            couleur_id=3,
+            date_export=datetime.now() - timedelta(hours=1),
+            validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+        )
+        db_session.add(v)
+        db_session.commit()
+        newsletters = list(Newsletter.export())
+        assert len(newsletters) == 1
+        attributes = NewsletterDB(newsletters[0]).attributes()
+        key = f'VIGILANCE_{Newsletter.phenomenes_sib[phenomene_id].upper()}'
+        assert f'{key}_COULEUR' in attributes
+        assert attributes[f'{key}_COULEUR'] == 'Orange'
+        assert attributes[f'{key}_COULEUR'] == attributes['VIGILANCE_GLOBALE_COULEUR']
+
+        db_session.delete(v)
+        db_session.commit()
