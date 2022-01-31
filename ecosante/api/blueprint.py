@@ -59,6 +59,7 @@ def index():
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
     advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
     advice_episode = get_advice(advices, "episode_pollution", polluants=[e.lib_pol_normalized for e in EpisodePollution.filter_etat_haut(episodes)])
+    advice_indice_uv = get_advice(advices, "indice_uv", indice_uv=indice_uv.uv_j0) if indice_uv and indice_uv.uv_j0 else None
 
     resp =  {
         "commune": commune,
@@ -95,6 +96,7 @@ def index():
         },
         "indice_uv": {
             "indice": indice_uv,
+            "advice": advice_indice_uv,
             "sources": [{
                 "label": "Météo France",
                 "url": "https://meteofrance.com/comprendre-la-meteo/atmosphere/les-ultraviolets"
