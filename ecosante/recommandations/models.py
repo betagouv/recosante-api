@@ -261,7 +261,6 @@ class Recommandation(db.Model):
         ])
 
     def is_relevant_indice_uv(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
-        print(indice_uv)
         if self.type_ != "indice_uv":
             return True
         if type(self.min_indice_uv) != int or type(indice_uv) != int:

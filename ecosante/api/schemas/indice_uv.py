@@ -14,7 +14,7 @@ class FullIndiceUv(FullIndiceSchema):
             resp = {}
         else: 
             resp = data
-            dt = datetime.combine(data["indice"].date.today(), datetime.min.time())
+            dt = datetime.combine(data["indice"].date, datetime.min.time())
             resp['validity'] = {
                 "start": dt,
                 "end": dt + timedelta(1) - timedelta(seconds=1),
