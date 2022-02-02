@@ -45,6 +45,7 @@ def index():
     date_ = rebar.validated_args.get('date')
     time_ = rebar.validated_args.get('time')
     show_raep = rebar.validated_args.get('show_raep')
+    show_indice_uv = rebar.validated_args.get('show_indice_uv')
 
     commune = Commune.get(insee)
 
@@ -53,7 +54,7 @@ def index():
     potentiel_radon = PotentielRadon.get(insee)
     episodes = get_episodes(insee, date_=date_, use_make_resp=False)
     vigilance_meteo = VigilanceMeteo.get(insee=insee, date_=date_, time_=time_)
-    indice_uv = IndiceUv.get(insee=insee, date_=date_)
+    indice_uv = IndiceUv.get(insee=insee, date_=date_) if show_indice_uv else None
 
     advice_atmo = get_advice(advices, "indice_atmo", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
@@ -93,17 +94,6 @@ def index():
             "validity": {
                 "area": commune.departement_nom
             }
-        },
-        "indice_uv": {
-            "indice": indice_uv,
-            "advice": advice_indice_uv,
-            "sources": [{
-                "label": "Météo France",
-                "url": "https://meteofrance.com/comprendre-la-meteo/atmosphere/les-ultraviolets"
-            }],
-            "validity": {
-                "area": commune.nom
-            }
         }
     }
     if show_raep:
@@ -114,6 +104,18 @@ def index():
                 "label": "Le Réseau national de surveillance aérobiologique (RNSA)",
                 "url": "https://www.pollens.fr/"
             }]
+        }
+    if show_indice_uv:
+        resp['indice_uv'] = {
+            "indice": indice_uv,
+            "advice": advice_indice_uv,
+            "sources": [{
+                "label": "Météo France",
+                "url": "https://meteofrance.com/comprendre-la-meteo/atmosphere/les-ultraviolets"
+            }],
+            "validity": {
+                "area": commune.nom
+            }
         }
     return resp
 

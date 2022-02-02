@@ -21,3 +21,4 @@ class QuerySchema(Schema):
     date = fields.Date()
     time = fields.Time()
     show_raep = fields.Boolean(description='If this argument is set to truthy value, the licence is now set to private, you can not share the data with users anymore')
+    show_indice_uv = fields.Boolean(description='If this argument is set to truthy value, the licence is now set to private, you can not share the data with users anymore')
