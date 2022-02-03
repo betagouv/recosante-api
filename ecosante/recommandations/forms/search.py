@@ -32,7 +32,8 @@ class FormSearch(BaseForm):
             ("episode_pollution", "Épisode de pollution"),
             ("pollens", "Pollens"),
             ("radon", "Radon"),
-            ("vigilance_meteo", "Vigilance météo")
+            ("vigilance_meteo", "Vigilance météo"),
+            ("indice_uv", "Indice UV")
         ]
     )
 

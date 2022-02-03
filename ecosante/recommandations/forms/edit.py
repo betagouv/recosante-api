@@ -21,7 +21,8 @@ class FormAdd(BaseForm):
             ("episode_pollution", "Épisode de pollution"),
             ("pollens", "Pollens"),
             ("radon", "Radon"),
-            ("vigilance_meteo", "Vigilance météo")
+            ("vigilance_meteo", "Vigilance météo"),
+            ("indice_uv", "Indice UV")
         ]
     )
     saison = MultiCheckboxField("Montrer la recommandation que durant les saisons :",
@@ -124,6 +125,12 @@ class FormAdd(BaseForm):
             (9, "Vagues-Submersion")
         ],
         coerce=coerce_int
+    )
+
+    min_indice_uv = SelectField(
+        'Montrer pour un indice UV',
+        choices=[(0, "de 0") ,(1, "de 1 à 2"),  (3, "de 3 à 5"), (6, "de 6 à 7"), (8, "de 8 à 10"), (11, "de 11 et plus")],
+        coerce=int
     )
 
     def validate(self, extra_validators=[]):

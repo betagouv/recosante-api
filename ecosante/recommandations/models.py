@@ -75,6 +75,7 @@ class Recommandation(db.Model):
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
     vigilance_couleur_ids: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
     vigilance_phenomene_ids: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
+    min_indice_uv: int = db.Column(db.Integer, nullable=True)
 
     @property
     def velo(self) -> bool:
@@ -175,7 +176,7 @@ class Recommandation(db.Model):
         return set([critere for critere in liste_criteres
                 if getattr(self, critere)])
 
-    def is_relevant_inscription(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+    def is_relevant_inscription(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
         #Inscription
         if inscription:
             if self.criteres and self.criteres.isdisjoint(inscription.criteres):
@@ -210,7 +211,7 @@ class Recommandation(db.Model):
         else:
             return False
 
-    def is_relevant_pollens(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+    def is_relevant_pollens(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
         if self.type_ != "pollens":
             return True
         if type(self.min_raep) != int or type(raep) != int:
@@ -234,7 +235,7 @@ class Recommandation(db.Model):
                     return False
         return True
 
-    def is_relevant_season(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+    def is_relevant_season(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
         if date_:
 	        # Voir https://stackoverflow.com/questions/44124436/python-datetime-to-season/44124490
             # Pour déterminer la saison
@@ -249,7 +250,7 @@ class Recommandation(db.Model):
                 return False
         return True
 
-    def is_relevant_vigilance_meteo(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+    def is_relevant_vigilance_meteo(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
         if self.type_ != "vigilance_meteo":
             return True
         if not isinstance(vigilances, list):
@@ -259,7 +260,26 @@ class Recommandation(db.Model):
             for v in vigilances
         ])
 
-    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens"], vigilances=[]):
+    def is_relevant_indice_uv(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
+        if self.type_ != "indice_uv":
+            return True
+        if type(self.min_indice_uv) != int or type(indice_uv) != int:
+            return False
+        if self.min_indice_uv == 0 and indice_uv != 0:
+            return False
+        elif self.min_indice_uv == 1 and not (1 <= indice_uv <= 2):
+            return False
+        elif self.min_indice_uv == 3 and not (3 <= indice_uv <= 5):
+            return False
+        elif self.min_indice_uv == 6 and not (6 <= indice_uv <= 7):
+            return False
+        elif self.min_indice_uv == 8 and not (8 <= indice_uv <= 10):
+            return False
+        elif self.min_indice_uv == 11 and indice_uv < self.min_indice_uv:
+            return False
+        return True
+
+    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
         if not self.is_relevant_inscription(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
             return False
         # Environnement
@@ -270,16 +290,19 @@ class Recommandation(db.Model):
         if not self.is_relevant_qualif(qualif):
             return False
         # Pollens
-        if not self.is_relevant_pollens(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+        if not self.is_relevant_pollens(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         # Radon
         if self.type_ == "radon" and potentiel_radon not in self.potentiel_radon:
                 return False
         # Saison
-        if not self.is_relevant_season(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+        if not self.is_relevant_season(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         # Vigilance météo
-        if not self.is_relevant_vigilance_meteo(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+        if not self.is_relevant_vigilance_meteo(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
+            return False
+        # Indice UV
+        if not self.is_relevant_indice_uv(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         return self.type_ in types
 

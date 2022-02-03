@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload
 from ecosante.extensions import rebar, db
 from .schemas import ResponseSchema, QuerySchema
 from indice_pollution import forecast, raep, episodes as get_episodes
-from indice_pollution.history.models import PotentielRadon, IndiceATMO, VigilanceMeteo, vigilance_meteo
+from indice_pollution.history.models import PotentielRadon, IndiceATMO, VigilanceMeteo, IndiceUv
 from ecosante.recommandations.models import Recommandation
 from flask.wrappers import Response
 from flask import stream_with_context
@@ -45,6 +45,7 @@ def index():
     date_ = rebar.validated_args.get('date')
     time_ = rebar.validated_args.get('time')
     show_raep = rebar.validated_args.get('show_raep')
+    show_indice_uv = rebar.validated_args.get('show_indice_uv')
 
     commune = Commune.get(insee)
 
@@ -53,11 +54,13 @@ def index():
     potentiel_radon = PotentielRadon.get(insee)
     episodes = get_episodes(insee, date_=date_, use_make_resp=False)
     vigilance_meteo = VigilanceMeteo.get(insee=insee, date_=date_, time_=time_)
+    indice_uv = IndiceUv.get(insee=insee, date_=date_) if show_indice_uv else None
 
     advice_atmo = get_advice(advices, "indice_atmo", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
     advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
     advice_episode = get_advice(advices, "episode_pollution", polluants=[e.lib_pol_normalized for e in EpisodePollution.filter_etat_haut(episodes)])
+    advice_indice_uv = get_advice(advices, "indice_uv", indice_uv=indice_uv.uv_j0) if indice_uv and indice_uv.uv_j0 is not None else None
 
     resp =  {
         "commune": commune,
@@ -101,6 +104,18 @@ def index():
                 "label": "Le Réseau national de surveillance aérobiologique (RNSA)",
                 "url": "https://www.pollens.fr/"
             }]
+        }
+    if show_indice_uv:
+        resp['indice_uv'] = {
+            "indice": indice_uv,
+            "advice": advice_indice_uv,
+            "sources": [{
+                "label": "Météo France",
+                "url": "https://meteofrance.com/comprendre-la-meteo/atmosphere/les-ultraviolets"
+            }],
+            "validity": {
+                "area": commune.nom
+            }
         }
     return resp
 

@@ -79,6 +79,14 @@
                 <button class="button-outline primary raz">RàZ du panel</button>
             </div>
         </div>
+        <div class="panel" id="indice_uv">
+            <h4 class="subtitle">Indice UV</h4>
+            {{ render_field(form.min_indice_uv) }}
+            <div class="form__group">
+                <button class="button" type="submit" id="submit">{{ action }}</button>
+                <button class="button-outline primary raz">RàZ du panel</button>
+            </div>
+        </div>
         <div class="panel" id="inscription">
             <h4 class="subtitle">Inscription</h4>
             {{ render_field(form.population) }}

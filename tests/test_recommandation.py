@@ -306,3 +306,59 @@ def test_vigilances():
     assert r.is_relevant(media="dashboard", vigilances=[v3], types=["vigilance_meteo"]) == False
 
     assert r.is_relevant(media="dashboard", vigilances=[v2, v1, v3], types=["vigilance_meteo"]) == True
+
+def test_min_indice_uv():
+    r = published_recommandation(type_="indice_uv", min_indice_uv=0)
+    assert r.is_relevant(types=["indice_uv"], indice_uv=0) == True
+    assert r.is_relevant(types=["indice_uv"], indice_uv=1) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=3) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=6) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=8) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=11) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=12) == False
+
+
+    r = published_recommandation(type_="indice_uv", min_indice_uv=1)
+    assert r.is_relevant(types=["indice_uv"], indice_uv=0) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=1) == True
+    assert r.is_relevant(types=["indice_uv"], indice_uv=3) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=6) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=8) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=11) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=12) == False
+
+    r = published_recommandation(type_="indice_uv", min_indice_uv=3)
+    assert r.is_relevant(types=["indice_uv"], indice_uv=0) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=1) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=3) == True
+    assert r.is_relevant(types=["indice_uv"], indice_uv=6) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=8) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=11) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=12) == False
+
+    r = published_recommandation(type_="indice_uv", min_indice_uv=6)
+    assert r.is_relevant(types=["indice_uv"], indice_uv=0) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=1) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=3) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=6) == True
+    assert r.is_relevant(types=["indice_uv"], indice_uv=8) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=11) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=12) == False
+
+    r = published_recommandation(type_="indice_uv", min_indice_uv=8)
+    assert r.is_relevant(types=["indice_uv"], indice_uv=0) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=1) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=3) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=6) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=8) == True
+    assert r.is_relevant(types=["indice_uv"], indice_uv=11) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=12) == False
+
+    r = published_recommandation(type_="indice_uv", min_indice_uv=11)
+    assert r.is_relevant(types=["indice_uv"], indice_uv=0) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=1) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=3) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=6) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=8) == False
+    assert r.is_relevant(types=["indice_uv"], indice_uv=11) == True
+    assert r.is_relevant(types=["indice_uv"], indice_uv=12) == True
