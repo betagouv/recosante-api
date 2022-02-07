@@ -132,7 +132,7 @@ function clickAjoutAllergene() {
 function displayForecast(commune) {
   document.getElementById("modal_status").style.display = 'block'
   document.getElementById("status").innerText = "Chargement des prévisions pour l’utilisateur"
-  fetch(`https://api.recosante.beta.gouv.fr/v1/?` + new URLSearchParams({insee: commune.code}))
+  fetch(`https://api.recosante.beta.gouv.fr/v1/` + new URLSearchParams({insee: commune.code, show_raep=true}))
   .then(response => response.json())
   .then(data => {
       document.getElementById("div_forecast").style.display = 'block'
