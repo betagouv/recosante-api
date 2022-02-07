@@ -89,6 +89,30 @@
             <option value="8">Dioxyde azote</option>
           </select>
       </fieldset>
+      <fieldset>
+        <label for="vigilances">Vigilances météo</label>
+        <div id="liste_vigilances"></div>
+        <div>
+          <select id="ajout_vigilance_phenomene">
+            <option>Vent violent</option>
+            <option>Pluie-Inondation</option>
+            <option>Orages</option>
+            <option>Crues</option>
+            <option>Neige-verglas</option>
+            <option>Canicule</option>
+            <option>Grand Froid</option>
+            <option>Avalanches</option>
+            <option>Vagues-Submersion</option>
+          </select>
+          <select id="ajout_vigilance_couleur">
+            <option>Vert</option>
+            <option>Jaune</option>
+            <option>Orange</option>
+            <option>Rouge</option>
+          </select>
+        <input type="button" id="ajout_vigilance_button" onclick="clickAjoutVigilance()" value="Ajouter">
+        </div>
+      </fieldset>
       <input type="submit" onclick="monterChargement()">
     </form>
     <div class="modal__backdrop" id="modal_status">
@@ -125,23 +149,46 @@ function ajoutAllergene(nom, value) {
   }
 }
 
+function ajoutVigilance(phenomene, couleur) {
+  let vigilance_phenomene = document.getElementById("ajout_vigilance_phenomene").cloneNode(true)
+  vigilance_phenomene.id = "vigilance_phenomene[]"
+  vigilance_phenomene.name = "vigilance_phenomene[]"
+  vigilance_phenomene.value = phenomene
+  let vigilance_couleur = document.getElementById("ajout_vigilance_couleur").cloneNode(true)
+  vigilance_couleur.id = "vigilance_couleur[]"
+  vigilance_couleur.name = "vigilance_couleur[]"
+  vigilance_couleur.value = couleur
+
+  let div = document.createElement("div")
+  div.appendChild(vigilance_phenomene)
+  div.appendChild(vigilance_couleur)
+
+  document.getElementById("liste_vigilances").appendChild(div)
+}
+
 function clickAjoutAllergene() {
   ajoutAllergene(document.getElementById("ajout_allergene_nom").value, document.getElementById("ajout_allergene_value").value)
+}
+function clickAjoutVigilance() {
+  ajoutVigilance(document.getElementById("ajout_vigilance_phenomene").value, document.getElementById("ajout_vigilance_couleur").value)
 }
 
 function displayForecast(commune) {
   document.getElementById("modal_status").style.display = 'block'
   document.getElementById("status").innerText = "Chargement des prévisions pour l’utilisateur"
-  fetch(`https://api.recosante.beta.gouv.fr/v1/?` + new URLSearchParams({insee: commune.code}))
+  fetch(`https://api.recosante.beta.gouv.fr/v1/?` + new URLSearchParams({insee: commune.code, show_raep:true}))
   .then(response => response.json())
   .then(data => {
       document.getElementById("div_forecast").style.display = 'block'
-      document.getElementById("indice_atmo").value = data.indice_atmo.indice.value
-      document.getElementById("raep").value = data.raep.indice.value
-      data.raep.indice.details.forEach(el => {
+      document.getElementById("indice_atmo").value = data.indice_atmo?.indice?.value
+      document.getElementById("raep").value = data.raep?.indice?.value
+      data.raep?.indice?.details?.forEach(el => {
         if(el.indice.value != 0) {
           ajoutAllergene(el.label, el.indice.value)
         }
+      })
+      data.vigilance_meteo?.indice?.details?.forEach(el => {
+        ajoutVigilance(el.indice.label, el.indice.color)
       })
       document.getElementById("modal_status").style.display = 'none'
   })
