@@ -3,7 +3,7 @@ from ecosante.extensions import rebar, db
 from ecosante.utils.decorators import admin_capability_url
 from .schemas import RequestPOST, Response, RequestPOSTID, RequestUpdateProfile
 from ecosante.inscription.models import Inscription
-from ecosante.extensions import celery
+from ecosante.extensions import celery, authenticator
 
 registry = rebar.create_handler_registry('/users/')
 
@@ -43,7 +43,8 @@ def post_users():
 @registry.handles(
     rule='/<uid>',
     method='GET',
-    response_body_schema={200: Response()}
+    response_body_schema={200: Response()},
+    authenticators=[authenticator]
 )
 def get_user(uid):
     inscription = Inscription.query.filter_by(uid=uid).first()
@@ -55,6 +56,7 @@ def get_user(uid):
     method='POST',
     response_body_schema={200: Response()},
     request_body_schema=RequestPOSTID(),
+    authenticators=[authenticator]
 )
 def post_user_id(uid):
     inscription = rebar.validated_body
@@ -85,6 +87,7 @@ def send_update_profile():
     rule='/<uid>/_deactivate',
     method='POST',
     response_body_schema={200: Response()},
+    authenticators=[authenticator]
 )
 def deactivate(uid):
     inscription = Inscription.query.filter_by(uid=uid).first()
@@ -97,6 +100,7 @@ def deactivate(uid):
     rule='/<uid>/_reactivate',
     method='POST',
     response_body_schema={200: Response()},
+    authenticators=[authenticator]
 )
 def reactivate(uid):
     inscription = Inscription.query.filter_by(uid=uid).first()

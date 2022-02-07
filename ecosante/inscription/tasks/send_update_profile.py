@@ -1,5 +1,5 @@
 import sib_api_v3_sdk
-from ecosante.extensions import celery, sib
+from ecosante.extensions import celery, sib, authenticator
 from ecosante.inscription.models import Inscription
 import os
 from sib_api_v3_sdk.rest import ApiException
@@ -17,6 +17,7 @@ def send_update_profile(inscription_id):
             sib_api_v3_sdk.UpdateContact(
                 attributes={
                     "USER_UID": inscription.uid,
+                    "USER_AUTH_TOKEN": authenticator.make_token(inscription.uid)
                 }
             )
         )

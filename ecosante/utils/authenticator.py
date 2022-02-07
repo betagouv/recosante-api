@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from time import time
 from flask import request
 from flask_rebar.authenticators.base import Authenticator
 from flask_rebar import errors, messages
@@ -20,7 +20,7 @@ class TempAuthenticator(Authenticator):
         if not view_uid:
             raise errors.Unauthorized(messages.required_field_missing)
         try:
-            decoded_token = jwt.decode(encoded_token, self.secret)
+            decoded_token = jwt.decode(encoded_token, self.secret, options={"require_exp": True, "leeway": 0})
         except jwt.ExpiredSignatureError:
             raise errors.Unauthorized(messages.invalid_auth_token)
         except jwt.JWTClaimsError:
@@ -34,7 +34,7 @@ class TempAuthenticator(Authenticator):
     def make_token(self, uid):
         return jwt.encode(
             {
-                'exp': datetime.now() + timedelta(minutes=30),
+                'exp': time() + 60 * 30,
                 'uid': uid
             },
             self.secret,
