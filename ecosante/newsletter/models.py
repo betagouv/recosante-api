@@ -21,7 +21,7 @@ from ecosante.utils.funcs import (
 )
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
-
+import unicodedata, re
 FR_DATE_FORMAT = '%d/%m/%Y'
 
 
@@ -79,7 +79,7 @@ class NewsletterHebdoTemplate(db.Model):
     @property
     def periode_validite(self) -> DateRange:
         current_year = datetime.today().year
-        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) <= date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
+        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) < date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
             year_lower = current_year
         else:
             year_lower = current_year - 1
@@ -628,6 +628,15 @@ class NewsletterDB(db.Model, Newsletter):
                 return {}
         def convert_bool_to_yes_no(b):
             return "Yes" if b else "No"
+        def slugify_ville(ville):
+            # lower, replace whitespace and apostrophe by hyphen, replace œ by oe
+            ville = ville.lower()\
+                .replace(' ', '-')\
+                .replace('\'', '-').replace(u'\u2019', '-')\
+                .replace(u'\u0153', 'oe')
+            # remove diacritics
+            ville = re.sub(r'[\u0300-\u036f]', '', unicodedata.normalize('NFD', ville))
+            return ville
         return {
             **{
                 'EMAIL': self.inscription.mail,
@@ -638,6 +647,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'QUALITE_AIR': self.label or "",
                 'VILLE': self.inscription.commune.nom or "",
                 'VILLE_CODE': self.inscription.commune.insee or "",
+                'VILLE_SLUG': slugify_ville(self.inscription.commune.nom) or "",
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
@@ -666,7 +676,7 @@ class NewsletterDB(db.Model, Newsletter):
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
         }
 
-    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT','LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE','RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP', 'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule','ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier','ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL','SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR','SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR']
+    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE','VILLE_CODE','VILLE_SLUG','BACKGROUND_COLOR','SHORT_ID','POLLUANT','LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE','RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP', 'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule','ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier','ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL','SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR','SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR']
 
     @property
     def webpush_data(self):
