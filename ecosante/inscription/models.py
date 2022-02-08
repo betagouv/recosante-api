@@ -282,41 +282,6 @@ class Inscription(db.Model):
         )
 
     @classmethod
-    def generate_csv(cls):
-        yield generate_line([
-            'region',
-            'ville',
-            'deplacement',
-            'activites',
-            'pathologie_respiratoire',
-            'allergie_pollens',
-            'enfants',
-            'diffusion',
-            'mail',
-            'frequence',
-            'date_inscription',
-            'deactivation_date'
-        ])
-        for inscription in cls.active_query().all():
-            yield inscription.csv_line()
-    
-    def csv_line(self):
-        return generate_line([
-            self.region_name,
-            self.ville_nom,
-            self.deplacement,
-            self.activites,
-            self.pathologie_respiratoire,
-            self.allergie_pollens,
-            self.enfants,
-            self.diffusion,
-            self.mail,
-            self.frequence,
-            self.date_inscription,
-            self.deactivation_date
-        ])
-
-    @classmethod
     def export_geojson(cls):
         return {
             "type": "FeatureCollection",

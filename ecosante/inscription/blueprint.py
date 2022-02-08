@@ -108,16 +108,6 @@ def export():
         }
     )
 
-@bp.route('<secret_slug>/liste')
-@bp.route('/liste')
-@admin_capability_url
-def liste():
-    inscriptions = Inscription.active_query().all()
-    return render_template(
-        'liste.html',
-        inscriptions=inscriptions
-    )
-
 @bp.route('/geojson')
 def geojson():
     return jsonify(Inscription.export_geojson())

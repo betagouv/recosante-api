@@ -53,9 +53,11 @@ class NewsletterHebdoTemplate(db.Model):
         return date_ in self.periode_validite
 
     def filtre_criteres(self, inscription):
-        for critere in ['chauffage', 'activites', 'deplacement']:
-            if isinstance(getattr(self, critere), list):
-                return isinstance(getattr(inscription, critere), list) and len(set(getattr(self, critere)).intersection(getattr(inscription, critere))) > 0
+        for nom_critere in ['chauffage', 'activites', 'deplacement']:
+            critere = getattr(self, nom_critere)
+            if isinstance(critere, list) and len(critere) > 0:
+                inscription_critere = getattr(inscription, nom_critere)
+                return isinstance(inscription_critere, list) and len(set(critere).intersection(inscription_critere)) > 0
         if isinstance(self.enfants, bool):
             return self.enfants == inscription.enfants
         if isinstance(self.animaux_domestiques, bool):
@@ -78,9 +80,13 @@ class NewsletterHebdoTemplate(db.Model):
     @property
     def periode_validite(self) -> DateRange:
         current_year = datetime.today().year
+        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) <= date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
+            year_lower = current_year
+        else:
+            year_lower = current_year - 1
         # Si les dates sont sur deux années différentes ont veut conserver le saut d’année
-        year_upper = current_year + (self._periode_validite.upper.year - self._periode_validite.lower.year)
-        return DateRange(self._periode_validite.lower.replace(year=current_year), self._periode_validite.upper.replace(year=year_upper))
+        year_upper = year_lower + (self._periode_validite.upper.year - self._periode_validite.lower.year)
+        return DateRange(self._periode_validite.lower.replace(year=year_lower), self._periode_validite.upper.replace(year=year_upper))
 
     @property
     def debut_periode_validite(self):
@@ -133,6 +139,7 @@ class Newsletter:
     recommandation: Recommandation = field(default=None, init=True)
     recommandation_qa: Recommandation = field(default=None, init=True)
     recommandation_raep: Recommandation = field(default=None, init=True)
+    recommandation_episode: Recommandation = field(default=None, init=True)
     recommandations: List[Recommandation] = field(default=None, init=True)
     user_seed: str = field(default=None, init=True)
     inscription: Inscription = field(default=None, init=True)
@@ -717,8 +724,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_qa_id = newsletter.recommandation_qa.id if newsletter.recommandation_qa else None
         self.recommandation_raep = newsletter.recommandation_raep
         self.recommandation_raep_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
-        self.recommandation_episode = newsletter.recommandation_raep
-        self.recommandation_episode_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
+        self.recommandation_episode = newsletter.recommandation_episode
+        self.recommandation_episode_id = newsletter.recommandation_episode.id if newsletter.recommandation_episode else None
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
