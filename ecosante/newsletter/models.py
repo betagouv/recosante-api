@@ -79,7 +79,7 @@ class NewsletterHebdoTemplate(db.Model):
     @property
     def periode_validite(self) -> DateRange:
         current_year = datetime.today().year
-        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) < date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
+        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) <= date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
             year_lower = current_year
         else:
             year_lower = current_year - 1
