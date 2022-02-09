@@ -566,12 +566,12 @@ def test_ville_slug(db_session, inscription, bonne_qualite_air, raep_nul):
     assert nldb.attributes()['VILLE_SLUG'] == 'plateau-d-hauteville'
 
      # œ => oe
-    inscription.commune.nom = "Bonnœils"
+    inscription.commune.nom = "Bonnœil"
     db_session.add(inscription)
     db_session.commit()
     newsletters = list(Newsletter.export())
     nldb = NewsletterDB(newsletters[0])
-    assert nldb.attributes()['VILLE_SLUG'] == 'bonnoeils'
+    assert nldb.attributes()['VILLE_SLUG'] == 'bonnoeil'
 
      # Diacritics
     inscription.commune.nom = "Montluçon"
