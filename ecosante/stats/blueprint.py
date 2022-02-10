@@ -1,13 +1,13 @@
 from datetime import date, datetime, timedelta
 from functools import reduce
-from flask import current_app, render_template
+from flask import current_app, jsonify, render_template
 from flask.globals import request
 from ecosante.extensions import db, sib
 from ecosante.inscription.models import Inscription
 from ecosante.avis.models import Avis
 from ecosante.avis.forms import Form
 from ecosante.utils.blueprint import Blueprint
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from calendar import month_name, different_locale
 import json
 from dateutil.parser import parse, ParserError
@@ -155,3 +155,26 @@ def openings():
         "openings": json.dumps(dict(openings)),
         "opening_yesterday": opening_yesterday,
     }
+
+
+@bp.route('/users')
+def users():
+    active_query = db.session.query(Inscription).where(Inscription.deactivation_date == None)
+    grouped_query = active_query.group_by(text('1')).order_by(text('1'))
+    make_dict = lambda attribute: dict(grouped_query.with_entities(func.unnest(getattr(Inscription, attribute)), func.count('*')).all())
+    enfants = dict(active_query.with_entities(Inscription.enfants, func.count('*')).group_by(Inscription.enfants).all())
+    if None in enfants:
+        enfants['aucun'] += enfants[None]
+        del enfants[None]
+    return {
+        "indicateurs": make_dict('indicateurs'),
+        "indicateurs_frequence": make_dict('indicateurs_frequence'),
+        "indicateurs_media": make_dict('indicateurs_media'),
+        "newsletter_hebdo": make_dict('recommandations_actives'),
+        "activites": make_dict('activites'),
+        "enfants": enfants,
+        "chauffage": make_dict('chauffage'),
+        "transport": make_dict('deplacement'),
+        "animaux": make_dict('animaux_domestiques'),
+    }
+
