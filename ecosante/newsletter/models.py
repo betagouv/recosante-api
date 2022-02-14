@@ -153,6 +153,7 @@ class Newsletter:
     recommandation_qa: Recommandation = field(default=None, init=True)
     recommandation_raep: Recommandation = field(default=None, init=True)
     recommandation_episode: Recommandation = field(default=None, init=True)
+    recommandation_indice_uv: Recommandation = field(default=None, init=True)
     recommandations: List[Recommandation] = field(default=None, init=True)
     user_seed: str = field(default=None, init=True)
     inscription: Inscription = field(default=None, init=True)
@@ -163,6 +164,7 @@ class Newsletter:
     radon: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
+    indice_uv: dict = field(default_factory=dict, init=True)
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
     type_: str = field(default="quotidien", init=True)
 
@@ -230,6 +232,7 @@ class Newsletter:
         self.recommandation_qa = self.get_recommandation(self.recommandations, types=["indice_atmo"])
         self.recommandation_raep = self.get_recommandation(self.recommandations, types=["pollens"])
         self.recommandation_episode = self.get_recommandation(self.recommandations, types=["episode_pollution"])
+        self.recommandation_indice_uv = self.get_recommandation(self.recommandations, types=["indice_uv"])
         self.fill_vigilances()
 
     def fill_vigilances(self):
@@ -273,7 +276,6 @@ class Newsletter:
                     Recommandation.vigilance_couleur_ids.contains([to_return['globale']['vigilance'].couleur_id])
                 ).first()
         return to_return
-    
 
     @property
     def polluants_formatted(self):
@@ -328,6 +330,18 @@ class Newsletter:
             return [dict()]
 
     @property
+    def today_indice_uv(self):
+        if not self.indice_uv:
+            return dict()
+        data = self.indice_uv['data']
+        try:
+            return next(iter([v for v in data if v['date'] == str(self.date)]), dict())
+        except (TypeError, ValueError, StopIteration) as e:
+            current_app.logger.error(f'Unable to get indice_uv for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
+            current_app.logger.error(e)
+            return dict()
+
+    @property
     def qualif(self):
         return self.today_forecast.get('indice')
 
@@ -348,6 +362,14 @@ class Newsletter:
         return [e for e in self.today_episodes if e['etat'] != 'PAS DE DEPASSEMENT']
 
     @property
+    def indice_uv_label(self):
+        return self.today_indice_uv.get('label')
+
+    @property
+    def indice_uv_value(self):
+        return self.today_indice_uv.get('value')
+
+    @property
     def has_depassement(self):
         return len(self.get_depassement) > 0
 
@@ -355,7 +377,7 @@ class Newsletter:
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        indices, all_episodes, allergenes, vigilances = get_all(date_)
+        indices, all_episodes, allergenes, vigilances, indices_uv = get_all(date_)
         vigilances_recommandations = {
             dep_code: cls.get_vigilances_recommandations(v, recommandations)
             for dep_code, v in vigilances.items()
@@ -373,6 +395,7 @@ class Newsletter:
                     raep = None
                     vigilances_recommandations_dep = {}
                 raep_dict = raep.to_dict() if raep else {}
+                indice_uv = indices_uv.get(inscription.commune_id)
                 init_dict.update({
                     "inscription": inscription,
                     "recommandations": recommandations,
@@ -381,7 +404,8 @@ class Newsletter:
                     "raep": raep_dict.get("total"),
                     "allergenes": raep_dict.get("allergenes"),
                     "validite_raep": raep_dict.get("periode_validite", {}),
-                    "vigilances": vigilances_recommandations_dep
+                    "vigilances": vigilances_recommandations_dep,
+                    "indice_uv": {"data": [indice_uv.dict()]} if indice_uv else None
                 })
                 if date_:
                     init_dict['date'] = date_
@@ -419,6 +443,8 @@ class Newsletter:
             if self.inscription.has_indicateur("raep") and isinstance(self.raep, int) and self.raep >= 4:
                 return True
             if self.inscription.has_indicateur("vigilance_meteo") and isinstance(self.vigilance_globale, VigilanceMeteo) and self.vigilance_globale.couleur_id > 2:
+                return True
+            if self.inscription.has_indicateur("indice_uv") and isinstance(self.indice_uv_value, int) and self.indice_uv_value >= 3:
                 return True
             return False
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
@@ -473,7 +499,7 @@ class Newsletter:
             .filter(Recommandation.status == "published")\
             .order_by(text("nl.date nulls first"), Recommandation.ordre)
 
-    def eligible_recommandations(self, recommandations: Dict[int, Recommandation], types=["indice_atmo", "episode_pollution", "pollens"]):
+    def eligible_recommandations(self, recommandations: Dict[int, Recommandation], types=["indice_atmo", "episode_pollution", "pollens", "indice_uv"]):
         if not recommandations:
             return
             yield # See https://stackoverflow.com/questions/13243766/python-empty-generator-function
@@ -505,13 +531,14 @@ class Newsletter:
                 polluants=self.polluants,
                 raep=self.raep,
                 date_=self.date,
+                indice_uv=self.today_indice_uv.get('value'),
                 media='mail',
                 types=types
             ):
                 yield recommandations[r[1]]
 
 
-    def get_recommandation(self, recommandations: List[Recommandation], types=["indice_atmo", "episode_pollution", "pollens"]):
+    def get_recommandation(self, recommandations: List[Recommandation], types=["indice_atmo", "episode_pollution", "pollens", "indice_uv"]):
         try:
             return next(self.eligible_recommandations(recommandations, types))
         except StopIteration:
@@ -639,6 +666,9 @@ class Newsletter:
             return True
         return False
 
+    @property
+    def show_indice_uv(self):
+        return self.inscription.has_indicateur("indice_uv")
 
 @dataclass
 class NewsletterDB(db.Model, Newsletter):
@@ -661,6 +691,8 @@ class NewsletterDB(db.Model, Newsletter):
     recommandation_raep: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_raep_id])
     recommandation_episode_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
     recommandation_episode: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_episode_id])
+    recommandation_indice_uv_id: int = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    recommandation_indice_uv: Recommandation = db.relationship("Recommandation", foreign_keys=[recommandation_indice_uv_id])
     date: date = db.Column(db.Date())
     qualif: str = db.Column(db.String())
     label: str = db.Column(db.String())
@@ -673,8 +705,11 @@ class NewsletterDB(db.Model, Newsletter):
     allergenes: dict = db.Column(postgresql.JSONB)
     raep_debut_validite = db.Column(db.String())
     raep_fin_validite = db.Column(db.String())
+    indice_uv_label: str = field(default=None, init=True)
+    indice_uv_value: int = field(default=None, init=True)
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
+    show_indice_uv = db.Column(db.Boolean())
     sous_indices: dict = db.Column(postgresql.JSONB)
     webpush_subscription_info_id: int = db.Column(db.Integer, db.ForeignKey('webpush_subscription_info.id'), index=True)
     webpush_subscription_info: WebpushSubscriptionInfo = db.relationship(WebpushSubscriptionInfo)
@@ -745,6 +780,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_raep_id = newsletter.recommandation_raep.id if newsletter.recommandation_raep else None
         self.recommandation_episode = newsletter.recommandation_episode
         self.recommandation_episode_id = newsletter.recommandation_episode.id if newsletter.recommandation_episode else None
+        self.recommandation_indice_uv = newsletter.recommandation_indice_uv
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
@@ -754,8 +790,11 @@ class NewsletterDB(db.Model, Newsletter):
         self.allergenes = newsletter.allergenes
         self.raep_debut_validite = newsletter.validite_raep.get('debut')
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
+        self.indice_uv_label = newsletter.indice_uv_label
+        self.indice_uv_value = newsletter.indice_uv_value
         self.show_raep = newsletter.show_raep
         self.show_radon = newsletter.show_radon
+        self.show_indice_uv = newsletter.show_indice_uv
         self.sous_indices = newsletter.sous_indices
         self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
         self.webpush_subscription_info = newsletter.webpush_subscription_info
@@ -832,15 +871,20 @@ class NewsletterDB(db.Model, Newsletter):
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
+                'INDICE_UV_VALIDITE': self.date.strftime('%d/%m/%Y'),
                 'POLLINARIUM_SENTINELLE': convert_bool_to_yes_no((False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True)),
+                'INDICE_UV_LABEL': self.indice_uv_label or "",
+                'INDICE_UV_VALUE': self.indice_uv_value or "",
                 'SHOW_QA': convert_bool_to_yes_no(self.show_qa),
                 'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
                 'SHOW_VIGILANCE': convert_bool_to_yes_no(self.show_vigilance),
                 'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
+                'SHOW_INDICE_UV': convert_bool_to_yes_no(self.show_indice_uv),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
-                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
+                'RECOMMANDATION_RAEP ': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
+                'RECOMMANDATION_INDICE_UV': (self.recommandation_indice_uv.format(self.inscription) or "") if self.recommandation_indice_uv else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
                 'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib,
                 "VIGILANCE_VALIDITE_DEBUT": self.vigilance_globale.validity.lower.strftime('%d/%m/%Y à %H:%M') if self.vigilance_globale else "",
@@ -852,10 +896,10 @@ class NewsletterDB(db.Model, Newsletter):
             **self.vigilances_dict
         }
 
-    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
+    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE','VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
 'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
-'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
-'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',
+'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','INDICE_UV_VALIDITE','POLLINARIUM_SENTINELLE','INDICE_UV_LABEL','INDICE_UV_VALUE','SHOW_QA','SHOW_RADON','SHOW_INDICE_UV','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
+'RECOMMANDATION_EPISODE','RECOMMANDATION_INDICE_UV','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',
 'ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier',
 'ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL',
 'SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR',
