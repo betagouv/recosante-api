@@ -195,6 +195,7 @@ def test():
                 recommandations
             ),
             recommandations=recommandations
+            indice_uv=int(request.form.get("indice_uv"))
         )
         if media == "mail":
             import_(None, newsletters=[nl], force_send=True, test=True)
