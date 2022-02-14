@@ -830,7 +830,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib,
                 "VIGILANCE_VALIDITE_DEBUT": self.vigilance_globale.validity.lower,
                 "VIGILANCE_VALIDITE_FIN": self.vigilance_globale.validity.upper,
-                "VIGILANCE_LABEL": f"Viglance {self.vigilance_globale.couleur}",
+                "VIGILANCE_LABEL": VigilanceMeteo.make_label(self.vigilance_globale.couleur_id),
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices])),
