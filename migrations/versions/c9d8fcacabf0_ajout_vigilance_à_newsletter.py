@@ -35,11 +35,11 @@ def upgrade():
         column_name = f'vigilance_{phenomene}_id'
         if not _table_has_column('newsletter', column_name):
             op.add_column('newsletter', sa.Column(column_name, sa.Integer(), nullable=True))
-            op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'recommandation', [f'vigilance_{phenomene}_recommandation_id'], ['id'])
+            op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'vigilance_meteo', [column_name], ['id'], referent_schema='indice_schema')
         column_name = f'vigilance_{phenomene}_recommandation_id'
         if not _table_has_column('newsletter', column_name):
             op.add_column('newsletter', sa.Column(column_name, sa.Integer(), nullable=True))
-            op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'vigilance_meteo', [f'vigilance_{phenomene}_id'], ['id'], referent_schema='indice_schema')
+            op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'recommandation', [column_name], ['id'])
 
 
 def downgrade():
