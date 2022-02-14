@@ -28,10 +28,10 @@ def _table_has_column(table, column):
     return has_column
 
 def upgrade():
-    op.add_column('newsletter', sa.Column('vigilance_globale_id', sa.Integer(), nullable=True))
-    op.create_foreign_key('newsletter_vigilance_meteo_globale_id_fk', 'newsletter', 'vigilance_meteo', ['vigilance_globale_id'], ['id'], referent_schema='indice_schema')
-    op.add_column('newsletter', sa.Column('vigilance_globale_recommandation_id', sa.Integer(), nullable=True))
-    op.create_foreign_key('newsletter_vigilance_meteo_globale_recommandation_id_fk', 'newsletter', 'recommandation', ['vigilance_globale_recommandation_id'], ['id'])
+        op.add_column('newsletter', sa.Column('vigilance_globale_id', sa.Integer(), nullable=True))
+        op.create_foreign_key('newsletter_vigilance_meteo_globale_id_fk', 'newsletter', 'vigilance_meteo', ['vigilance_globale_id'], ['id'], referent_schema='indice_schema')
+        op.add_column('newsletter', sa.Column('vigilance_globale_recommandation_id', sa.Integer(), nullable=True))
+        op.create_foreign_key('newsletter_vigilance_meteo_globale_recommandation_id_fk', 'newsletter', 'recommandation', ['vigilance_globale_recommandation_id'], ['id'])
 
 
 def downgrade():
