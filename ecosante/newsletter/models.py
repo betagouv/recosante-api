@@ -844,7 +844,8 @@ class NewsletterDB(db.Model, Newsletter):
 'ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier',
 'ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL',
 'SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR',
-'SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR'] + [f'VIGILANCE_{ph.upper()}_COULEUR' for ph in Newsletter.phenomenes_sib.values()] + [f'VIGILANCE_{ph.upper()}_RECOMMANDATION' for ph in Newsletter.phenomenes_sib.values()]
+'SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR', 'VIGILANCE_VALIDITE_FIN', 'VIGILANCE_LABEL', 'VIGILANCE_VALIDITE_DEBUT', 'VIGILANCE_GLOBALE_RECOMMANDATION',
+ 'SHOW_VIGILANCE', 'VIGILANCE_GLOBALE_COULEUR'] + [f'VIGILANCE_{ph.upper()}_COULEUR' for ph in Newsletter.phenomenes_sib.values()] + [f'VIGILANCE_{ph.upper()}_RECOMMANDATION' for ph in Newsletter.phenomenes_sib.values()]
 
     @property
     def webpush_data(self):
