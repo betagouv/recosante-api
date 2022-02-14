@@ -595,6 +595,10 @@ class Newsletter:
         return True
 
     @property
+    def show_vigilance(self):
+        return self.inscription.has_indicateur("vigilance_meteo")
+
+    @property
     def show_qa(self):
         return self.inscription.has_indicateur("indice_atmo")
 
@@ -805,7 +809,6 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
-                'SHOW_RAEP': convert_bool_to_yes_no((self.show_raep or False)),
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
@@ -817,13 +820,17 @@ class NewsletterDB(db.Model, Newsletter):
                 'POLLINARIUM_SENTINELLE': convert_bool_to_yes_no((False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True)),
                 'SHOW_QA': convert_bool_to_yes_no(self.show_qa),
                 'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
+                'SHOW_VIGILANCE': convert_bool_to_yes_no(self.show_vigilance),
                 'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
-                'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib
+                'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib,
+                "VIGILANCE_VALIDITE_DEBUT": self.vigilance_globale.validity.lower,
+                "VIGILANCE_VALIDITE_FIN": self.vigilance_globale.validity.upper,
+                "VIGILANCE_LABEL": f"Viglance {self.vigilance_globale.couleur}",
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices])),
