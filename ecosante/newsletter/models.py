@@ -2,7 +2,7 @@ from calendar import different_locale
 from dataclasses import dataclass, field
 from typing import Dict, List
 from datetime import datetime, date, timedelta
-from itertools import chain
+from itertools import chain, groupby
 from math import inf
 from flask.helpers import url_for
 from sqlalchemy import text
@@ -21,6 +21,7 @@ from ecosante.utils.funcs import (
 )
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
+from indice_pollution.history.models import VigilanceMeteo
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
@@ -152,6 +153,30 @@ class Newsletter:
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
     type_: str = field(default="quotidien", init=True)
 
+    vigilances: List[VigilanceMeteo]= field(default=None, init=True)
+    vigilance_vent: VigilanceMeteo = field(default=None, init=True)
+    vigilance_vent_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_pluie: VigilanceMeteo = field(default=None, init=True)
+    vigilance_pluie_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_orages: VigilanceMeteo = field(default=None, init=True)
+    vigilance_orages_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_crues: VigilanceMeteo = field(default=None, init=True)
+    vigilance_crues_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_neige: VigilanceMeteo = field(default=None, init=True)
+    vigilance_neige_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_canicule: VigilanceMeteo = field(default=None, init=True)
+    vigilance_canicule_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_froid: VigilanceMeteo = field(default=None, init=True)
+    vigilance_froid_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_avalanches: VigilanceMeteo = field(default=None, init=True)
+    vigilance_avalanches_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_vagues: VigilanceMeteo = field(default=None, init=True)
+    vigilance_vagues_recommandation: Recommandation = field(default=None, init=True)
+    vigilance_globale: VigilanceMeteo = field(default=None, init=True)
+    vigilance_globale_recommandation: Recommandation = field(default=None, init=True)
+    
+    phenomenes_sib = {1: 'vent', 2: 'pluie', 3: 'orages', 4: 'crues', 5: 'neige', 6: 'canicule', 7: 'froid', 8: 'avalanches', 9: 'vagues'}
+
     def __post_init__(self):
         if self.type_ != "quotidien":
             return
@@ -192,6 +217,47 @@ class Newsletter:
         self.recommandation_qa = self.get_recommandation(self.recommandations, types=["indice_atmo"])
         self.recommandation_raep = self.get_recommandation(self.recommandations, types=["pollens"])
         self.recommandation_episode = self.get_recommandation(self.recommandations, types=["episode_pollution"])
+        self.fill_vigilances()
+
+    def fill_vigilances(self):
+        if not self.vigilances:
+            return
+        for phenomene, v in self.vigilances.items():
+            setattr(self, f"vigilance_{phenomene}", v['vigilance'])
+            setattr(self, f"vigilance_{phenomene}_recommandation", v['recommandation'])
+        self.vigilance_globale = self.vigilances['globale']['vigilance']
+        self.vigilance_globale_recommandation = self.vigilances['globale']['recommandation']
+
+    @classmethod
+    def get_vigilances_recommandations(cls, vigilances, recommandations):
+        vigilances_par_phenomenes = {
+            k: list(g)
+            for k, g in groupby(sorted(vigilances, key=lambda v: v.phenomene_id), lambda v: v.phenomene_id)}
+        vigilances_max_couleur = {
+            k: max(v, key=lambda v: v.couleur_id) if len(v) > 0 else None 
+            for k, v in vigilances_par_phenomenes.items()
+        }
+        to_return = dict()
+        for ph_id, vigilance in vigilances_max_couleur.items():
+            if not isinstance(vigilance, VigilanceMeteo):
+                continue
+            phenomene = cls.phenomenes_sib.get(ph_id)
+            try:
+                recommandation = next(filter(lambda r: r.is_relevant(types=["vigilance_meteo"], media=["dashboard"], vigilances=[vigilance]), recommandations))
+            except StopIteration:
+                current_app.logger.info(f"Impossible de trouver une recommandation pour {vigilance.id}")
+                recommandation = None
+            to_return[phenomene] = {
+                "vigilance": vigilance,
+                "recommandation": recommandation
+            }
+        to_return['globale'] = {"vigilance": None, 'recommandation': None}
+        to_return['globale']['vigilance'] = max(chain(vigilances_max_couleur.values()), key=lambda v: v.couleur_id)
+        if to_return['globale']['vigilance'] and to_return['globale']['vigilance'].couleur_id <= 2:
+            to_return['globale']['recommandation'] = Recommandation.published_query().filter(
+                Recommandation.vigilance_couleur_ids.contains([to_return['globale']['vigilance'].couleur_id])
+            ).first()
+        return to_return
     
 
     @property
@@ -274,7 +340,11 @@ class Newsletter:
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        indices, all_episodes, allergenes = get_all(date_)
+        indices, all_episodes, allergenes, vigilances = get_all(date_)
+        vigilances_recommandations = {
+            dep_code: cls.get_vigilances_recommandations(v, recommandations)
+            for dep_code, v in vigilances.items()
+        }
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
             init_dict = {"type_": type_}
@@ -282,9 +352,11 @@ class Newsletter:
                 indice = indices.get(inscription.commune_id)
                 episodes = all_episodes.get(inscription.commune.zone_pollution_id)
                 if inscription.commune.departement:
-                    raep = allergenes.get(inscription.commune.departement.zone_id, {})
+                    raep = allergenes.get(inscription.commune.departement.zone_id, None)
+                    vigilances_recommandations_dep = vigilances_recommandations.get(inscription.commune.departement.zone_id, {})
                 else:
                     raep = None
+                    vigilances_recommandations_dep = {}
                 raep_dict = raep.to_dict() if raep else {}
                 init_dict.update({
                     "inscription": inscription,
@@ -294,6 +366,7 @@ class Newsletter:
                     "raep": raep_dict.get("total"),
                     "allergenes": raep_dict.get("allergenes"),
                     "validite_raep": raep_dict.get("periode_validite", {}),
+                    "vigilances": vigilances_recommandations_dep
                 })
                 if date_:
                     init_dict['date'] = date_
@@ -330,10 +403,14 @@ class Newsletter:
                 return True
             if self.inscription.has_indicateur("raep") and isinstance(self.raep, int) and self.raep >= 4:
                 return True
+            if self.inscription.has_indicateur("vigilance_meteo") and isinstance(self.vigilance_globale, VigilanceMeteo) and self.vigilance_globale.couleur_id > 2:
+                return True
             return False
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
             return False
         if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
+            return False
+        if self.inscription.has_indicateur("vigilance_meteo") and not isinstance(self.vigilance_globale, VigilanceMeteo):
             return False
         return True
 
@@ -518,6 +595,10 @@ class Newsletter:
         return True
 
     @property
+    def show_vigilance(self):
+        return self.inscription.has_indicateur("vigilance_meteo")
+
+    @property
     def show_qa(self):
         return self.inscription.has_indicateur("indice_atmo")
 
@@ -586,6 +667,56 @@ class NewsletterDB(db.Model, Newsletter):
     newsletter_hebdo_template_id: int = db.Column(db.Integer(), db.ForeignKey('newsletter_hebdo_template.id'))
     newsletter_hebdo_template: NewsletterHebdoTemplate = db.relationship(NewsletterHebdoTemplate)
 
+    vigilance_vent_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_vent: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_vent_id])
+    vigilance_vent_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_vent_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_vent_recommandation_id])
+
+    vigilance_pluie_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_pluie: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_pluie_id])
+    vigilance_pluie_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_pluie_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_pluie_recommandation_id])
+
+    vigilance_orages_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_orages: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_orages_id])
+    vigilance_orages_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_orages_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_orages_recommandation_id])
+
+    vigilance_crues_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_crues: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_crues_id])
+    vigilance_crues_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_crues_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_crues_recommandation_id])
+
+    vigilance_neige_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_neige: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_neige_id])
+    vigilance_neige_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_neige_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_neige_recommandation_id])
+
+    vigilance_canicule_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_canicule: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_canicule_id])
+    vigilance_canicule_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_canicule_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_canicule_recommandation_id])
+
+    vigilance_froid_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_froid: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_froid_id])
+    vigilance_froid_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_froid_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_froid_recommandation_id])
+
+    vigilance_avalanches_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_avalanches: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_avalanches_id])
+    vigilance_avalanches_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_avalanches_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_avalanches_recommandation_id])
+
+    vigilance_vagues_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_vagues: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_vagues_id])
+    vigilance_vagues_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_vagues_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_vagues_recommandation_id])
+
+    vigilance_globale_id: VigilanceMeteo = db.Column(db.Integer(), db.ForeignKey(VigilanceMeteo.id))
+    vigilance_globale: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_globale_id])
+    vigilance_globale_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
+    vigilance_globale_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_globale_recommandation_id])
+
     def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
         self.inscription_id = newsletter.inscription.id
@@ -616,6 +747,43 @@ class NewsletterDB(db.Model, Newsletter):
         self.mail_list_id = mail_list_id
         self.newsletter_hebdo_template = newsletter.newsletter_hebdo_template
         self.newsletter_hebdo_template_id = newsletter.newsletter_hebdo_template.id if newsletter.newsletter_hebdo_template else None
+        for phenomene in self.phenomenes_sib.values():
+            key = f"vigilance_{phenomene}"
+            setattr(self, key, getattr(newsletter, key))
+            if getattr(self, key):
+                setattr(self, f"{key}_id", getattr(self, key).id)
+            key = f"vigilance_{phenomene}_recommandation"
+            setattr(self, key, getattr(newsletter, key))
+            if getattr(self, key):
+                setattr(self, f"{key}_id", getattr(self, key).id)
+        self.vigilance_globale = newsletter.vigilance_globale
+        self.vigilance_globale_id = newsletter.vigilance_globale.id if self.vigilance_globale else None
+        self.vigilance_globale_recommandation = newsletter.vigilance_globale_recommandation
+        self.vigilance_globale_recommandation_id = newsletter.vigilance_globale_recommandation.id if self.vigilance_globale_recommandation else None
+
+    @property
+    def vigilances_dict(self):
+        max_couleur = VigilanceMeteo.make_max_couleur(
+            list(filter(None, map(lambda ph: getattr(self, f"vigilance_{ph}"), self.phenomenes_sib.values())))
+        )
+        to_return = dict()
+        for phenomene in self.phenomenes_sib.values():
+            key = f"vigilance_{phenomene}"
+            vigilance = getattr(self, key)
+            recommandation = getattr(self, f"{key}_recommandation")
+            to_return[f"{key.upper()}_RECOMMANDATION"] = ""
+            to_return[f"{key.upper()}_COULEUR"] = ""
+            if vigilance and vigilance.couleur_id == max_couleur:
+                to_return[f"{key.upper()}_COULEUR"] = vigilance.couleur
+            if recommandation:
+                to_return[f"{key.upper()}_RECOMMANDATION"] = recommandation.recommandation_sanitized
+        to_return['VIGILANCE_GLOBALE_COULEUR'] = ""
+        if self.vigilance_globale:
+            to_return['VIGILANCE_GLOBALE_COULEUR'] = self.vigilance_globale.couleur
+        to_return['VIGILANCE_GLOBALE_RECOMMANDATION'] = ""
+        if self.vigilance_globale_recommandation:
+            to_return['VIGILANCE_GLOBALE_RECOMMANDATION'] = self.vigilance_globale_recommandation.recommandation_sanitized
+        return to_return
 
     def attributes(self):
         noms_sous_indices = ['no2', 'so2', 'o3', 'pm10', 'pm25']
@@ -641,8 +809,6 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
-                #'LIEN_RECOMMANDATIONS_ALERTE': self.lien_recommandations_alerte or "",
-                'SHOW_RAEP': convert_bool_to_yes_no((self.show_raep or False)),
                 'RAEP': self.qualif_raep or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
@@ -654,19 +820,31 @@ class NewsletterDB(db.Model, Newsletter):
                 'POLLINARIUM_SENTINELLE': convert_bool_to_yes_no((False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True)),
                 'SHOW_QA': convert_bool_to_yes_no(self.show_qa),
                 'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
+                'SHOW_VIGILANCE': convert_bool_to_yes_no(self.show_vigilance),
                 'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
-                'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib
+                'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib,
+                "VIGILANCE_VALIDITE_DEBUT": self.vigilance_globale.validity.lower,
+                "VIGILANCE_VALIDITE_FIN": self.vigilance_globale.validity.upper,
+                "VIGILANCE_LABEL": VigilanceMeteo.make_label(self.vigilance_globale.couleur_id),
             },
             **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
-            **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices]))
+            **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices])),
+            **self.vigilances_dict
         }
 
-    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT','LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE','RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP', 'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule','ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier','ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL','SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR','SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR']
+    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE', 'VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
+'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
+'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','POLLINARIUM_SENTINELLE','SHOW_QA','SHOW_RADON','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
+'RECOMMANDATION_EPISODE','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',
+'ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier',
+'ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL',
+'SS_INDICE_NO2_COULEUR','SS_INDICE_SO2_LABEL','SS_INDICE_SO2_COULEUR','SS_INDICE_O3_LABEL','SS_INDICE_O3_COULEUR','SS_INDICE_PM10_LABEL','SS_INDICE_PM10_COULEUR',
+'SS_INDICE_PM25_LABEL','SS_INDICE_PM25_COULEUR'] + [f'VIGILANCE_{ph.upper()}_COULEUR' for ph in Newsletter.phenomenes_sib.values()] + [f'VIGILANCE_{ph.upper()}_RECOMMANDATION' for ph in Newsletter.phenomenes_sib.values()]
 
     @property
     def webpush_data(self):
