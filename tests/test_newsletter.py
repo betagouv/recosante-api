@@ -692,7 +692,7 @@ def test_vigilance(db_session, inscription, bonne_qualite_air, raep_nul):
 def test_vigilance_alerte(db_session, inscription, bonne_qualite_air, raep_nul):
     db_session.add(published_recommandation())
     inscription.indicateurs_frequence = ['alerte']
-    inscription.indicateurs = ['vigilances_meteo']
+    inscription.indicateurs = ['vigilance_meteo']
     db_session.add(inscription)
     db_session.commit()
 

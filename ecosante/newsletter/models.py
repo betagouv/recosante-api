@@ -403,7 +403,7 @@ class Newsletter:
                 return True
             if self.inscription.has_indicateur("raep") and isinstance(self.raep, int) and self.raep >= 4:
                 return True
-            if self.inscription.has_indicateur("vigilances_meteo") and isinstance(self.vigilance_globale, VigilanceMeteo) and self.vigilance_globale.couleur_id > 2:
+            if self.inscription.has_indicateur("vigilance_meteo") and isinstance(self.vigilance_globale, VigilanceMeteo) and self.vigilance_globale.couleur_id > 2:
                 return True
             return False
         if self.inscription.has_indicateur("indice_atmo") and not self.label:
