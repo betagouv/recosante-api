@@ -34,7 +34,7 @@ def upgrade():
     for phenomene in phenomenes_sib.values():
         column_name = f'vigilance_{phenomene}_id'
         if not _table_has_column('newsletter', column_name):
-            op.add_column('newsletter', sa.Column(column_name, sa.Integer(), nullable=True), if_not_exists=True)
+            op.add_column('newsletter', sa.Column(column_name, sa.Integer(), nullable=True))
             op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'recommandation', [f'vigilance_{phenomene}_recommandation_id'], ['id'])
         column_name = f'vigilance_{phenomene}_recommandation_id'
         if not _table_has_column('newsletter', column_name):
