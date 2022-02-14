@@ -882,7 +882,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'SHOW_INDICE_UV': convert_bool_to_yes_no(self.show_indice_uv),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
-                'RECOMMANDATION_RAEP ': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
+                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
                 'RECOMMANDATION_INDICE_UV': (self.recommandation_indice_uv.format(self.inscription) or "") if self.recommandation_indice_uv else "",
                 'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
