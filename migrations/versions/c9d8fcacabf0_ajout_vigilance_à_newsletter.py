@@ -7,6 +7,7 @@ Create Date: 2022-01-19 17:35:41.001599
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.engine import reflection
 
 
 # revision identifiers, used by Alembic.
@@ -16,13 +17,29 @@ branch_labels = None
 depends_on = None
 
 phenomenes_sib = {1: 'vent', 2: 'pluie', 3: 'orages', 4: 'crues', 5: 'neige', 6: 'canicule', 7: 'froid', 8: 'avalanches', 9: 'vagues'}
+def _table_has_column(table, column):
+    config = op.get_context().config
+    engine = sa.engine_from_config(
+        config.get_section(config.config_ini_section), prefix='sqlalchemy.')
+    insp = reflection.Inspector.from_engine(engine)
+    has_column = False
+    for col in insp.get_columns(table):
+        if column not in col['name']:
+            continue
+        has_column = True
+    return has_column
+
 
 def upgrade():
     for phenomene in phenomenes_sib.values():
-        op.add_column('newsletter', sa.Column(f'vigilance_{phenomene}_id', sa.Integer(), nullable=True))
-        op.add_column('newsletter', sa.Column(f'vigilance_{phenomene}_recommandation_id', sa.Integer(), nullable=True))
-        op.create_foreign_key(f'newsletter_fk_vigilance_{phenomene}_id', 'newsletter', 'recommandation', [f'vigilance_{phenomene}_recommandation_id'], ['id'])
-        op.create_foreign_key(f'newsletter_fk_vigilance_{phenomene}_recommandation_id', 'newsletter', 'vigilance_meteo', [f'vigilance_{phenomene}_id'], ['id'], referent_schema='indice_schema')
+        column_name = f'vigilance_{phenomene}_id'
+        if not _table_has_column('newsletter', column_name):
+            op.add_column('newsletter', sa.Column(column_name, sa.Integer(), nullable=True), if_not_exists=True)
+            op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'recommandation', [f'vigilance_{phenomene}_recommandation_id'], ['id'])
+        column_name = f'vigilance_{phenomene}_recommandation_id'
+        if not _table_has_column('newsletter', column_name):
+            op.add_column('newsletter', sa.Column(column_name, sa.Integer(), nullable=True))
+            op.create_foreign_key(f'newsletter_fk_{column_name}', 'newsletter', 'vigilance_meteo', [f'vigilance_{phenomene}_id'], ['id'], referent_schema='indice_schema')
 
 
 def downgrade():
