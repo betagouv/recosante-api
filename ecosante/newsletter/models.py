@@ -341,6 +341,8 @@ class Newsletter:
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         indices, all_episodes, allergenes, vigilances = get_all(date_)
+        for vigilance in vigilances:
+            db.session.merge(vigilance)
         vigilances_recommandations = {
             dep_code: cls.get_vigilances_recommandations(v, recommandations)
             for dep_code, v in vigilances.items()
