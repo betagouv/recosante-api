@@ -248,15 +248,17 @@ class Newsletter:
                 current_app.logger.info(f"Impossible de trouver une recommandation pour {vigilance.id}")
                 recommandation = None
             to_return[phenomene] = {
-                "vigilance": vigilance,
+                "vigilance": db.session.merge(vigilance),
                 "recommandation": recommandation
             }
         to_return['globale'] = {"vigilance": None, 'recommandation': None}
         to_return['globale']['vigilance'] = max(chain(vigilances_max_couleur.values()), key=lambda v: v.couleur_id)
-        if to_return['globale']['vigilance'] and to_return['globale']['vigilance'].couleur_id <= 2:
-            to_return['globale']['recommandation'] = Recommandation.published_query().filter(
-                Recommandation.vigilance_couleur_ids.contains([to_return['globale']['vigilance'].couleur_id])
-            ).first()
+        if to_return['globale']['vigilance']:
+            to_return['globale']['vigilance'] = db.session.merge(to_return['globale']['vigilance'])
+            if to_return['globale']['vigilance'].couleur_id <= 2:
+                to_return['globale']['recommandation'] = Recommandation.published_query().filter(
+                    Recommandation.vigilance_couleur_ids.contains([to_return['globale']['vigilance'].couleur_id])
+                ).first()
         return to_return
     
 
@@ -341,8 +343,6 @@ class Newsletter:
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
         indices, all_episodes, allergenes, vigilances = get_all(date_)
-        for vigilance in vigilances:
-            db.session.merge(vigilance)
         vigilances_recommandations = {
             dep_code: cls.get_vigilances_recommandations(v, recommandations)
             for dep_code, v in vigilances.items()
@@ -434,7 +434,7 @@ class Newsletter:
                     "ville": self.inscription.commune.nom,
                     "insee": self.inscription.commune.insee
                 })
-        elif type_ == 'hebdomadaire':
+        elif self.type_ == 'hebdomadaire':
             if self.newsletter_hebdo_template == None:
                 errors.append({
                     "type": "no_template_weekly_nl",
