@@ -60,7 +60,6 @@ def test_next_template_criteres(db_session, templates, inscription):
     assert NewsletterHebdoTemplate.next_template(inscription) != None
     assert len(list(Newsletter.export(type_='hebdomadaire'))) > 0
 
-
 def test_hebdo_periode_validite_default(db_session, templates):
     db_session.add_all(templates)
     db_session.commit()
@@ -95,7 +94,6 @@ def test_periode_validite_contains_periode_validite_two_years(db_session, templa
     t._periode_validite = DateRange(date(2022, 10, 1), date(2023, 2, 1))
     db_session.add(t)
     db_session.commit()
-
     assert t.filtre_date(date.today().replace(month=1, day=1)) == False
     assert t.filtre_date(date.today().replace(month=10, day=1))
     assert t.filtre_date(date.today().replace(month=10, day=10))
@@ -105,16 +103,19 @@ def test_periode_validite_contains_periode_validite_two_years(db_session, templa
 
 def test_chauffage(templates, inscription):
     t = templates[0]
-
+    t.chauffage = []
+    assert t.filtre_criteres(inscription) == True
+    inscription.chauffage = ["bois"]
     assert t.filtre_criteres(inscription) == True
 
     t.chauffage = ["bois"]
+    inscription.chauffage = None
     assert t.filtre_criteres(inscription) == False
     inscription.chauffage = ["bois"]
     assert t.filtre_criteres(inscription) == True
 
     t.chauffage = ["bois", "chaudiere"]
-    inscription.chauffage = []
+    inscription.chauffage = None
     assert t.filtre_criteres(inscription) == False
     inscription.chauffage = ["bois"]
     assert t.filtre_criteres(inscription) == True
@@ -125,60 +126,84 @@ def test_chauffage(templates, inscription):
 
 def test_activites(templates, inscription):
     t = templates[0]
-
+    t.activites = []
+    assert t.filtre_criteres(inscription) == True
+    inscription.activites = ["menage"]
     assert t.filtre_criteres(inscription) == True
 
     t.activites = ["menage"]
+    inscription.activites = None
     assert t.filtre_criteres(inscription) == False
     inscription.activites = ["menage"]
     assert t.filtre_criteres(inscription) == True
 
+    t.activites = ["menage", "bricolage"]
+    inscription.activites = None
+    assert t.filtre_criteres(inscription) == False
+    inscription.activites = ["menage"]
+    assert t.filtre_criteres(inscription) == True
+    inscription.activites = ["bricolage"]
+    assert t.filtre_criteres(inscription) == True
+    inscription.activites = ["bricolage", "menage"]
+    assert t.filtre_criteres(inscription) == True
+
 def test_enfants(templates, inscription):
     t = templates[0]
-
+    t.enfants = None
+    assert t.filtre_criteres(inscription) == True
+    inscription.enfants = "oui"
     assert t.filtre_criteres(inscription) == True
 
     t.enfants = True
+    inscription.enfants = "non"
     assert t.filtre_criteres(inscription) == False
-    inscription.enfants = True
+    inscription.enfants = "oui"
     assert t.filtre_criteres(inscription) == True
 
-    inscription.enfants = None
     t.enfants = False
+    inscription.enfants = "oui"
     assert t.filtre_criteres(inscription) == False
-    inscription.enfants = False
+    inscription.enfants = "non"
     assert t.filtre_criteres(inscription) == True
 
 def test_deplacement(templates, inscription):
     t = templates[0]
-
-    t.deplacement = None
+    t.deplacement = []
     assert t.filtre_criteres(inscription) == True
     inscription.deplacement = ["velo"]
     assert t.filtre_criteres(inscription) == True
 
-    t.deplacement = ["voiture"]
+    t.deplacement = ["velo"]
+    inscription.deplacement = None
     assert t.filtre_criteres(inscription) == False
-    inscription.deplacement = ["voiture"]
+    inscription.deplacement = ["velo"]
     assert t.filtre_criteres(inscription) == True
 
     t.deplacement = ["velo", "tec"]
+    inscription.deplacement = None
     assert t.filtre_criteres(inscription) == False
-    inscription.deplacement = ["velo", "tec"]
+    inscription.deplacement = ["velo"]
+    assert t.filtre_criteres(inscription) == True
+    inscription.deplacement = ["tec"]
+    assert t.filtre_criteres(inscription) == True
+    inscription.deplacement = ["tec", "velo"]
     assert t.filtre_criteres(inscription) == True
 
 def test_animaux_domestiques(templates, inscription):
     t = templates[0]
-
+    t.animaux_domestiques = None
+    assert t.filtre_criteres(inscription) == True
+    inscription.animaux_domestiques = ["chat"]
     assert t.filtre_criteres(inscription) == True
 
     t.animaux_domestiques = True
+    inscription.animaux_domestiques = None
     assert t.filtre_criteres(inscription) == False
-    inscription.animaux_domestiques = True
+    inscription.animaux_domestiques = ["chat"]
     assert t.filtre_criteres(inscription) == True
 
-    inscription.animaux_domestiques = None
     t.animaux_domestiques = False
+    inscription.animaux_domestiques = ["chat"]
     assert t.filtre_criteres(inscription) == False
-    inscription.animaux_domestiques = False
+    inscription.animaux_domestiques = None
     assert t.filtre_criteres(inscription) == True

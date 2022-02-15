@@ -59,9 +59,9 @@ class NewsletterHebdoTemplate(db.Model):
                 inscription_critere = getattr(inscription, nom_critere)
                 return isinstance(inscription_critere, list) and len(set(critere).intersection(inscription_critere)) > 0
         if isinstance(self.enfants, bool):
-            return self.enfants == inscription.enfants
+            return self.enfants == inscription.has_enfants
         if isinstance(self.animaux_domestiques, bool):
-            return self.animaux_domestiques == inscription.animaux_domestiques
+            return self.animaux_domestiques == inscription.has_animaux_domestiques
         return True
 
     @classmethod
@@ -86,6 +86,7 @@ class NewsletterHebdoTemplate(db.Model):
             year_lower = current_year - 1
         # Si les dates sont sur deux années différentes ont veut conserver le saut d’année
         year_upper = year_lower + (self._periode_validite.upper.year - self._periode_validite.lower.year)
+        print(DateRange(self._periode_validite.lower.replace(year=year_lower), self._periode_validite.upper.replace(year=year_upper)))
         return DateRange(self._periode_validite.lower.replace(year=year_lower), self._periode_validite.upper.replace(year=year_upper))
 
     @property
