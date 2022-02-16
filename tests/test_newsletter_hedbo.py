@@ -182,3 +182,23 @@ def test_animaux_domestiques(templates, inscription):
     assert t.filtre_criteres(inscription) == False
     inscription.animaux_domestiques = False
     assert t.filtre_criteres(inscription) == True
+
+def test_vraie_vie(templates, inscription, db_session):
+    templates = sorted(templates, key=lambda n: n.ordre)
+    templates[1].animaux_domestiques = True
+    templates[2].enfants = True
+    templates[3].chauffage = ["bois"]
+
+    db_session.add(inscription)
+    db_session.add_all(templates)
+    db_session.commit()
+
+    nls = list(Newsletter.export(type_='hebdomadaire'))
+    assert len(nls) == 1
+    assert nls[0].newsletter_hebdo_template.id == templates[0].id
+    db_session.add_all([NewsletterDB(nl) for nl in nls])
+    db_session.commit()
+
+    nls = list(Newsletter.export(type_='hebdomadaire', filter_already_sent=False))
+    assert len(nls) == 1
+    assert nls[0].newsletter_hebdo_template.id == templates[-1].id
