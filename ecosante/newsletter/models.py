@@ -61,11 +61,14 @@ class NewsletterHebdoTemplate(db.Model):
             critere = getattr(self, nom_critere)
             if isinstance(critere, list) and len(critere) > 0:
                 inscription_critere = getattr(inscription, nom_critere)
-                return isinstance(inscription_critere, list) and len(set(critere).intersection(inscription_critere)) > 0
-        if isinstance(self.enfants, bool):
-            return self.enfants == inscription.has_enfants
-        if isinstance(self.animaux_domestiques, bool):
-            return self.animaux_domestiques == inscription.has_animaux_domestiques
+                if not isinstance(inscription_critere, list):
+                    return False
+                if len(set(critere).intersection(inscription_critere)) == 0:
+                    return False
+        if isinstance(self.enfants, bool) and self.enfants != inscription.has_enfants:
+            return False
+        if isinstance(self.animaux_domestiques, bool) and self.animaux_domestiques != inscription.has_animaux_domestiques:
+            return False
         return True
 
     @classmethod
