@@ -50,6 +50,10 @@ class NewsletterHebdoTemplate(db.Model):
         return cls.query.order_by(cls.ordre).all()
 
     def filtre_date(self, date_):
+        periode_validite = self.periode_validite
+        if periode_validite.lower.year != periode_validite.upper.year:
+            return date(date_.year, 1, 1) <= date_ <= periode_validite.upper.replace(year=date_.year)\
+                 or  periode_validite.lower.replace(year=date_.year) <= date_ <= date(date_.year, 12, 31)
         return date_ in self.periode_validite
 
     def filtre_criteres(self, inscription):
@@ -80,7 +84,7 @@ class NewsletterHebdoTemplate(db.Model):
     @property
     def periode_validite(self) -> DateRange:
         current_year = datetime.today().year
-        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) <= date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
+        if self._periode_validite.lower.replace(year=current_year) <= self._periode_validite.upper.replace(year=current_year):
             year_lower = current_year
         else:
             year_lower = current_year - 1

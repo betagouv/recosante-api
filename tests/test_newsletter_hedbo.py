@@ -96,12 +96,14 @@ def test_periode_validite_contains_periode_validite_two_years(db_session, templa
     db_session.add(t)
     db_session.commit()
 
-    assert t.filtre_date(date.today().replace(month=1, day=1)) == False
+    assert t.filtre_date(date.today().replace(month=1, day=1))
     assert t.filtre_date(date.today().replace(month=10, day=1))
     assert t.filtre_date(date.today().replace(month=10, day=10))
     assert t.filtre_date(date.today().replace(month=12, day=31))
     assert t.filtre_date(date.today().replace(year=date.today().year+1, month=1, day=1))
-    assert t.filtre_date(date.today().replace(year=date.today().year+1, month=1, day=31))
+    assert t.filtre_date(date.today().replace(year=date.today().year+1, month=2, day=1))
+    assert t.filtre_date(date.today().replace(year=date.today().year+1, month=2, day=2)) == False
+    assert t.filtre_date(date.today().replace(month=9, day=30)) == False
 
 def test_chauffage(templates, inscription):
     t = templates[0]
