@@ -96,10 +96,10 @@ def get_mail_list_id(newsletter, template_id_mail_list_id, now, test):
     return template_id_mail_list_id[template_sib_id]
 
 
-def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, activate_webhook=True):
+def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, activate_webhook=True, filter_already_sent=True):
     
     now = datetime.now()
-    errors, template_id_mail_list_id = import_in_db(task, now, type_, force_send, test, mail_list_id, newsletters)
+    errors, template_id_mail_list_id = import_in_db(task, now, type_, force_send, test, mail_list_id, newsletters, filter_already_sent)
     import_contacts_in_sb(template_id_mail_list_id, now, type_, test, activate_webhook)
 
     return {
@@ -109,7 +109,7 @@ def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=
         "errors": errors
     }
 
-def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None):
+def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, filter_already_sent=True):
     errors = []
     template_id_mail_list_id = dict()
     if mail_list_id:
@@ -125,7 +125,7 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
         c.name: getattr(r, c.name) for c in r.__table__.columns if c.name != "id"
     }
     to_add = []
-    for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send)):
+    for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send, filter_already_sent=filter_already_sent)):
         nldb = NewsletterDB(nl, get_mail_list_id(nl, template_id_mail_list_id, now, test))
         errors.extend(nldb.errors)
         if current_app.config['ENV'] == 'production':
