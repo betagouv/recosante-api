@@ -14,16 +14,16 @@ def test_next_template_first(db_session, inscription, templates):
     assert NewsletterHebdoTemplate.next_template(inscription) != None
 
 def test_next_template(db_session, inscription, templates):
-    template = templates[1]
+    template = min(templates, key=lambda t: t.ordre)
     nl = Newsletter(inscription=inscription, newsletter_hebdo_template=template)
     db_session.add(NewsletterDB(nl))
 
     assert NewsletterHebdoTemplate.next_template(inscription).ordre > template.ordre 
 
 def test_next_template_last(db_session, inscription, templates):
-    template = templates[0]
-    nl = Newsletter(inscription=inscription, newsletter_hebdo_template=template)
-    db_session.add(NewsletterDB(nl))
+    for template in templates:
+        nl = Newsletter(inscription=inscription, newsletter_hebdo_template=template)
+        db_session.add(NewsletterDB(nl))
 
     assert NewsletterHebdoTemplate.next_template(inscription) == None
 

@@ -563,7 +563,7 @@ def test_export_user_hebdo_ordre(db_session, inscription, templates):
     nl1 = Newsletter(
         inscription=inscription,
         date=yesterday,
-        newsletter_hebdo_template=templates[1]
+        newsletter_hebdo_template=min(templates, key=lambda t: t.ordre)
     )
     db_session.add(NewsletterDB(nl1))
     db_session.commit()
