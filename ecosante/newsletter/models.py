@@ -96,7 +96,6 @@ class NewsletterHebdoTemplate(db.Model):
             year_lower = current_year - 1
         # Si les dates sont sur deux années différentes ont veut conserver le saut d’année
         year_upper = year_lower + (self._periode_validite.upper.year - self._periode_validite.lower.year)
-        print(DateRange(self._periode_validite.lower.replace(year=year_lower), self._periode_validite.upper.replace(year=year_upper)))
         return DateRange(self._periode_validite.lower.replace(year=year_lower), self._periode_validite.upper.replace(year=year_upper))
 
     @property
