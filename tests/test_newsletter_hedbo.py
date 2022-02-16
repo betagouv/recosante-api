@@ -212,6 +212,18 @@ def test_animaux_domestiques(templates, inscription):
     inscription.animaux_domestiques = None
     assert t.filtre_criteres(inscription) == True
 
+def test_deux_criteres(templates, inscription):
+    t = templates[0]
+    t.animaux_domestiques = True
+    t.deplacement = ['velo']
+
+    assert t.filtre_criteres(inscription) == False
+    inscription.animaux_domestiques = ["chat"]
+    assert t.filtre_criteres(inscription) == False
+    inscription.deplacement = ["velo"]
+    assert t.filtre_criteres(inscription) == True
+
+
 def test_vraie_vie(templates, inscription, db_session):
     templates = sorted(templates, key=lambda n: n.ordre)
     templates[1].animaux_domestiques = True
