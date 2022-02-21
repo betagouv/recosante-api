@@ -206,14 +206,14 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         elif 0 < raep < 4:
             if allergie_pollens:
                 assert nl.show_raep == True
-                assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
+                assert nl.recommandation.type_ == "pollens"
             else:
                 assert nl.show_raep == False
                 assert nl.recommandation.type_ != "pollens"
         else:
             if allergie_pollens:
                 assert nl.show_raep == True
-                assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
+                assert nl.recommandation.type_ == "pollens"
             else:
                 assert nl.show_raep == True
                 assert nl.recommandation.type_ != "pollens"
