@@ -20,6 +20,6 @@ def setup_periodic_inscriptions_tasks(sender, **kwargs):
     sender.add_periodic_task(
         crontab(minute='0', hour='6', day_of_week='*/1'),
         deactivate_accounts.s(),
-        queue='default',
+        queue='recosante-api',
         routing_key='task.deactivate_accounts'
     )
