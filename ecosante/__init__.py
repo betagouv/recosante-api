@@ -27,6 +27,7 @@ def configure_celery(flask_app):
     else:
 	    queues = [
             Queue("default", routing_key='task.#'),
+            Queue("recosante-api", routing_key='task.#'),
             Queue("send_newsletter", routing_key='send_newsletter.#'),
             Queue("send_email", routing_key='send_email.#'),
         ]
