@@ -50,6 +50,10 @@ class NewsletterHebdoTemplate(db.Model):
         return cls.query.order_by(cls.ordre).all()
 
     def filtre_date(self, date_):
+        periode_validite = self.periode_validite
+        if periode_validite.lower.year != periode_validite.upper.year:
+            return date(date_.year, 1, 1) <= date_ <= periode_validite.upper.replace(year=date_.year)\
+                 or  periode_validite.lower.replace(year=date_.year) <= date_ <= date(date_.year, 12, 31)
         return date_ in self.periode_validite
 
     def filtre_criteres(self, inscription):
@@ -57,30 +61,39 @@ class NewsletterHebdoTemplate(db.Model):
             critere = getattr(self, nom_critere)
             if isinstance(critere, list) and len(critere) > 0:
                 inscription_critere = getattr(inscription, nom_critere)
-                return isinstance(inscription_critere, list) and len(set(critere).intersection(inscription_critere)) > 0
-        if isinstance(self.enfants, bool):
-            return self.enfants == inscription.enfants
-        if isinstance(self.animaux_domestiques, bool):
-            return self.animaux_domestiques == inscription.animaux_domestiques
+                if not isinstance(inscription_critere, list):
+                    return False
+                if len(set(critere).intersection(inscription_critere)) == 0:
+                    return False
+        if isinstance(self.enfants, bool) and self.enfants != inscription.has_enfants:
+            return False
+        if isinstance(self.animaux_domestiques, bool) and self.animaux_domestiques != inscription.has_animaux_domestiques:
+            return False
         return True
 
     @classmethod
     def next_template(cls, inscription: Inscription, templates=None):
         templates = templates or cls.get_templates()
-        valid_templates = [t for t in templates if t.filtre_date(date.today()) and t.filtre_criteres(inscription)]
+        already_sent_templates_ids = [nl.newsletter_hebdo_template_id for nl in inscription.last_newsletters_hebdo]
+        valid_templates = sorted(
+            [
+                t
+                for t in templates
+                if t.filtre_date(date.today())\
+                    and t.filtre_criteres(inscription)\
+                    and t.id not in already_sent_templates_ids
+            ],
+            key=lambda t: t.ordre
+        )
         if len(valid_templates) == 0:
             return None
-        if len(inscription.last_newsletters_hebdo) == 0:
-            return valid_templates[0]
-        dernier_ordre = inscription.last_newsletters_hebdo[0].newsletter_hebdo_template.ordre
-        if dernier_ordre >= max([t.ordre for t in valid_templates]):
-            return None
-        return [t for t in templates if t.ordre > dernier_ordre][0]
+
+        return [t for t in valid_templates][0]
 
     @property
     def periode_validite(self) -> DateRange:
         current_year = datetime.today().year
-        if date(current_year, self._periode_validite.lower.month, self._periode_validite.lower.day) <= date(current_year, self._periode_validite.upper.month, self._periode_validite.upper.day):
+        if self._periode_validite.lower.replace(year=current_year) <= self._periode_validite.upper.replace(year=current_year):
             year_lower = current_year
         else:
             year_lower = current_year - 1

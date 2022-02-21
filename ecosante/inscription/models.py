@@ -191,6 +191,10 @@ class Inscription(db.Model):
     def has_enfants(self):
         return self.enfants == 'oui'
 
+    @property
+    def has_animaux_domestiques(self):
+        return type(self.animaux_domestiques) == list and ('chat' or 'chien') in self.animaux_domestiques
+
     def set_cache_api_commune(self):
         if not self.ville_insee:
             return
