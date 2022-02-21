@@ -15,26 +15,23 @@ class TempAuthenticator(Authenticator):
     def authenticate(self):
         encoded_token = request.args.get('token')
         if not encoded_token:
-            raise errors.Unauthorized(messages.required_field_missing)
+            raise errors.Unauthorized(messages.required_field_missing('token'))
         view_uid = request.view_args.get('uid')
         if not view_uid:
-            raise errors.Unauthorized(messages.required_field_missing)
+            raise errors.Unauthorized(messages.required_field_missing('uid'))
         try:
             decoded_token = jwt.decode(encoded_token, self.secret, options={"require_exp": True, "leeway": 0})
-        except jwt.ExpiredSignatureError:
+        except (jwt.ExpiredSignatureError, jwt.JWTClaimsError, jwt.JWTError):
             raise errors.Unauthorized(messages.invalid_auth_token)
-        except jwt.JWTClaimsError:
-            raise Exception(messages.invalid_auth_token)
-        except jwt.JWTError:
-            raise Exception(messages.invalid_auth_token)
 
         if not safe_str_cmp(view_uid, decoded_token.get('uid')):
             raise errors.Unauthorized(messages.invalid_auth_token)
     
-    def make_token(self, uid):
+    def make_token(self, uid, time_= None):
+        time_ = time_ or time() + 60 * 30
         return jwt.encode(
             {
-                'exp': time() + 60 * 30,
+                'exp': time_,
                 'uid': uid
             },
             self.secret,

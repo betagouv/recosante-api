@@ -1,6 +1,9 @@
+from redis import AuthenticationError
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.users.schemas import User
 import json
+
+from ecosante.utils.authenticator import TempAuthenticator
 
 def test_no_mail(client):
     data = {
@@ -115,6 +118,9 @@ def test_get_user(commune_commited, client):
 
     uid = response.json["uid"]
     response = client.get(f'/users/{uid}')
+    assert response.status_code == 401
+    authenticator = TempAuthenticator()
+    response = client.get(f'/users/{uid}?token={authenticator.make_token(uid)}')
     assert response.status_code == 200
     assert response.json['uid'] == uid
     assert response.json['mail'] == data['mail']
@@ -145,10 +151,11 @@ def test_update_user_bad_uid(commune_commited, client):
             "code": "53130"
         }
     }
+    authenticator = TempAuthenticator()
     response = client.post('/users/', json=data)
     assert response.status_code == 201
     uid = response.json['uid'] + 'bad'
-    response = client.post(f'/users/{uid}', json=data)
+    response = client.post(f'/users/{uid}?token={authenticator.make_token(uid)}', json=data)
     assert response.status_code == 404
 
 
@@ -165,15 +172,20 @@ def test_update_user(commune_commited, client):
     assert inscription is not None
     assert inscription.animaux_domestiques == None
 
+    authenticator = TempAuthenticator()
     uid = response.json['uid']
     data['animaux_domestiques'] = ['chat']
     response = client.post(f'/users/{uid}', json=data)
+    assert response.status_code == 401
+    response = client.post(f'/users/{uid}?token={authenticator.make_token(uid)}', json=data)
     assert response.status_code == 200
     inscription = Inscription.query.filter_by(mail=data['mail']).first()
     assert inscription is not None
     assert inscription.animaux_domestiques == data['animaux_domestiques']
 
     response = client.post(f'/users/{uid}', json={"animaux_domestiques": ["aucun"]})
+    assert response.status_code == 401
+    response = client.post(f'/users/{uid}?token={authenticator.make_token(uid)}', json={"animaux_domestiques": ["aucun"]})
     assert response.status_code == 200
     inscription = Inscription.query.filter_by(mail=data['mail']).first()
     assert inscription is not None
@@ -190,6 +202,11 @@ def test_update_user(commune_commited, client):
     j_dump = json.dumps(webpush_subscriptions_info)
     response = client.post(
         f'/users/{uid}',
+        json={"indicateurs_media":["notifications_web"], "webpush_subscriptions_info": j_dump}
+    )
+    assert response.status_code == 401
+    response = client.post(
+        f'/users/{uid}?token={authenticator.make_token(uid)}',
         json={"indicateurs_media":["notifications_web"], "webpush_subscriptions_info": j_dump}
     )
     assert response.status_code == 200
@@ -215,4 +232,7 @@ def test_update_user_with_existing_email(commune_commited, client):
 
     data['mail'] = 'lebo@tonvelo.com'
     response = client.post(f'/users/{uid}', json=data)
+    assert response.status_code == 401
+    authenticator = TempAuthenticator()
+    response = client.post(f'/users/{uid}?token={authenticator.make_token(uid)}', json=data)
     assert response.status_code == 409
