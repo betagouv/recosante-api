@@ -1,5 +1,5 @@
 from time import time
-from flask import request
+from flask import current_app, request
 from flask_rebar.authenticators.base import Authenticator
 from flask_rebar import errors, messages
 from jose import jwt
@@ -28,7 +28,7 @@ class TempAuthenticator(Authenticator):
             raise errors.Unauthorized(messages.invalid_auth_token)
     
     def make_token(self, uid, time_= None):
-        time_ = time_ or time() + 60 * 30
+        time_ = time_ or time() + current_app.config['TEMP_AUTHENTICATOR_EXP_TIME']
         return jwt.encode(
             {
                 'exp': time_,
