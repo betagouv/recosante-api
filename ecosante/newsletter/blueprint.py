@@ -194,7 +194,7 @@ def test():
                 ],
                 recommandations
             ),
-            recommandations=recommandations
+            recommandations=recommandations,
             indice_uv=int(request.form.get("indice_uv"))
         )
         if media == "mail":
