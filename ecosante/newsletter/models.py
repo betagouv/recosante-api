@@ -863,7 +863,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
-                'RAEP': self.qualif_raep.capitalize() or "",
+                'RAEP': self.qualif_raep.capitalize() if self.qualif_raep else "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
                 'DEPARTEMENT': self.inscription.commune.departement_nom,
