@@ -223,16 +223,8 @@ class Recommandation(db.Model):
         elif self.min_raep == 4 and raep < self.min_raep:
             return False
         if media != "dashboard":
-            if 0 < raep < 4: #RAEP Faible
-                if inscription and "raep" in inscription.indicateurs:
-                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
-                else:
-                    return False
-            if raep >= 4:
-                if inscription and "raep" in inscription.indicateurs:
-                    return date_.weekday() in [2, 5] #On envoie le mercredi et le samedi
-                else:
-                    return False
+            if raep > 0:
+                return inscription and "raep" in inscription.indicateurs
         return True
 
     def is_relevant_season(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
