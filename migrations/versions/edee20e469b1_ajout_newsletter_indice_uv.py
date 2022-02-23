@@ -1,7 +1,7 @@
 """Ajout newsletter Indice UV
 
 Revision ID: edee20e469b1
-Revises: 37b15063d1c7
+Revises: 86489b0fc49b
 Create Date: 2022-02-14 14:05:47.216836
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'edee20e469b1'
-down_revision = '37b15063d1c7'
+down_revision = '86489b0fc49b'
 branch_labels = None
 depends_on = None
 
