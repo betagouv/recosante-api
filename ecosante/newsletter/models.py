@@ -577,7 +577,7 @@ class Newsletter:
             3: "moyen",
             4: "élevé",
             5: "très élevé"
-        }.get(value)
+        }.get(value, "")
 
     @property
     def qualif_raep(self):
