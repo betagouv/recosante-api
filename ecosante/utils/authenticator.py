@@ -12,6 +12,9 @@ class TempAuthenticator(Authenticator):
         if self.secret is None:
             raise Exception("AUTHENTICATOR_SECRET var env is required")
 
+    def decode_token(self, encoded_token):
+        return jwt.decode(encoded_token, self.secret, options={"require_exp": True, "leeway": 0})
+
     def authenticate(self):
         encoded_token = request.args.get('token')
         if not encoded_token:
@@ -20,7 +23,7 @@ class TempAuthenticator(Authenticator):
         if not view_uid:
             raise errors.Unauthorized(messages.required_field_missing('uid'))
         try:
-            decoded_token = jwt.decode(encoded_token, self.secret, options={"require_exp": True, "leeway": 0})
+            decoded_token = self.decode_token(encoded_token)
         except (jwt.ExpiredSignatureError, jwt.JWTClaimsError, jwt.JWTError):
             raise errors.Unauthorized(messages.invalid_auth_token)
 

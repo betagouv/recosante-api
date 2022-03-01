@@ -38,6 +38,7 @@ def post_users():
         queue='send_email',
         routing_key='send_email.subscribe'
     )
+    inscription.authentication_token = authenticator.make_token(uid=inscription.uid)
     return inscription, 201
 
 @registry.handles(

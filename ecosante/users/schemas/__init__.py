@@ -43,6 +43,7 @@ class User(Schema):
 
 class Response(User, ResponseSchema):
     is_active = Bool(attribute='is_active')
+    authentication_token = Str(dump_only=True, required=False)
     
 
 class RequestPOST(User, RequestSchema):

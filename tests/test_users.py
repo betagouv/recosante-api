@@ -1,6 +1,7 @@
 from redis import AuthenticationError
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.users.schemas import User
+from ecosante.extensions import authenticator
 import json
 
 from ecosante.utils.authenticator import TempAuthenticator
@@ -58,8 +59,14 @@ def test_default(client, commune):
     assert response.json['commune']['codes_postaux'] == ['53000']
     assert response.json['commune']['code'] == '53130'
     assert response.json['commune']['nom'] == 'Laval'
-
     assert inscription.commune.id == commune.id
+
+    assert 'authentication_token' in response.json
+    authentication_token = authenticator.decode_token(response.json['authentication_token'])
+    assert authentication_token['uid'] == inscription.uid
+
+    response = client.get(f'/users/{inscription.uid}?token={response.json["authentication_token"]}')
+    assert response.status_code == 200
 
 def validate_choice(db_session, client, attribute_name, choice):
     db_session.execute('TRUNCATE inscription CASCADE')
