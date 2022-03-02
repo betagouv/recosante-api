@@ -17,7 +17,8 @@ from indice_pollution.helpers import today
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.departement import Departement
 from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 
@@ -236,6 +237,8 @@ def newsletter_hebdo():
 def newsletter_hebdo_form(id_=None):
     form_cls = FormTemplateEdit if id_ else FormTemplateAdd
     form = form_cls(obj=NewsletterHebdoTemplate.query.get(id_))
+    (dernier_ordre,) = db.session.query(func.max(NewsletterHebdoTemplate.ordre)).first()
+    form.ordre.description = f"Dernier ordre ajouté : {dernier_ordre}"
     if request.method == "GET":
         return render_template("newsletter_hebdo_form.html", form=form)
     else:
