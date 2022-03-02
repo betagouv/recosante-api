@@ -1,8 +1,11 @@
+from datetime import date, datetime, timedelta
 import requests, requests_mock
 from ecosante.newsletter.tasks.send_webpush_notifications import *
 from ecosante.newsletter.models import Newsletter, NewsletterDB
+from indice_pollution.history.models import VigilanceMeteo
 from indice_pollution.history.models import IndiceUv
 from tests.conftest import inscription
+from psycopg2.extras import DateTimeTZRange
 from datetime import date
 
 @requests_mock.Mocker(kw='mock')
@@ -51,7 +54,15 @@ def test_webpush_data(inscription_notifications, recommandation, bonne_qualite_a
         uv_j0=1,
     )
     db_session.add(indice_uv)
-    inscription_notifications.indicateurs = inscription_notifications.indicateurs + ["indice_uv"]
+    v = VigilanceMeteo(
+        zone_id=inscription_notifications.commune.departement.zone_id,
+        phenomene_id=1,
+        couleur_id=1,
+        date_export=datetime.now() - timedelta(hours=1),
+        validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+    )
+    db_session.add(v)
+    inscription_notifications.indicateurs = inscription_notifications.indicateurs + ["indice_uv"] + ["vigilance_meteo"]
     db_session.commit()
     newsletters = list(Newsletter.export(media='notifications_web'))
     assert len(newsletters) == 1
@@ -59,4 +70,5 @@ def test_webpush_data(inscription_notifications, recommandation, bonne_qualite_a
     webpush_data = nldb.webpush_data
     assert 'qualité de l’air' in webpush_data['body']
     assert 'allergie' in webpush_data['body']
+    assert 'Vigilance météo' in webpush_data['body']
     assert 'Indice UV' in webpush_data['body']

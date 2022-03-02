@@ -277,6 +277,7 @@ class Newsletter:
                     Recommandation.vigilance_couleur_ids.contains([to_return['globale']['vigilance'].couleur_id])
                 ).first()
         return to_return
+    
 
     @property
     def polluants_formatted(self):
@@ -914,6 +915,8 @@ class NewsletterDB(db.Model, Newsletter):
             array_body.append(f"Indice de la qualité de l’air : {self.label.capitalize()}.")
         if self.inscription.has_indicateur("raep") and self.qualif_raep:
             array_body.append(f"Risque d’allergie aux pollens : {self.qualif_raep.capitalize()}.")
+        if self.inscription.has_indicateur("vigilance_meteo") and self.vigilance_globale:
+            array_body.append(f"Vigilance météo : {self.vigilance_globale.couleur}")
         if self.inscription.has_indicateur("indice_uv") and self.indice_uv_label:
             array_body.append(f"Indice UV : {self.indice_uv_label}.")
         return {
