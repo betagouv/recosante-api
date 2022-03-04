@@ -210,7 +210,7 @@ def make_raep(commune, raep):
 
 @pytest.fixture(scope='function')
 def raep_eleve(db_session, commune_commited):
-    raep = make_raep(commune_commited, 6)
+    raep = make_raep(commune_commited, 5)
     db_session.add(raep)
     return raep
 

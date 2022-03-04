@@ -902,13 +902,19 @@ class NewsletterDB(db.Model, Newsletter):
     @property
     def webpush_data(self):
         commune = self.inscription.commune
-        with different_locale('fr_FR.utf8'):
-            title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
+        try:
+            different_locale('fr_FR.utf8')
+            different_locale('fr_FR.UTF-8')
+        except Exception as e:
+            current_app.logger.error(e)
+        title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
         array_body = []
-        if "indice_atmo" in self.inscription.indicateurs and self.label:
+        if self.inscription.has_indicateur("indice_atmo") and self.label:
             array_body.append(f"Indice de la qualité de l’air : {self.label.capitalize()}.")
-        if "raep" in self.inscription.indicateurs and self.qualif_raep:
+        if self.inscription.has_indicateur("raep") and self.qualif_raep:
             array_body.append(f"Risque d’allergie aux pollens : {self.qualif_raep.capitalize()}.")
+        if self.inscription.has_indicateur("indice_uv") and self.indice_uv_label:
+            array_body.append(f"Indice UV : {self.indice_uv_label}.")
         return {
             "title": title,
             "body": "\n".join(array_body),
