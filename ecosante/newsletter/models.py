@@ -22,6 +22,7 @@ from ecosante.utils.funcs import (
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
 from indice_pollution.history.models import VigilanceMeteo
+from indice_pollution.history.models import IndiceUv
 
 FR_DATE_FORMAT = '%d/%m/%Y'
 
@@ -164,7 +165,7 @@ class Newsletter:
     radon: int = field(default=0, init=True)
     allergenes: dict = field(default_factory=dict, init=True)
     validite_raep: dict = field(default_factory=dict, init=True)
-    indice_uv: dict = field(default_factory=dict, init=True)
+    indice_uv: IndiceUv = field(default=None, init=True)
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
     type_: str = field(default="quotidien", init=True)
 
@@ -330,18 +331,6 @@ class Newsletter:
             return [dict()]
 
     @property
-    def today_indice_uv(self):
-        if not self.indice_uv:
-            return dict()
-        data = self.indice_uv['data']
-        try:
-            return next(iter([v for v in data if v['date'] == str(self.date)]), dict())
-        except (TypeError, ValueError, StopIteration) as e:
-            current_app.logger.error(f'Unable to get indice_uv for inscription: id: {self.inscription.id} insee: {self.inscription.commune.insee}')
-            current_app.logger.error(e)
-            return dict()
-
-    @property
     def qualif(self):
         return self.today_forecast.get('indice')
 
@@ -363,11 +352,11 @@ class Newsletter:
 
     @property
     def indice_uv_label(self):
-        return self.today_indice_uv.get('label')
+        return self.indice_uv.label
 
     @property
     def indice_uv_value(self):
-        return self.today_indice_uv.get('value')
+        return self.indice_uv.uv_j0
 
     @property
     def has_depassement(self):
@@ -405,7 +394,7 @@ class Newsletter:
                     "allergenes": raep_dict.get("allergenes"),
                     "validite_raep": raep_dict.get("periode_validite", {}),
                     "vigilances": vigilances_recommandations_dep,
-                    "indice_uv": {"data": [indice_uv.dict()]} if indice_uv else None
+                    "indice_uv": indice_uv
                 })
                 if date_:
                     init_dict['date'] = date_
@@ -531,7 +520,7 @@ class Newsletter:
                 polluants=self.polluants,
                 raep=self.raep,
                 date_=self.date,
-                indice_uv=self.today_indice_uv.get('value'),
+                indice_uv=self.indice_uv_value,
                 media='mail',
                 types=types
             ):
@@ -604,7 +593,7 @@ class Newsletter:
             3: "moyen",
             4: "élevé",
             5: "très élevé"
-        }.get(value)
+        }.get(value, "")
 
     @property
     def qualif_raep(self):
@@ -705,8 +694,10 @@ class NewsletterDB(db.Model, Newsletter):
     allergenes: dict = db.Column(postgresql.JSONB)
     raep_debut_validite = db.Column(db.String())
     raep_fin_validite = db.Column(db.String())
-    indice_uv_label: str = field(default=None, init=True)
-    indice_uv_value: int = field(default=None, init=True)
+    indice_uv_label: str = db.Column(db.String())
+    indice_uv_value: int = db.Column(db.Integer())
+    indice_uv_zone_id: int = db.Column(db.Integer(), db.ForeignKey(IndiceUv.zone_id))
+    indice_uv_date: date = db.Column(db.Date(), db.ForeignKey(IndiceUv.date))
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
     show_indice_uv = db.Column(db.Boolean())
@@ -792,6 +783,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
         self.indice_uv_label = newsletter.indice_uv_label
         self.indice_uv_value = newsletter.indice_uv_value
+        self.indice_uv_zone_id = newsletter.indice_uv.zone_id
+        self.indice_uv_date = newsletter.indice_uv.date
         self.show_raep = newsletter.show_raep
         self.show_radon = newsletter.show_radon
         self.show_indice_uv = newsletter.show_indice_uv
@@ -863,7 +856,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
-                'RAEP': self.qualif_raep.capitalize() if self.qualif_raep else "",
+                'RAEP': self.qualif_raep.capitalize() or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
                 'DEPARTEMENT': self.inscription.commune.departement_nom,
