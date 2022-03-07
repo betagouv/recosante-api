@@ -853,6 +853,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'QUALITE_AIR': self.label or "",
                 'VILLE': self.inscription.commune.nom or "",
                 'VILLE_CODE': self.inscription.commune.insee or "",
+                'VILLE_SLUG': self.inscription.commune.slug or "",
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
@@ -889,7 +890,7 @@ class NewsletterDB(db.Model, Newsletter):
             **self.vigilances_dict
         }
 
-    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE','VILLE_CODE','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
+    header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE','VILLE_CODE','VILLE_SLUG','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
 'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
 'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','INDICE_UV_VALIDITE','POLLINARIUM_SENTINELLE','INDICE_UV_LABEL','INDICE_UV_VALUE','SHOW_QA','SHOW_RADON','SHOW_INDICE_UV','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
 'RECOMMANDATION_EPISODE','RECOMMANDATION_INDICE_UV','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',

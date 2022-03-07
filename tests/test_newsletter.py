@@ -560,6 +560,59 @@ def test_export_simple(db_session, inscription, bonne_qualite_air, raep_nul):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
 
+def test_ville_slug(db_session, inscription, bonne_qualite_air, raep_nul):
+    # Lowercase
+    inscription.commune.nom = "Paris"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'paris'
+
+     # Whitespace
+    inscription.commune.nom = "Le Loreur"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'le-loreur'
+
+     # Apostrophe
+    inscription.commune.nom = "L'Épine-aux-Bois"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'l-epine-aux-bois'
+    inscription.commune.nom = "Plateau d’Hauteville"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'plateau-d-hauteville'
+
+     # œ => oe
+    inscription.commune.nom = "Bonnœil"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'bonnoeil'
+
+     # Diacritics
+    inscription.commune.nom = "Montluçon"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'montlucon'
+    inscription.commune.nom = "Éourres"
+    db_session.add(inscription)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    nldb = NewsletterDB(newsletters[0])
+    assert nldb.attributes()['VILLE_SLUG'] == 'eourres'
+
 def test_export_user_hebdo(db_session, inscription, templates):
     inscription.recommandations_actives = ["non"]
     newsletters = list(Newsletter.export(type_='hebdomadaire'))
