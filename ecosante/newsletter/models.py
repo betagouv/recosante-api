@@ -5,7 +5,7 @@ from datetime import datetime, date, timedelta
 from itertools import chain, groupby
 from math import inf
 from flask.helpers import url_for
-from sqlalchemy import text
+from sqlalchemy import ForeignKeyConstraint, text
 from sqlalchemy.dialects import postgresql
 from flask import current_app
 from sqlalchemy.sql.functions import func
@@ -371,6 +371,7 @@ class Newsletter:
             dep_code: cls.get_vigilances_recommandations(v, recommandations)
             for dep_code, v in vigilances.items()
         }
+        indices_uv = {k: db.session.merge(v) for k, v in indices_uv.items()}
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
             init_dict = {"type_": type_}
@@ -696,8 +697,9 @@ class NewsletterDB(db.Model, Newsletter):
     raep_fin_validite = db.Column(db.String())
     indice_uv_label: str = db.Column(db.String())
     indice_uv_value: int = db.Column(db.Integer())
-    indice_uv_zone_id: int = db.Column(db.Integer(), db.ForeignKey(IndiceUv.zone_id))
-    indice_uv_date: date = db.Column(db.Date(), db.ForeignKey(IndiceUv.date))
+    indice_uv_zone_id: int = db.Column(db.Integer)
+    indice_uv_date: date = db.Column(db.Date())
+    indice_uv: IndiceUv = db.relationship(IndiceUv, foreign_keys=[indice_uv_zone_id, indice_uv_date])
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
     show_indice_uv = db.Column(db.Boolean())
@@ -757,6 +759,9 @@ class NewsletterDB(db.Model, Newsletter):
     vigilance_globale: VigilanceMeteo = db.relationship(VigilanceMeteo, foreign_keys=[vigilance_globale_id])
     vigilance_globale_recommandation_id: Recommandation = db.Column(db.Integer, db.ForeignKey('recommandation.id'))
     vigilance_globale_recommandation: Recommandation = db.relationship("Recommandation", foreign_keys=[vigilance_globale_recommandation_id])
+    __table_args__ = (
+        ForeignKeyConstraint([indice_uv_zone_id, indice_uv_date], [IndiceUv.zone_id, IndiceUv.date]),
+    )
 
     def __init__(self, newsletter: Newsletter, mail_list_id=None):
         self.inscription = newsletter.inscription
@@ -786,6 +791,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.indice_uv_value = newsletter.indice_uv_value
         self.indice_uv_zone_id = newsletter.indice_uv.zone_id if newsletter.indice_uv else None
         self.indice_uv_date = newsletter.indice_uv.date if newsletter.indice_uv else None
+        self.indice_uv = newsletter.indice_uv
         self.show_raep = newsletter.show_raep
         self.show_radon = newsletter.show_radon
         self.show_indice_uv = newsletter.show_indice_uv
