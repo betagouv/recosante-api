@@ -192,9 +192,8 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune, delta, qualif, 
     i = Inscription(indicateurs=["indice_atmo"])
     assert not r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_)
 
-    #On veut envoyer le mercredi et le samedi
     i = Inscription(indicateurs=["raep"])
-    assert r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_) == (date_.weekday() in [2, 5]) 
+    assert r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_)
 
 
 def test_chauffage():

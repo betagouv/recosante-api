@@ -32,7 +32,7 @@ class User(Schema):
     animaux_domestiques = list_str(["chat", "chien", "aucun"])
     connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "autrement"])
     population = list_str(["pathologie_respiratoire", "allergie_pollens", "aucun"])
-    indicateurs = list_str(["indice_atmo", "raep", "indice_uv", "vigilance_meteorologique"])
+    indicateurs = list_str(["indice_atmo", "raep", "indice_uv", "vigilance_meteo"])
     indicateurs_frequence = list_str(["quotidien", "hebdomadaire", "alerte"], 1)
     indicateurs_media = list_str(["mail", "notifications_web"])
     recommandations = list_str(["oui", "non"], 1, attribute='recommandations_actives')

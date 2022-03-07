@@ -95,11 +95,22 @@ def get_mail_list_id(newsletter, template_id_mail_list_id, now, test):
         template_id_mail_list_id[template_sib_id] = create_mail_list(now, test)
     return template_id_mail_list_id[template_sib_id]
 
-def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None):
-    errors = []
+
+def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, activate_webhook=True, filter_already_sent=True):
     
     now = datetime.now()
-    nb_requests = 0
+    errors, template_id_mail_list_id = import_in_db(task, now, type_, force_send, test, mail_list_id, newsletters, filter_already_sent)
+    import_contacts_in_sb(template_id_mail_list_id, now, type_, test, activate_webhook)
+
+    return {
+        "state": "STARTED",
+        "progress": 100,
+        "details": "Terminé",
+        "errors": errors
+    }
+
+def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, filter_already_sent=True):
+    errors = []
     template_id_mail_list_id = dict()
     if mail_list_id:
         template_id_mail_list_id[None] = mail_list_id
@@ -110,36 +121,27 @@ def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=
                 "details": f"Création de la liste"
             }
         )
-
+    row2dict = lambda r: {
+        c.name: getattr(r, c.name) for c in r.__table__.columns if c.name != "id"
+    }
     to_add = []
-    for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send)):
+    for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send, filter_already_sent=filter_already_sent)):
         nldb = NewsletterDB(nl, get_mail_list_id(nl, template_id_mail_list_id, now, test))
-        errors.extend(nldb.errors)
+        errors.extend(nl.errors)
         if current_app.config['ENV'] == 'production':
             to_add.append(nldb)
             current_app.logger.info(f"Création de l’objet NewsletterDB pour {nldb.inscription_id}, template: {nldb.newsletter_hebdo_template_id}, mail_list_id: {nldb.mail_list_id} ")
             if len(to_add) % 1000 == 0:
-                db.session.add_all(to_add)
-                db.session.flush() # do not use commit, it will raise an error
-                current_app.logger.info("Flush des newsletters dans la base de données")
+                db.engine.execute(NewsletterDB.__table__.insert(), list(map(row2dict, to_add)))
                 to_add = []
 
     if current_app.config['ENV'] == 'production' or test:
-        db.session.add_all(to_add)
-        db.session.commit()
+        db.engine.execute(NewsletterDB.__table__.insert(), list(map(row2dict, to_add)))
         current_app.logger.info("Commit des newsletters dans la base de données")
-
-    import_contacts_in_sb(template_id_mail_list_id, now, type_, test)
-
-    return {
-        "state": "STARTED",
-        "progress": 100,
-        "details": "Terminé",
-        "errors": errors
-    }
+    return errors, template_id_mail_list_id
 
 
-def import_contacts_in_sb(template_id_mail_list_id, now, type_, test):
+def import_contacts_in_sb(template_id_mail_list_id, now, type_, test, activate_webhook):
     if current_app.config['ENV'] == 'production' or test:
         contact_api = sib_api_v3_sdk.ContactsApi(sib)
         for template_id, mail_list_id in template_id_mail_list_id.items():
@@ -156,16 +158,17 @@ def import_contacts_in_sb(template_id_mail_list_id, now, type_, test):
                 _external=True,
                 _scheme='https'
             )
-            request_contact_import.notify_url = url_for(
-                'newsletter.send_campaign',
-                secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
-                now=now,
-                mail_list_id=mail_list_id,
-                template_id=template_id,
-                type_=type_,
-                _external=True,
-                _scheme='https'
-            )
+            if activate_webhook:
+                request_contact_import.notify_url = url_for(
+                    'newsletter.send_campaign',
+                    secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
+                    now=now,
+                    mail_list_id=mail_list_id,
+                    template_id=template_id,
+                    type_=type_,
+                    _external=True,
+                    _scheme='https'
+                )
             current_app.logger.info("About to send newsletter with params")
             current_app.logger.info(request_contact_import)
             try:

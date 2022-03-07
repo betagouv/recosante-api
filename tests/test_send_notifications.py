@@ -1,7 +1,9 @@
 import requests, requests_mock
 from ecosante.newsletter.tasks.send_webpush_notifications import *
 from ecosante.newsletter.models import Newsletter, NewsletterDB
+from indice_pollution.history.models import IndiceUv
 from tests.conftest import inscription
+from datetime import date
 
 @requests_mock.Mocker(kw='mock')
 def test_cas_send_wepush_notification(inscription_notifications, recommandation, **kw):
@@ -41,3 +43,20 @@ def test_cas_send_wepush_notifications_pas_de_donnee(inscription_notifications, 
     assert mock.call_count == 0
     nls = NewsletterDB.query.all()
     assert len(nls) == 0
+
+def test_webpush_data(inscription_notifications, recommandation, bonne_qualite_air, raep_eleve, db_session):
+    indice_uv = IndiceUv(
+        zone_id=inscription_notifications.commune.zone_id,
+        date=date.today(),
+        uv_j0=1,
+    )
+    db_session.add(indice_uv)
+    inscription_notifications.indicateurs = inscription_notifications.indicateurs + ["indice_uv"]
+    db_session.commit()
+    newsletters = list(Newsletter.export(media='notifications_web'))
+    assert len(newsletters) == 1
+    nldb = NewsletterDB(newsletters[0])
+    webpush_data = nldb.webpush_data
+    assert 'qualité de l’air' in webpush_data['body']
+    assert 'allergie' in webpush_data['body']
+    assert 'Indice UV' in webpush_data['body']

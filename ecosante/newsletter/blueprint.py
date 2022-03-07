@@ -16,8 +16,11 @@ import csv
 from indice_pollution.helpers import today
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.departement import Departement
-from sqlalchemy.orm import joinedload, subqueryload
+from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
+from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 from ecosante.inscription.models import Inscription
+from ecosante.recommandations.models import Recommandation
 
 from ecosante.utils.decorators import admin_capability_url, admin_capability_url_no_redirect
 from ecosante.utils import Blueprint
@@ -28,6 +31,7 @@ from .tasks.import_in_sb import create_campaign, import_, send
 from .tasks.send_webpush_notifications import send_webpush_notification, vapid_claims
 from indice_pollution.history.models import IndiceATMO
 import sib_api_v3_sdk
+from psycopg2.extras import DateTimeTZRange
 
 bp = Blueprint("newsletter", __name__)
 
@@ -162,19 +166,40 @@ def test():
     nb_mails = 0
     nb_notifications = 0
     nb_notifications_sent = 0
+    phenomene_to_phenomene_id = {v: k for k, v in VigilanceMeteo.phenomenes.items()}
+    couleur_to_couleur_id = {v: k for k, v in VigilanceMeteo.couleurs.items()}
+    recommandations = Recommandation.published_query().all()
     for media in inscription.indicateurs_media:
         nl = Newsletter(
             inscription=inscription,
             forecast={"data":[{"date": str(today()), "label": IndiceATMO.label_from_valeur(indice_atmo), "couleur": IndiceATMO.couleur_from_valeur(indice_atmo)}]},
             raep=int(request.form.get("raep")),
-            allergenes={k: v for k, v in zip(request.form.getlist('allergene_nom'), request.form.getlist('allergene_value'))},
+            allergenes={k: v for k, v in zip(request.form.getlist('allergene_nom[]'), request.form.getlist('allergene_value[]'))},
             validite_raep={
                 "debut": today().strftime("%d/%m/%Y"),
                 "fin": (today()+timedelta(days=7)).strftime("%d/%m/%Y")
-            }
+            },
+            vigilances=Newsletter.get_vigilances_recommandations(
+                [
+                    VigilanceMeteo(
+                        zone_id=inscription.commune.departement.zone_id,
+                        couleur_id=couleur_to_couleur_id[c],
+                        phenomene_id=phenomene_to_phenomene_id[ph],
+                        date_export=datetime.now() - timedelta(minutes=30),
+                        validity=DateTimeTZRange(datetime.now() - timedelta(hours=6), datetime.now() + timedelta(hours=6)),
+                    )
+                    for c, ph in zip(
+                        request.form.getlist('vigilance_couleur[]'),
+                        request.form.getlist('vigilance_phenomene[]')
+                    )
+                ],
+                recommandations
+            ),
+            recommandations=recommandations,
+            indice_uv=request.form.get("indice_uv", type=int)
         )
         if media == "mail":
-            import_(None, newsletters=[NewsletterDB(nl)], force_send=True, test=True)
+            import_(None, newsletters=[nl], force_send=True, test=True)
             nb_mails += 1
         elif media == "notifications_web":
             for wp in inscription.webpush_subscriptions_info:
@@ -213,6 +238,8 @@ def newsletter_hebdo():
 def newsletter_hebdo_form(id_=None):
     form_cls = FormTemplateEdit if id_ else FormTemplateAdd
     form = form_cls(obj=NewsletterHebdoTemplate.query.get(id_))
+    (dernier_ordre,) = db.session.query(func.max(NewsletterHebdoTemplate.ordre)).first()
+    form.ordre.description = f"Dernier ordre ajouté : {dernier_ordre}"
     if request.method == "GET":
         return render_template("newsletter_hebdo_form.html", form=form)
     else:

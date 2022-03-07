@@ -1,8 +1,11 @@
 from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from .utils import published_recommandation
 import os, pytest
 from itertools import product
+from indice_pollution.history.models import VigilanceMeteo
+from psycopg2.extras import DateTimeTZRange
+from indice_pollution.history.models import IndiceUv
 
 def test_episode_passe(db_session, inscription):
     yesterday = date.today() - timedelta(days=1)
@@ -204,14 +207,14 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         elif 0 < raep < 4:
             if allergie_pollens:
                 assert nl.show_raep == True
-                assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
+                assert nl.recommandation.type_ == "pollens"
             else:
                 assert nl.show_raep == False
                 assert nl.recommandation.type_ != "pollens"
         else:
             if allergie_pollens:
                 assert nl.show_raep == True
-                assert (nl.recommandation.type_ == "pollens") == (date_.weekday() in [2, 5])
+                assert nl.recommandation.type_ == "pollens"
             else:
                 assert nl.show_raep == True
                 assert nl.recommandation.type_ != "pollens"
@@ -247,6 +250,29 @@ def test_show_qa(inscription):
         recommandations=[]
     )
     assert nl.show_qa == False
+
+def test_show_indice_uv(inscription):
+    inscription.indicateurs = ['indice_uv']
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        raep=0,
+        indice_uv={"data": []},
+        recommandations=[]
+    )
+    assert nl.show_indice_uv == True
+
+    inscription.indicateurs = []
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": []},
+        episodes={"data": []},
+        raep=0,
+        indice_uv={"data": []},
+        recommandations=[]
+    )
+    assert nl.show_indice_uv == False
 
 def test_show_radon_polluants(db_session, inscription, episode_pm10):
     nl = Newsletter(
@@ -614,7 +640,7 @@ def test_export_user_hebdo_ordre(db_session, inscription, templates):
     nl1 = Newsletter(
         inscription=inscription,
         date=yesterday,
-        newsletter_hebdo_template=templates[1]
+        newsletter_hebdo_template=min(templates, key=lambda t: t.ordre)
     )
     db_session.add(NewsletterDB(nl1))
     db_session.commit()
@@ -713,3 +739,186 @@ def test_get_recommandation_par_type(inscription, db_session):
     )
     eligible_recommandations = list(nl.eligible_recommandations({r.id: r for r in recommandations}, types=["indice_atmo"]))
     assert all([r.type_ == "indice_atmo"] for r in eligible_recommandations)
+
+def test_vigilance(db_session, inscription, bonne_qualite_air, raep_nul):
+    db_session.add(published_recommandation())
+    db_session.add(inscription)
+    db_session.commit()
+
+    for phenomene_id in VigilanceMeteo.phenomenes.keys():
+        v = VigilanceMeteo(
+            zone_id=inscription.commune.departement.zone_id,
+            phenomene_id=phenomene_id,
+            couleur_id=1,
+            date_export=datetime.now() - timedelta(hours=1),
+            validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+        )
+        db_session.add(v)
+        db_session.commit()
+        newsletters = list(Newsletter.export())
+        assert len(newsletters) == 1
+        attributes = NewsletterDB(newsletters[0]).attributes()
+        key = f'VIGILANCE_{Newsletter.phenomenes_sib[phenomene_id].upper()}'
+        assert f'{key}_COULEUR' in attributes
+        assert attributes[f'{key}_COULEUR'] == 'Vert'
+        assert attributes[f'{key}_COULEUR'] == attributes['VIGILANCE_GLOBALE_COULEUR']
+
+        db_session.delete(v)
+        db_session.commit()
+
+def test_vigilance_alerte(db_session, inscription, bonne_qualite_air, raep_nul):
+    db_session.add(published_recommandation())
+    inscription.indicateurs_frequence = ['alerte']
+    inscription.indicateurs = ['vigilance_meteo']
+    db_session.add(inscription)
+    db_session.commit()
+
+    for phenomene_id in VigilanceMeteo.phenomenes.keys():
+        v = VigilanceMeteo(
+            zone_id=inscription.commune.departement.zone_id,
+            phenomene_id=phenomene_id,
+            couleur_id=1,
+            date_export=datetime.now() - timedelta(hours=1),
+            validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+        )
+        db_session.add(v)
+        db_session.commit()
+        newsletters = list(Newsletter.export())
+        assert len(newsletters) == 0
+        db_session.delete(v)
+        db_session.commit()
+
+    for phenomene_id in VigilanceMeteo.phenomenes.keys():
+        v = VigilanceMeteo(
+            zone_id=inscription.commune.departement.zone_id,
+            phenomene_id=phenomene_id,
+            couleur_id=3,
+            date_export=datetime.now() - timedelta(hours=1),
+            validity=DateTimeTZRange(date.today() - timedelta(days=1), date.today() + timedelta(days=1)),
+        )
+        db_session.add(v)
+        db_session.commit()
+        newsletters = list(Newsletter.export())
+        assert len(newsletters) == 1
+        attributes = NewsletterDB(newsletters[0]).attributes()
+        key = f'VIGILANCE_{Newsletter.phenomenes_sib[phenomene_id].upper()}'
+        assert f'{key}_COULEUR' in attributes
+        assert attributes[f'{key}_COULEUR'] == 'Orange'
+        assert attributes[f'{key}_COULEUR'] == attributes['VIGILANCE_GLOBALE_COULEUR']
+
+        db_session.delete(v)
+        db_session.commit()
+
+def test_no_indice_uv(db_session, inscription):
+    db_session.add(published_recommandation())
+    inscription.indicateurs = ['indice_uv']
+    db_session.add(inscription)
+    db_session.commit()
+
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=None,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+    attributes = NewsletterDB(newsletters[0]).attributes()
+    assert f'INDICE_UV_VALUE' in attributes
+    assert attributes[f'INDICE_UV_VALUE'] == ""
+    assert f'INDICE_UV_LABEL' in attributes
+    assert attributes[f'INDICE_UV_LABEL'] == ""
+
+    db_session.delete(indice_uv)
+    db_session.commit()
+
+def test_indice_uv(db_session, inscription):
+    db_session.add(published_recommandation())
+    inscription.indicateurs = ['indice_uv']
+    db_session.add(inscription)
+    db_session.commit()
+
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=1,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+    attributes = NewsletterDB(newsletters[0]).attributes()
+    assert f'INDICE_UV_VALUE' in attributes
+    assert attributes[f'INDICE_UV_VALUE'] == 1
+    assert f'INDICE_UV_LABEL' in attributes
+    assert attributes[f'INDICE_UV_LABEL'] == "Faible (UV\u00a01)"
+
+    db_session.delete(indice_uv)
+    db_session.commit()
+
+def test_indice_uv_alerte(db_session, inscription):
+    db_session.add(published_recommandation())
+    inscription.indicateurs_frequence = ['alerte']
+    inscription.indicateurs = ['indice_uv']
+    db_session.add(inscription)
+    db_session.commit()
+
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=1,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
+
+    db_session.delete(indice_uv)
+    db_session.commit()
+
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=3,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+    attributes = NewsletterDB(newsletters[0]).attributes()
+    assert f'INDICE_UV_VALUE' in attributes
+    assert attributes[f'INDICE_UV_VALUE'] == 3
+    assert f'INDICE_UV_LABEL' in attributes
+    assert attributes[f'INDICE_UV_LABEL'] == "Modéré (UV\u00a03)"
+
+    db_session.delete(indice_uv)
+    db_session.commit()
+
+def test_indice_uv_recommandation(db_session, inscription):
+    recommandations = [published_recommandation(type_="indice_uv", min_indice_uv=3, recommandation="Recommandation pour indice UV égal à 3")]
+    db_session.add_all(recommandations)
+    db_session.commit()
+    inscription.indicateurs = ['indice_uv']
+    db_session.add(inscription)
+    db_session.commit()
+
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=3,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+    nl = newsletters[0]
+    nl.recommandations = recommandations
+    nldb = NewsletterDB(nl)
+    attributes = nldb.attributes()
+    assert f'RECOMMANDATION_INDICE_UV' in attributes
+    assert attributes[f'RECOMMANDATION_INDICE_UV'] == "<p>Recommandation pour indice UV égal à 3</p>"
+
+    db_session.delete(indice_uv)
+    db_session.commit()
+    
