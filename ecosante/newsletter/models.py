@@ -21,7 +21,6 @@ from ecosante.utils.funcs import (
 )
 from ecosante.extensions import db
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
-import unicodedata, re
 FR_DATE_FORMAT = '%d/%m/%Y'
 
 
@@ -274,7 +273,7 @@ class Newsletter:
     @classmethod
     def export(cls, preferred_reco=None, user_seed=None, remove_reco=[], only_to=None, date_=None, media='mail', filter_already_sent=True, type_='quotidien', force_send=False):
         recommandations = Recommandation.shuffled(user_seed=user_seed, preferred_reco=preferred_reco, remove_reco=remove_reco)
-        indices, all_episodes, allergenes = get_all(date_)
+        indices, all_episodes, allergenes, vigilances, indices_uv = get_all(date_)
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
             init_dict = {"type_": type_}
@@ -628,15 +627,6 @@ class NewsletterDB(db.Model, Newsletter):
                 return {}
         def convert_bool_to_yes_no(b):
             return "Yes" if b else "No"
-        def slugify_ville(ville):
-            # lower, replace whitespace and apostrophe by hyphen, replace œ by oe
-            ville = ville.lower()\
-                .replace(' ', '-')\
-                .replace('\'', '-').replace(u'\u2019', '-')\
-                .replace(u'\u0153', 'oe')
-            # remove diacritics
-            ville = re.sub(r'[\u0300-\u036f]', '', unicodedata.normalize('NFD', ville))
-            return ville
         return {
             **{
                 'EMAIL': self.inscription.mail,
@@ -647,7 +637,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'QUALITE_AIR': self.label or "",
                 'VILLE': self.inscription.commune.nom or "",
                 'VILLE_CODE': self.inscription.commune.insee or "",
-                'VILLE_SLUG': slugify_ville(self.inscription.commune.nom) or "",
+                'VILLE_SLUG': self.inscription.commune.slug or "",
                 'BACKGROUND_COLOR': self.couleur or "",
                 'SHORT_ID': self.short_id or "",
                 'POLLUANT': self.polluants_symbols_formatted or "",
