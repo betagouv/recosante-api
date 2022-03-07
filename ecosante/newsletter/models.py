@@ -772,6 +772,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_episode = newsletter.recommandation_episode
         self.recommandation_episode_id = newsletter.recommandation_episode.id if newsletter.recommandation_episode else None
         self.recommandation_indice_uv = newsletter.recommandation_indice_uv
+        self.recommandation_indice_uv_id = newsletter.recommandation_indice_uv.id if newsletter.recommandation_indice_uv else None
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
