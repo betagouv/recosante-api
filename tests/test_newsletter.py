@@ -809,6 +809,20 @@ def test_vigilance_alerte(db_session, inscription, bonne_qualite_air, raep_nul):
         db_session.delete(v)
         db_session.commit()
 
+def test_no_indice_uv_data(db_session, inscription):
+    db_session.add(published_recommandation())
+    inscription.indicateurs = ['indice_uv']
+    db_session.add(inscription)
+    db_session.commit()
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
+    attributes = NewsletterDB(newsletters[0]).attributes()
+    assert f'INDICE_UV_VALUE' in attributes
+    assert attributes[f'INDICE_UV_VALUE'] == ""
+    assert f'INDICE_UV_LABEL' in attributes
+    assert attributes[f'INDICE_UV_LABEL'] == ""
+
 def test_no_indice_uv(db_session, inscription):
     db_session.add(published_recommandation())
     inscription.indicateurs = ['indice_uv']

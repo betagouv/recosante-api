@@ -352,11 +352,11 @@ class Newsletter:
 
     @property
     def indice_uv_label(self):
-        return self.indice_uv.label
+        return self.indice_uv.label if self.indice_uv else None
 
     @property
     def indice_uv_value(self):
-        return self.indice_uv.uv_j0
+        return self.indice_uv.uv_j0 if self.indice_uv else None
 
     @property
     def has_depassement(self):
@@ -777,6 +777,7 @@ class NewsletterDB(db.Model, Newsletter):
         self.recommandation_episode = newsletter.recommandation_episode
         self.recommandation_episode_id = newsletter.recommandation_episode.id if newsletter.recommandation_episode else None
         self.recommandation_indice_uv = newsletter.recommandation_indice_uv
+        self.recommandation_indice_uv_id = newsletter.recommandation_indice_uv.id if newsletter.recommandation_indice_uv else None
         self.date = newsletter.date
         self.qualif = newsletter.qualif
         self.label = newsletter.label
@@ -788,8 +789,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.raep_fin_validite = newsletter.validite_raep.get('fin')
         self.indice_uv_label = newsletter.indice_uv_label
         self.indice_uv_value = newsletter.indice_uv_value
-        self.indice_uv_zone_id = newsletter.indice_uv.zone_id
-        self.indice_uv_date = newsletter.indice_uv.date
+        self.indice_uv_zone_id = newsletter.indice_uv.zone_id if newsletter.indice_uv else None
+        self.indice_uv_date = newsletter.indice_uv.date if newsletter.indice_uv else None
         self.indice_uv = newsletter.indice_uv
         self.show_raep = newsletter.show_raep
         self.show_radon = newsletter.show_radon
