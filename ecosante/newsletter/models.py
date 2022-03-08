@@ -911,11 +911,8 @@ class NewsletterDB(db.Model, Newsletter):
     @property
     def webpush_data(self):
         commune = self.inscription.commune
-        try:
-            different_locale('fr_FR.utf8')
-            different_locale('fr_FR.UTF-8')
-        except Exception as e:
-            current_app.logger.error(e)
+        with different_locale('fr_FR'):
+            title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
         title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
         array_body = []
         if self.inscription.has_indicateur("indice_atmo") and self.label:
