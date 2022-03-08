@@ -920,7 +920,7 @@ class NewsletterDB(db.Model, Newsletter):
         if self.inscription.has_indicateur("raep") and self.qualif_raep:
             array_body.append(f"Risque d’allergie aux pollens : {self.qualif_raep.capitalize()}.")
         if self.inscription.has_indicateur("vigilance_meteo") and self.vigilance_globale:
-            array_body.append(f"Vigilance météo : {self.vigilance_globale.couleur}")
+            array_body.append(f"Vigilance météo : {self.vigilance_globale.couleur}.")
         if self.inscription.has_indicateur("indice_uv") and self.indice_uv_label:
             array_body.append(f"Indice UV : {self.indice_uv_label}.")
         return {
