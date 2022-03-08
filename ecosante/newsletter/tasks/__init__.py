@@ -8,7 +8,7 @@ def setup_periodic_tasks(sender, **kwargs):
     if sender.conf.env != "production":
         return
     sender.add_periodic_task(
-        crontab(minute='0', hour='05-13', day_of_week='*/1'),
+        crontab(minute='0', hour='06-13', day_of_week='*/1'),
         import_send_and_report.s(type_='quotidien'),
         queue='send_newsletter',
         routing_key='send_newsletter.import_send_and_report'
@@ -26,7 +26,7 @@ def setup_periodic_tasks(sender, **kwargs):
         routing_key='send_newsletter.import_send_and_report'
     )
     sender.add_periodic_task(
-        crontab(minute='0', hour='05-13', day_of_week='*/1'),
+        crontab(minute='0', hour='06-13', day_of_week='*/1'),
         send_webpush_notifications.s(),
         queue='send_newsletter',
         routing_key='send_newsletter.send_webpush_notifications'
