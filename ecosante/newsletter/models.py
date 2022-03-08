@@ -913,7 +913,6 @@ class NewsletterDB(db.Model, Newsletter):
         commune = self.inscription.commune
         with different_locale('fr_FR'):
             title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
-        title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
         array_body = []
         if self.inscription.has_indicateur("indice_atmo") and self.label:
             array_body.append(f"Indice de la qualité de l’air : {self.label.capitalize()}.")
