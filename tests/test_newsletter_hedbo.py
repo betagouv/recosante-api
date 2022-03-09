@@ -265,3 +265,11 @@ def test_indicateurs(templates, inscription, db_session):
     t.indicateurs = ["raep"]
     inscription.indicateurs = ["indice_atmo"]
     assert t.filtre_criteres(inscription) == False
+
+    t.indicateurs = ["raep"]
+    inscription.indicateurs = ["indice_atmo", "raep"]
+    assert t.filtre_criteres(inscription) == True
+
+    t.indicateurs = ["raep", "indice_atmo"]
+    inscription.indicateurs = ["indice_atmo"]
+    assert t.filtre_criteres(inscription) == True
