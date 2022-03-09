@@ -17,7 +17,7 @@ def send_update_profile(inscription_id):
             sib_api_v3_sdk.UpdateContact(
                 attributes={
                     "USER_UID": inscription.uid,
-                    "USER_AUTH_TOKEN": authenticator.make_token(inscription.uid)
+                    "AUTH_TOKEN": authenticator.make_token(inscription.uid)
                 }
             )
         )
