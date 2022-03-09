@@ -243,3 +243,33 @@ def test_vraie_vie(templates, inscription, db_session):
     nls = list(Newsletter.export(type_='hebdomadaire', filter_already_sent=False))
     assert len(nls) == 1
     assert nls[0].newsletter_hebdo_template.id == templates[-1].id
+
+def test_indicateurs(templates, inscription, db_session):
+    t = templates[0]
+    t.indicateurs = None
+    inscription.indicateurs = ["raep", "indice_atmo"]
+    assert t.filtre_criteres(inscription) == True
+
+    t.indicateurs = []
+    assert t.filtre_criteres(inscription) == True
+
+    t.indicateurs = inscription.indicateurs
+    assert t.filtre_criteres(inscription) == True
+
+    inscription.indicateurs = []
+    assert t.filtre_criteres(inscription) == False
+
+    t.indicateurs = []
+    assert t.filtre_criteres(inscription) == True
+
+    t.indicateurs = ["raep"]
+    inscription.indicateurs = ["indice_atmo"]
+    assert t.filtre_criteres(inscription) == False
+
+    t.indicateurs = ["raep"]
+    inscription.indicateurs = ["indice_atmo", "raep"]
+    assert t.filtre_criteres(inscription) == True
+
+    t.indicateurs = ["raep", "indice_atmo"]
+    inscription.indicateurs = ["indice_atmo"]
+    assert t.filtre_criteres(inscription) == True
