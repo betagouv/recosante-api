@@ -2,7 +2,7 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 import os
 from ecosante.extensions import celery, sib
-from ecosante.utils import send_log_mail
+from ecosante.utils.send_log_mail import send_log_mail
 from flask import current_app
 
 @celery.task()

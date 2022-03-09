@@ -92,8 +92,6 @@ def inscription_alerte(commune) -> Inscription:
     inscription.indicateurs_frequence = ["alerte"]
     return inscription
 
-
-
 @pytest.fixture(scope='function')
 def inscription_notifications(db_session, inscription: Inscription) -> Inscription:
     inscription.indicateurs_media = ['notifications_web']

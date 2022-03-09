@@ -8,6 +8,7 @@ from markdown_link_attr_modifier import LinkAttrModifierExtension
 import sib_api_v3_sdk
 from flask_cors import CORS
 from markdown import Markdown
+from ecosante.utils.authenticator import TempAuthenticator
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -20,5 +21,6 @@ markdown = Markdown(
     extensions=[LinkAttrModifierExtension(new_tab='on')]
 )
 cache = Cache()
+authenticator = TempAuthenticator()
 
 import ecosante.utils.rollup

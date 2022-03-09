@@ -7,7 +7,7 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
 from ecosante.extensions import db, sib, celery
-from ecosante.utils import send_log_mail
+from ecosante.utils.send_log_mail import send_log_mail
 from ecosante.utils.cache import cache_lock, cache_unlock
 
 def get_all_contacts(limit=100):

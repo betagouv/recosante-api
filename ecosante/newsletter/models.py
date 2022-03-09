@@ -19,7 +19,7 @@ from ecosante.utils.funcs import (
     generate_line,
     oxford_comma
 )
-from ecosante.extensions import db
+from ecosante.extensions import db, authenticator
 from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
 from indice_pollution.history.models import VigilanceMeteo
 from indice_pollution.history.models import IndiceUv
@@ -704,9 +704,8 @@ class NewsletterDB(db.Model, Newsletter):
     raep_fin_validite = db.Column(db.String())
     indice_uv_label: str = db.Column(db.String())
     indice_uv_value: int = db.Column(db.Integer())
-    indice_uv_zone_id: int = db.Column(db.Integer)
-    indice_uv_date: date = db.Column(db.Date())
-    indice_uv: IndiceUv = db.relationship(IndiceUv, foreign_keys=[indice_uv_zone_id, indice_uv_date])
+    indice_uv_zone_id: int = db.Column(db.Integer(), db.ForeignKey(IndiceUv.zone_id))
+    indice_uv_date: date = db.Column(db.Date(), db.ForeignKey(IndiceUv.date))
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
     show_indice_uv = db.Column(db.Boolean())
@@ -874,6 +873,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'RAEP': self.qualif_raep.capitalize() or "",
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
+                'AUTH_TOKEN': authenticator.make_token(self.inscription.uid),
                 'DEPARTEMENT': self.inscription.commune.departement_nom,
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
@@ -905,7 +905,7 @@ class NewsletterDB(db.Model, Newsletter):
         }
 
     header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE','VILLE_CODE','VILLE_SLUG','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
-'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
+'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','AUTH_TOKEN','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
 'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','INDICE_UV_VALIDITE','POLLINARIUM_SENTINELLE','INDICE_UV_LABEL','INDICE_UV_VALUE','SHOW_QA','SHOW_RADON','SHOW_INDICE_UV','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
 'RECOMMANDATION_EPISODE','RECOMMANDATION_INDICE_UV','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',
 'ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier',

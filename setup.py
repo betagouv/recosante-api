@@ -31,7 +31,8 @@ DEPENDENCIES = [
     'redis',
     'pywebpush',
     'py-vapid',
-    'cryptography'
+    'cryptography',
+    'python-jose[cryptography]'
 ]
 
 class CustomPsycopg2Install(install):
