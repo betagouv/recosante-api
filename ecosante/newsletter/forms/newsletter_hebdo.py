@@ -18,6 +18,15 @@ class FormTemplateAdd(BaseForm):
     chauffage = FormEdit.chauffage
     deplacement = FormEdit.deplacement
     animaux_domestiques = FormEdit.animal_de_compagnie
+    indicateurs = MultiCheckboxField(
+        "Ne montrer qu’aux personnes inscrites aux indicateurs",
+        choices=[
+            ("raep", "Risque d’allergie aux pollens"),
+            ("indice_atmo", "Indice ATMO"),
+            ("vigilance_meteo", "Vigilance météo"),
+            ("indice_uv", "Indice UV")
+        ],
+    )
 
     def validate_ordre(form, field):
         template_same_ordre = NewsletterHebdoTemplate.query.filter_by(ordre=field.data).first()

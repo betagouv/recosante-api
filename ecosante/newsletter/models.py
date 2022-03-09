@@ -38,6 +38,7 @@ class NewsletterHebdoTemplate(db.Model):
     _enfants: List[str] = db.Column("enfants", postgresql.ARRAY(db.String))
     chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
     _animaux_domestiques: List[str] = db.Column("animaux_domestiques", postgresql.ARRAY(db.String))
+    indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
 
     _periode_validite: DateRange = db.Column(
         "periode_validite",
@@ -70,6 +71,11 @@ class NewsletterHebdoTemplate(db.Model):
             return False
         if isinstance(self.animaux_domestiques, bool) and self.animaux_domestiques != inscription.has_animaux_domestiques:
             return False
+        if isinstance(self.indicateurs, list) and len(self.indicateurs) > 0:
+            if not isinstance(inscription.indicateurs, list):
+                return False
+            if len(set(inscription.indicateurs).intersection(set(self.indicateurs))) == 0:
+                return False
         return True
 
     @classmethod
