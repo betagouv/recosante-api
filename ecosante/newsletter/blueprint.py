@@ -149,7 +149,7 @@ def export(mail_list_id, secret_slug):
         ).options(joinedload(NewsletterDB.recommandation_raep)
         ).populate_existing(
         ).yield_per(1000)
-    response = Response(iter_csv(newsletters), mimetype='text/csv')
+    response = Response(stream_with_context(iter_csv(newsletters)), mimetype='text/csv')
     response.headers['Content-Disposition'] = 'attachment; filename=export.csv'
     return response
 
