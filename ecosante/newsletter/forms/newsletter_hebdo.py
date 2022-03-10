@@ -18,15 +18,11 @@ class FormTemplateAdd(BaseForm):
     chauffage = FormEdit.chauffage
     deplacement = FormEdit.deplacement
     animaux_domestiques = FormEdit.animal_de_compagnie
-    indicateurs = MultiCheckboxField(
-        "Ne montrer qu’aux personnes inscrites aux indicateurs",
-        choices=[
-            ("raep", "Risque d’allergie aux pollens"),
-            ("indice_atmo", "Indice ATMO"),
-            ("vigilance_meteo", "Vigilance météo"),
-            ("indice_uv", "Indice UV")
-        ],
-    )
+
+    raep = OuiNonField("Montrer aux personnes recevant le RAEP ?")
+    indice_atmo = OuiNonField("Montrer aux personnes recevant l’indice ATMO ?")
+    vigilance_meteo = OuiNonField("Montrer aux personnes recevant la vigilance météo ?")
+    indice_uv = OuiNonField("Montrer aux personnes recevant l’indice UV ?")
 
 class FormTemplateEdit(FormTemplateAdd):
     id = HiddenField()

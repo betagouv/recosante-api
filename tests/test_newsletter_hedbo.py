@@ -265,7 +265,44 @@ def test_indicateurs(template, inscription, db_session):
 
     template.indicateurs = ["raep", "indice_atmo"]
     inscription.indicateurs = ["indice_atmo"]
+    assert template.filtre_criteres(inscription) == False
+
+    template.indicateurs = ["raep", "indice_atmo"]
+    inscription.indicateurs = ["indice_atmo", "raep"]
     assert template.filtre_criteres(inscription) == True
+
+def test_indicateurs_exclus(template, inscription, db_session):
+    template.indicateurs_exclus = None
+    inscription.indicateurs = ["raep", "indice_atmo"]
+    assert template.filtre_criteres(inscription) == True
+
+    template.indicateurs_exclus = []
+    assert template.filtre_criteres(inscription) == True
+
+    template.indicateurs_exclus = inscription.indicateurs
+    assert template.filtre_criteres(inscription) == False
+
+    inscription.indicateurs = []
+    assert template.filtre_criteres(inscription) == True
+
+    template.indicateurs_exclus = []
+    assert template.filtre_criteres(inscription) == True
+
+    template.indicateurs_exclus = ["raep"]
+    inscription.indicateurs = ["indice_atmo"]
+    assert template.filtre_criteres(inscription) == True
+
+    template.indicateurs_exclus = ["raep"]
+    inscription.indicateurs = ["indice_atmo", "raep"]
+    assert template.filtre_criteres(inscription) == False
+
+    template.indicateurs_exclus = ["raep", "indice_atmo"]
+    inscription.indicateurs = ["indice_atmo"]
+    assert template.filtre_criteres(inscription) == False
+
+    template.indicateurs_exclus = ["raep", "indice_atmo"]
+    inscription.indicateurs = ["indice_atmo", "raep"]
+    assert template.filtre_criteres(inscription) == False
 
 def test_meme_ordre(templates, inscription, db_session):
     for template in templates:
