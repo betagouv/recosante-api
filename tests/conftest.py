@@ -225,6 +225,11 @@ def raep_nul(db_session, commune_commited):
     return raep
 
 @pytest.fixture(scope='function')
+def template():
+    return NewsletterHebdoTemplate(ordre=1, sib_id=1, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)))
+
+
+@pytest.fixture(scope='function')
 def templates(db_session):
     templates = [
         NewsletterHebdoTemplate(ordre=10, sib_id=10, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
