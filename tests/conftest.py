@@ -232,6 +232,10 @@ def template():
 @pytest.fixture(scope='function')
 def templates(db_session):
     templates = [
+        NewsletterHebdoTemplate(ordre=12, sib_id=14, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)), indicateurs=['indice_atmo', 'raep']),
+        NewsletterHebdoTemplate(ordre=12, sib_id=13, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)), indicateurs=['indice_atmo']),
+        NewsletterHebdoTemplate(ordre=11, sib_id=12, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)), enfants=True),
+        NewsletterHebdoTemplate(ordre=11, sib_id=11, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)), enfants=False),
         NewsletterHebdoTemplate(ordre=10, sib_id=10, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
         NewsletterHebdoTemplate(ordre=7, sib_id=7, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
 	    NewsletterHebdoTemplate(ordre=9, sib_id=9, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),

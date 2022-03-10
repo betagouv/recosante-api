@@ -79,16 +79,20 @@ class NewsletterHebdoTemplate(db.Model):
         return True
 
     @classmethod
-    def next_template(cls, inscription: Inscription, templates=None):
+    def next_template(cls, inscription: Inscription, templates=None) -> 'NewsletterHebdoTemplate | None':
         templates = templates or cls.get_templates()
-        already_sent_templates_ids = [nl.newsletter_hebdo_template_id for nl in inscription.last_newsletters_hebdo]
+        template_id_ordre = {t.id: t.ordre for t in templates}
+        already_sent_templates_ordres = [
+            template_id_ordre[nl.newsletter_hebdo_template_id] 
+            for nl in inscription.last_newsletters_hebdo
+        ]
         valid_templates = sorted(
             [
                 t
                 for t in templates
                 if t.filtre_date(date.today())\
+                    and t.ordre not in already_sent_templates_ordres
                     and t.filtre_criteres(inscription)\
-                    and t.id not in already_sent_templates_ids
             ],
             key=lambda t: t.ordre
         )

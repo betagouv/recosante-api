@@ -1,5 +1,5 @@
 from sqlalchemy.sql.sqltypes import Date
-from ecosante.newsletter.models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
+from ecosante.newsletter.models import Newsletter, NewsletterDB, NewsletterHebdoTemplate, Inscription
 from datetime import date, timedelta
 from psycopg2.extras import DateRange
 
@@ -7,7 +7,7 @@ def test_get_templates(templates):
     last_t = None
     for t in NewsletterHebdoTemplate.get_templates():
         if last_t:
-            assert last_t.ordre < t.ordre
+            assert last_t.ordre <= t.ordre
         last_t = t
 
 def test_next_template_first(db_session, inscription, templates):
@@ -266,3 +266,39 @@ def test_indicateurs(template, inscription, db_session):
     template.indicateurs = ["raep", "indice_atmo"]
     inscription.indicateurs = ["indice_atmo"]
     assert template.filtre_criteres(inscription) == True
+
+def test_meme_ordre(templates, inscription, db_session):
+    for template in templates:
+        if template.ordre >= 11:
+            continue
+        nl = Newsletter(newsletter_hebdo_template=template, inscription=inscription)
+        db_session.add(NewsletterDB(nl))
+    db_session.commit()
+    inscription = Inscription.query.get(inscription.id)
+    nlt = NewsletterHebdoTemplate.next_template(inscription)
+    assert nlt.ordre == 11
+    assert nlt.enfants == False
+
+    inscription.enfants = 'oui'
+    nlt = NewsletterHebdoTemplate.next_template(inscription)
+    assert nlt.ordre == 11
+    assert nlt.enfants == True
+
+def test_meme_ordre_population_recoupe(templates, inscription, db_session):
+    for template in templates:
+        if template.ordre >= 12:
+            continue
+        nl = Newsletter(newsletter_hebdo_template=template, inscription=inscription)
+        nl.date = date.today() - timedelta(days=1)
+        db_session.add(NewsletterDB(nl))
+    db_session.commit()
+    inscription = Inscription.query.get(inscription.id)
+    nlt = NewsletterHebdoTemplate.next_template(inscription)
+    nl = Newsletter(newsletter_hebdo_template=nlt, inscription=inscription)
+    nl.date = date.today() - timedelta(days=1)
+    db_session.add(NewsletterDB(nl))
+    db_session.commit()
+    inscription = Inscription.query.get(inscription.id)
+
+    nlt = NewsletterHebdoTemplate.next_template(inscription)
+    assert nlt == None or nlt.ordre > 12
