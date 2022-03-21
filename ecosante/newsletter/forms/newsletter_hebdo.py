@@ -19,8 +19,8 @@ class FormTemplateAdd(BaseForm):
     deplacement = FormEdit.deplacement
     animaux_domestiques = FormEdit.animal_de_compagnie
 
-    raep = OuiNonField("Montrer aux personnes recevant le RAEP ?")
     indice_atmo = OuiNonField("Montrer aux personnes recevant l’indice ATMO ?")
+    raep = OuiNonField("Montrer aux personnes recevant le RAEP ?")
     vigilance_meteo = OuiNonField("Montrer aux personnes recevant la vigilance météo ?")
     indice_uv = OuiNonField("Montrer aux personnes recevant l’indice UV ?")
 
