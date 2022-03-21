@@ -326,7 +326,6 @@ def test_meme_ordre_population_recoupe(templates, inscription, db_session):
         if template.ordre >= 12:
             continue
         nl = Newsletter(newsletter_hebdo_template=template, inscription=inscription)
-        nl.date = date.today() - timedelta(days=1)
         db_session.add(NewsletterDB(nl))
     db_session.commit()
     inscription = Inscription.query.get(inscription.id)
