@@ -78,9 +78,12 @@ class NewsletterHebdoTemplate(db.Model):
             return False
         if isinstance(self.animaux_domestiques, bool) and self.animaux_domestiques != inscription.has_animaux_domestiques:
             return False
-        if all([indicateur in inscription.indicateurs for indicateur in self.indicateurs]):
+        inscription_indicateurs = inscription.indicateurs if isinstance(inscription.indicateurs, list) else []
+        self_indicateurs = self.indicateurs if isinstance(self.indicateurs, list) else []
+        self_indicateurs_exclus = self.indicateurs_exclus if isinstance(self.indicateurs_exclus, list) else []
+        if not all([indicateur in inscription_indicateurs for indicateur in self_indicateurs]):
             return False
-        if not any([indicateur in inscription.indicateurs for indicateur in self.indicateurs_exclus]):
+        if any([indicateur in inscription_indicateurs for indicateur in self_indicateurs_exclus]):
             return False
         return True
 
