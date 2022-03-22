@@ -68,7 +68,7 @@ def test_webpush_data(inscription_notifications, recommandation, bonne_qualite_a
     assert len(newsletters) == 1
     nldb = NewsletterDB(newsletters[0])
     webpush_data = nldb.webpush_data
-    assert 'qualité de l’air' in webpush_data['body']
-    assert 'allergie' in webpush_data['body']
+    assert 'Air' in webpush_data['body']
+    assert 'Pollens' in webpush_data['body']
     assert 'Vigilance météo' in webpush_data['body']
-    assert 'Indice UV' in webpush_data['body']
+    assert 'UV' in webpush_data['body']

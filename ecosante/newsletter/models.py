@@ -920,18 +920,24 @@ class NewsletterDB(db.Model, Newsletter):
         commune = self.inscription.commune
         with different_locale('fr_FR'):
             title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
-        array_body = []
+        body = ""
+        first_line = []
         if self.inscription.has_indicateur("indice_atmo") and self.label:
-            array_body.append(f"Indice de la qualité de l’air : {self.label.capitalize()}.")
+            first_line.append(f"Air : {self.label.lower()}")
         if self.inscription.has_indicateur("raep") and self.qualif_raep:
-            array_body.append(f"Risque d’allergie aux pollens : {self.qualif_raep.capitalize()}.")
-        if self.inscription.has_indicateur("vigilance_meteo") and self.vigilance_globale:
-            array_body.append(f"Vigilance météo : {self.vigilance_globale.couleur}.")
-        if self.inscription.has_indicateur("indice_uv") and self.indice_uv_label:
-            array_body.append(f"Indice UV : {self.indice_uv_label}.")
+            first_line.append(f"Pollens : {self.qualif_raep.lower()}")
+        body += ". ".join(first_line)
+        if len(body) > 0:
+            body += "\n"
+        second_line = []
+        if self.inscription.has_indicateur("vigilance_meteo") and self.vigilance_globale and self.vigilance_globale.couleur:
+            second_line.append(f"Vigilance météo : {self.vigilance_globale.couleur.lower()}")
+        if self.inscription.has_indicateur("indice_uv") and self.indice_uv_value:
+            second_line.append(f"UV : {self.indice_uv_value}")
+        body += ". ".join(second_line)
         return {
             "title": title,
-            "body": "\n".join(array_body),
+            "body": body,
             "link": f"https://recosante.beta.gouv.fr/place/{commune.insee}/{commune.slug}/"
         }
 
