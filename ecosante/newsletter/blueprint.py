@@ -122,17 +122,17 @@ def export(mail_list_id, secret_slug):
             self._line = line
         def read(self):
             return self._line
-    def iter_csv(newsletters):
+    def iter_csv(query):
         line = Line()
         writer = csv.DictWriter(line, fieldnames=NewsletterDB.header)
         writer.writeheader()
         yield line.read()
-        for nl in newsletters:
+        for nl in query.yield_per(1000):
             if nl.inscription.mail is None:
                 continue
             writer.writerow(nl.attributes())
             yield line.read()
-    newsletters = db.session.query(NewsletterDB).filter_by(
+    newsletters_query = db.session.query(NewsletterDB).filter_by(
         mail_list_id=mail_list_id
         ).options(
             joinedload(
@@ -147,9 +147,8 @@ def export(mail_list_id, secret_slug):
         ).options(joinedload(NewsletterDB.recommandation)
         ).options(joinedload(NewsletterDB.recommandation_qa)
         ).options(joinedload(NewsletterDB.recommandation_raep)
-        ).populate_existing(
-        ).yield_per(1000)
-    response = Response(stream_with_context(iter_csv(newsletters)), mimetype='text/csv')
+        ).populate_existing()
+    response = Response(stream_with_context(iter_csv(newsletters_query)), mimetype='text/csv')
     response.headers['Content-Disposition'] = 'attachment; filename=export.csv'
     return response
 
