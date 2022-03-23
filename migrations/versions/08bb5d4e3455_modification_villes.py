@@ -13,7 +13,7 @@ from indice_pollution.history.models.commune import Commune
 
 # revision identifiers, used by Alembic.
 revision = '08bb5d4e3455'
-down_revision = '6603bd49a22b'
+down_revision = 'c8a957612479'
 branch_labels = None
 depends_on = None
 
