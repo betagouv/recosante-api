@@ -176,14 +176,15 @@ class NewsletterHebdoTemplate(db.Model):
             self.indicateurs_exclus = list(set(self.indicateurs_exclus or []) - set([indicateur]))
 
     def indicateur_getter(self, indicateur):
-        if not isinstance(self.indicateurs, list):
+        if not type(self.indicateurs) in [list, None]:
             return None
-        if indicateur in self.indicateurs:
+        if indicateur in (self.indicateurs or []):
             return True
-        elif indicateur in self.indicateurs_exclus:
-            return False
-        else:
+        if not type(self.indicateurs_exclus) in [list, None]:
             return None
+        if indicateur in (self.indicateurs_exclus or []):
+            return False
+        return None
 
     raep = property_indicateur("raep")
     indice_atmo = property_indicateur("indice_atmo")
