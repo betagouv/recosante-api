@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'c8a957612479'
-down_revision = '6603bd49a22b'
+down_revision = 'c5b5037a6407'
 branch_labels = None
 depends_on = None
 
@@ -22,3 +22,4 @@ def upgrade():
 
 def downgrade():
     op.drop_column('newsletter_hebdo_template', 'indicateurs_exclus')
+
