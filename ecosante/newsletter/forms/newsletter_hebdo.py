@@ -18,21 +18,11 @@ class FormTemplateAdd(BaseForm):
     chauffage = FormEdit.chauffage
     deplacement = FormEdit.deplacement
     animaux_domestiques = FormEdit.animal_de_compagnie
-    indicateurs = MultiCheckboxField(
-        "Ne montrer qu’aux personnes inscrites aux indicateurs",
-        choices=[
-            ("raep", "Risque d’allergie aux pollens"),
-            ("indice_atmo", "Indice ATMO"),
-            ("vigilance_meteo", "Vigilance météo"),
-            ("indice_uv", "Indice UV")
-        ],
-    )
 
-    def validate_ordre(form, field):
-        template_same_ordre = NewsletterHebdoTemplate.query.filter_by(ordre=field.data).first()
-        if template_same_ordre:
-            if not 'id' in form.data or int(form.data['id']) != template_same_ordre.id:
-                raise ValidationError("Un autre template a déjà cet ordre")
+    indice_atmo = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés à l’indice ATMO ?")
+    raep = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés RAEP ?")
+    vigilance_meteo = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés à la vigilance météo ?")
+    indice_uv = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés à l’indice UV ?")
 
 class FormTemplateEdit(FormTemplateAdd):
     id = HiddenField()

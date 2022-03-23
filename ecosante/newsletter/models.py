@@ -27,6 +27,12 @@ from indice_pollution.history.models import IndiceUv
 FR_DATE_FORMAT = '%d/%m/%Y'
 
 
+def property_indicateur(indicateur):
+    return property(
+        lambda self: self.indicateur_getter(indicateur),
+        lambda self, value: self.indicateur_setter(value, indicateur)
+    )
+
 @dataclass
 class NewsletterHebdoTemplate(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
@@ -39,6 +45,7 @@ class NewsletterHebdoTemplate(db.Model):
     chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
     _animaux_domestiques: List[str] = db.Column("animaux_domestiques", postgresql.ARRAY(db.String))
     indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String))
+    indicateurs_exclus: List[str] = db.Column(postgresql.ARRAY(db.String))
 
     _periode_validite: DateRange = db.Column(
         "periode_validite",
@@ -71,24 +78,30 @@ class NewsletterHebdoTemplate(db.Model):
             return False
         if isinstance(self.animaux_domestiques, bool) and self.animaux_domestiques != inscription.has_animaux_domestiques:
             return False
-        if isinstance(self.indicateurs, list) and len(self.indicateurs) > 0:
-            if not isinstance(inscription.indicateurs, list):
-                return False
-            if len(set(inscription.indicateurs).intersection(set(self.indicateurs))) == 0:
-                return False
+        inscription_indicateurs = inscription.indicateurs if isinstance(inscription.indicateurs, list) else []
+        self_indicateurs = self.indicateurs if isinstance(self.indicateurs, list) else []
+        self_indicateurs_exclus = self.indicateurs_exclus if isinstance(self.indicateurs_exclus, list) else []
+        if not all([indicateur in inscription_indicateurs for indicateur in self_indicateurs]):
+            return False
+        if any([indicateur in inscription_indicateurs for indicateur in self_indicateurs_exclus]):
+            return False
         return True
 
     @classmethod
-    def next_template(cls, inscription: Inscription, templates=None):
+    def next_template(cls, inscription: Inscription, templates=None) -> 'NewsletterHebdoTemplate | None':
         templates = templates or cls.get_templates()
-        already_sent_templates_ids = [nl.newsletter_hebdo_template_id for nl in inscription.last_newsletters_hebdo]
+        template_id_ordre = {t.id: t.ordre for t in templates}
+        already_sent_templates_ordres = [
+            template_id_ordre[nl.newsletter_hebdo_template_id] 
+            for nl in inscription.last_newsletters_hebdo
+        ]
         valid_templates = sorted(
             [
                 t
                 for t in templates
                 if t.filtre_date(date.today())\
+                    and t.ordre not in already_sent_templates_ordres
                     and t.filtre_criteres(inscription)\
-                    and t.id not in already_sent_templates_ids
             ],
             key=lambda t: t.ordre
         )
@@ -150,6 +163,33 @@ class NewsletterHebdoTemplate(db.Model):
             self._enfants = ["true" if value else "false"]
         else:
             self._enfants = None
+
+    def indicateur_setter(self, value, indicateur):
+        if value == None:
+            self.indicateurs = list(set(self.indicateurs or []) - set([indicateur]))
+            self.indicateurs_exclus = list(set(self.indicateurs_exclus or []) - set([indicateur]))
+        elif value == False:
+            self.indicateurs = list(set(self.indicateurs or []) - set([indicateur]))
+            self.indicateurs_exclus = list(set(self.indicateurs_exclus or []) | set([indicateur]))
+        elif value == True:
+            self.indicateurs = list(set(self.indicateurs or []) | set([indicateur]))
+            self.indicateurs_exclus = list(set(self.indicateurs_exclus or []) - set([indicateur]))
+
+    def indicateur_getter(self, indicateur):
+        if not isinstance(self.indicateurs, list):
+            return None
+        if indicateur in self.indicateurs:
+            return True
+        elif indicateur in self.indicateurs_exclus:
+            return False
+        else:
+            return None
+
+    raep = property_indicateur("raep")
+    indice_atmo = property_indicateur("indice_atmo")
+    vigilance_meteo = property_indicateur("vigilance_meteo")
+    indice_uv = property_indicateur("indice_uv")
+
 
 @dataclass
 class Newsletter:
