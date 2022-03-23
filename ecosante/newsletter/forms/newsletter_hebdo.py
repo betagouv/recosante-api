@@ -19,10 +19,10 @@ class FormTemplateAdd(BaseForm):
     deplacement = FormEdit.deplacement
     animaux_domestiques = FormEdit.animal_de_compagnie
 
-    indice_atmo = OuiNonField("Montrer aux personnes recevant l’indice ATMO ?")
-    raep = OuiNonField("Montrer aux personnes recevant le RAEP ?")
-    vigilance_meteo = OuiNonField("Montrer aux personnes recevant la vigilance météo ?")
-    indice_uv = OuiNonField("Montrer aux personnes recevant l’indice UV ?")
+    indice_atmo = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés à l’indice ATMO ?")
+    raep = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés RAEP ?")
+    vigilance_meteo = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés à la vigilance météo ?")
+    indice_uv = OuiNonField("Inclure (Oui) ou exclure (Non) les abonnés à l’indice UV ?")
 
 class FormTemplateEdit(FormTemplateAdd):
     id = HiddenField()
