@@ -334,7 +334,6 @@ def test_meme_ordre_population_recoupe(templates, inscription, db_session):
     nl.date = date.today() - timedelta(days=1)
     db_session.add(NewsletterDB(nl))
     db_session.commit()
-    inscription = Inscription.query.get(inscription.id)
 
     nlt = NewsletterHebdoTemplate.next_template(inscription)
     assert nlt == None or nlt.ordre > 12
