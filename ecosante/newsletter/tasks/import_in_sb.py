@@ -1,7 +1,7 @@
 from flask import current_app
 from datetime import datetime
 from uuid import uuid4
-import os
+import csv, io,  os
 from flask.helpers import url_for
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
@@ -140,6 +140,12 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
         current_app.logger.info("Commit des newsletters dans la base de données")
     return errors, template_id_mail_list_id
 
+def get_file_body(mail_list_id):
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=NewsletterDB.header)
+    writer.writeheader()
+    writer.writerows([nl.attributes() for nl in NewsletterDB.query.filter_by(mail_list_id=mail_list_id).all()])
+    return output.getvalue()
 
 def import_contacts_in_sb(template_id_mail_list_id, now, type_, test, activate_webhook):
     if current_app.config['ENV'] == 'production' or test:
@@ -151,13 +157,7 @@ def import_contacts_in_sb(template_id_mail_list_id, now, type_, test, activate_w
             request_contact_import.sms_blacklist = False
             request_contact_import.update_existing_contacts = True
             request_contact_import.empty_contacts_attributes = True
-            request_contact_import.file_url = url_for(
-                'newsletter.export',
-                secret_slug=os.getenv("CAPABILITY_ADMIN_TOKEN"),
-                mail_list_id=mail_list_id,
-                _external=True,
-                _scheme='https'
-            )
+            request_contact_import.file_body = get_file_body(mail_list_id)
             if activate_webhook:
                 request_contact_import.notify_url = url_for(
                     'newsletter.send_campaign',
