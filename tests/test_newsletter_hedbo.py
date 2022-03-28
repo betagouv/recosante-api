@@ -139,7 +139,25 @@ def test_activites(template, inscription):
     inscription.activites = ["menage"]
     assert template.filtre_criteres(inscription) == True
 
-    template.activites = ["menage", "bricolage"]
+    template.activites = ["bricolage"]
+    inscription.activites = None
+    assert template.filtre_criteres(inscription) == False
+    inscription.activites = ["bricolage"]
+    assert template.filtre_criteres(inscription) == True
+
+    template.activites = ["jardinage"]
+    inscription.activites = None
+    assert template.filtre_criteres(inscription) == False
+    inscription.activites = ["jardinage"]
+    assert template.filtre_criteres(inscription) == True
+
+    template.activites = ["activite_physique"]
+    inscription.activites = None
+    assert template.filtre_criteres(inscription) == False
+    inscription.activites = ["sport"]
+    assert template.filtre_criteres(inscription) == True
+
+    template.activites = ["menage", "bricolage", "activite_physique"]
     inscription.activites = None
     assert template.filtre_criteres(inscription) == False
     inscription.activites = ["menage"]
@@ -147,6 +165,8 @@ def test_activites(template, inscription):
     inscription.activites = ["bricolage"]
     assert template.filtre_criteres(inscription) == True
     inscription.activites = ["bricolage", "menage"]
+    assert template.filtre_criteres(inscription) == True
+    inscription.activites = ["bricolage", "menage", "sport"]
     assert template.filtre_criteres(inscription) == True
 
 def test_enfants(template, inscription):
