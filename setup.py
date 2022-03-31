@@ -34,6 +34,7 @@ DEPENDENCIES = [
     'py-vapid',
     'cryptography',
     'python-jose[cryptography]',
+    'Werkzeug~=2.0.0'
 ]
 
 class CustomPsycopg2Install(install):
