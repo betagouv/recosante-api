@@ -15,6 +15,7 @@ DEPENDENCIES = [
     'Flask-caching',
     'flask-cors',
     'Flask-Migrate',
+    'flask-rebar',
     'Flask-SQLAlchemy',
     'Flask-WTF',
     'Flask-Manage-Webpack',
@@ -32,7 +33,7 @@ DEPENDENCIES = [
     'pywebpush',
     'py-vapid',
     'cryptography',
-    'python-jose[cryptography]'
+    'python-jose[cryptography]',
 ]
 
 class CustomPsycopg2Install(install):
