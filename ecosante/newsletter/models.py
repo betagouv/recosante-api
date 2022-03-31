@@ -69,6 +69,8 @@ class NewsletterHebdoTemplate(db.Model):
         for nom_critere in ['chauffage', 'activites', 'deplacement']:
             critere = getattr(self, nom_critere)
             if isinstance(critere, list) and len(critere) > 0:
+                if nom_critere == 'activites':
+                    critere = list(map(lambda x: x.replace('activite_physique', 'sport'), critere))
                 inscription_critere = getattr(inscription, nom_critere)
                 if not isinstance(inscription_critere, list):
                     return False
