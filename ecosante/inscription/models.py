@@ -366,6 +366,9 @@ class Inscription(db.Model):
     def has_indicateur(self, indicateur):
         return isinstance(self.indicateurs, list) and indicateur in self.indicateurs
 
+    def has_frequence(self, frequence):
+        return isinstance(self.indicateurs_frequence, list) and frequence in self.indicateurs_frequence
+
     @classmethod
     def export_query(cls, only_to=None, filter_already_sent=True, media='mail', type_='quotidien', date_=None):
         from ecosante.newsletter.models import NewsletterDB
