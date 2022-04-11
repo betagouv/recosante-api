@@ -1,7 +1,7 @@
-from ecosante.newsletter.models import Inscription, Newsletter, NewsletterDB, Recommandation
+from ecosante.newsletter.models import Newsletter, NewsletterDB
 from datetime import date, datetime, timedelta
 from .utils import published_recommandation
-import os, pytest
+import pytest
 from itertools import product
 from indice_pollution.history.models import VigilanceMeteo
 from psycopg2.extras import DateTimeTZRange
@@ -258,7 +258,7 @@ def test_show_indice_uv(inscription):
         forecast={"data": []},
         episodes={"data": []},
         raep=0,
-        indice_uv={"data": []},
+        indice_uv=None,
         recommandations=[]
     )
     assert nl.show_indice_uv == True
@@ -269,162 +269,10 @@ def test_show_indice_uv(inscription):
         forecast={"data": []},
         episodes={"data": []},
         raep=0,
-        indice_uv={"data": []},
+        indice_uv=None,
         recommandations=[]
     )
     assert nl.show_indice_uv == False
-
-def test_show_radon_polluants(db_session, inscription, episode_pm10):
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": []},
-        episodes={"data": [episode_pm10.dict()]},
-        raep=0,
-        recommandations=[]
-    )
-
-    assert nl.show_radon == False
-
-
-def test_show_radon_raep(db_session, inscription):
-    today_date = date.today()
-    inscription.id = 1
-    inscription.indicateurs = ["indice_atmo", "raep"]
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[]
-    )
-    assert nl.show_radon == True
-
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=4,
-        recommandations=[]
-    )
-    assert nl.show_radon == False
-
-    inscription.indicateurs = ["indice_atmo"]
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=1,
-        recommandations=[]
-    )
-    assert nl.show_radon == True
-
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=4,
-        recommandations=[]
-    )
-    assert nl.show_radon == False
-
-
-def test_show_radon_indice(inscription):
-    today_date = date.today()
-    inscription.allergie_pollens = False
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[]
-    )
-    assert nl.show_radon == True
-
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "moyen"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[]
-    )
-    assert nl.show_radon == True
-
-    today_date = date.today()
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "degrade"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[]
-    )
-    assert nl.show_radon == False
-
-def test_show_radon_recent(db_session, inscription):
-    today_date = date.today()
-    db_session.add(
-        published_recommandation(),
-    )
-    inscription.allergie_pollens=False
-    past_nl = NewsletterDB(
-        Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[]
-    ))
-    db_session.add(past_nl)
-    db_session.commit()
-
-    today_date = date.today()
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[],
-        radon=3
-    )
-    assert nl.show_radon == False
-
-    past_nl.date = today_date - timedelta(days=15)
-    db_session.add(past_nl)
-    db_session.commit()
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[],
-        radon=3
-    )
-    assert nl.show_radon == True
-
-    past_nl.date = today_date - timedelta(days=15)
-    db_session.add(past_nl)
-    db_session.commit()
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[],
-        radon=2
-    )
-    assert nl.show_radon == False
-
-    past_nl.date = today_date - timedelta(days=30)
-    db_session.add(past_nl)
-    db_session.commit()
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=[],
-        radon=2
-    )
-    assert nl.show_radon == True
 
 
 def test_sous_indice(db_session, inscription):
@@ -495,62 +343,6 @@ def test_sous_indice(db_session, inscription):
         assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_LABEL']) == str
         assert nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR'] != ""
         assert type(nldb.attributes()[f'SS_INDICE_{sous_indice.upper()}_COULEUR']) == str
-
-
-def test_sorted_recommandation_query(db_session, inscription):
-    recommandations=[
-        published_recommandation(ordre=1),
-        published_recommandation(),
-        published_recommandation(),
-        published_recommandation()
-    ]
-    db_session.add_all(recommandations)
-    db_session.commit()
-    today_date = date.today()
-    yesterday_date = today_date - timedelta(days=1)
-    tomorrow_date = today_date + timedelta(days=1)
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(yesterday_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=recommandations,
-        radon=2,
-        date=yesterday_date
-    )
-    db_session.add(NewsletterDB(nl))
-    db_session.commit()
-    yesterday_recommandation = nl.recommandation
-    assert yesterday_recommandation.ordre == 1
-
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(today_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=recommandations,
-        radon=2,
-        date=today_date
-    )
-    db_session.add(NewsletterDB(nl))
-    db_session.commit()
-    today_recommandation = nl.recommandation
-    sorted_recommandations =  nl.sorted_recommandations_query.all()
-    next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 1.0
-
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": str(tomorrow_date), "indice": "bon"}]},
-        episodes={"data": []},
-        raep=0,
-        recommandations=recommandations,
-        radon=2,
-        date=tomorrow_date
-    )
-    nl.sorted_recommandations_query.all()[-1][0] == 2.0
-    sorted_recommandations =  nl.sorted_recommandations_query.all()
-    next(filter(lambda a: a[1] == yesterday_recommandation.id, sorted_recommandations))[0] == 2.0
-    next(filter(lambda a: a[1] == today_recommandation.id, sorted_recommandations))[0] == 2.0
 
 def test_export_simple(db_session, inscription, bonne_qualite_air, raep_nul):
     db_session.add(published_recommandation())

@@ -6,7 +6,8 @@ import csv, io,  os
 from flask.helpers import url_for
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
-from ecosante.newsletter.models import Newsletter, NewsletterDB, Inscription
+from ecosante.newsletter.models import Newsletter, NewsletterDB
+from ecosante.inscription.models import Inscription
 from ecosante.extensions import db, sib, celery
 from ecosante.utils.send_log_mail import send_log_mail
 from ecosante.utils.cache import cache_lock, cache_unlock

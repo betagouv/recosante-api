@@ -1,8 +1,9 @@
 from marshmallow.utils import pprint
-from ecosante.api.schemas.indice import FullIndiceSchema, IndiceDetailsSchema, IndiceSchema, NestedIndiceSchema
+from ecosante.api.schemas.indice import FullIndiceSchema, IndiceDetailsSchema, NestedIndiceSchema
 from marshmallow import fields, pre_dump
 from datetime import datetime
-from ecosante.newsletter.models import Newsletter, Recommandation
+from ecosante.newsletter.models import Newsletter
+from ecosante.recommandations.models import Recommandation
 
 class NestedIndiceRAEPSchema(NestedIndiceSchema):
     value = fields.Integer(attribute='total')

@@ -1,5 +1,7 @@
-from ecosante.extensions import celery, sib
-from ecosante.newsletter.models import Newsletter, NewsletterDB, db, Inscription
+from re import I
+from ecosante.extensions import celery, sib, db
+from ecosante.inscription.models import Inscription
+from ecosante.newsletter.models import Newsletter, NewsletterDB
 from flask import current_app
 import os
 import sib_api_v3_sdk
