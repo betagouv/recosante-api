@@ -44,7 +44,8 @@ class IndiceATMO(FullIndiceSchema):
             resp['validity'] = {
                 "start": data["indice"].date_ech,
                 "end": data["indice"].date_ech + timedelta(1) - timedelta(seconds=1),
-                "area": data["indice"].commune.nom
+                "area": data["indice"].commune.nom,
+                "area_details": data["indice"].commune
             }
         if data.get("advice"):
             resp['advice'] = data['advice']

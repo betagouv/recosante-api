@@ -68,11 +68,11 @@ def _db(app):
 @pytest.fixture(scope='function')
 def commune(db_session) -> Commune:
     from indice_pollution.history.models import Commune, Departement, Region, Zone
-    region = Region(nom="Pays de la Loire", code="52")
+    region = Region(nom="Pays de la Loire", code="52", tncc=4)
     zone_departement = Zone(type='departement', code='53')
-    departement = Departement(nom="Mayenne", code="53", region=region, zone=zone_departement)
+    departement = Departement(nom="Mayenne", code="53", region=region, zone=zone_departement, tncc=3)
     zone = Zone(type='commune', code='53130')
-    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, zone_pollution=departement.zone, departement=departement)
+    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, zone_pollution=departement.zone, departement=departement, tncc=0)
     db_session.add_all([region, zone_departement, departement, zone, commune])
     return commune
 

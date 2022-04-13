@@ -4,19 +4,15 @@ from marshmallow import fields, pre_dump, Schema
 from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
 from ecosante.utils.funcs import oxford_comma
 
-class VigilanceValiditySchema(ValiditySchema):
-    start = fields.DateTime(attribute='lower')
-    end = fields.DateTime(attribute='upper')
-
 class NestedIndiceSchema(Schema):
     label = fields.String(attribute='phenomene')
     color = fields.String(attribute='couleur')
-    validity = fields.Nested(VigilanceValiditySchema)
+    validity = fields.Nested(ValiditySchema)
     advice = fields.Nested(AdviceSchema)
 
     @pre_dump
     def add_advice(self, data: VigilanceMeteo, *a, **kw):
-        r = {"phenomene": data.phenomene, "couleur": data.couleur, "validity": data.validity}
+        r = {"phenomene": data.phenomene, "couleur": data.couleur, "validity": {"start": data.validity.lower, "end": data.validity.upper}}
         try:
             r['advice'] = next(filter(
                 lambda r: r.is_relevant(types=["vigilance_meteo"], media="dashboard", vigilances=[data]),

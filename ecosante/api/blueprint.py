@@ -58,7 +58,7 @@ def index():
 
     advice_atmo = get_advice(advices, "indice_atmo", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
-    advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel)
+    advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel if potentiel_radon else None)
     advice_episode = get_advice(advices, "episode_pollution", polluants=[e.lib_pol_normalized for e in EpisodePollution.filter_etat_haut(episodes)])
     advice_indice_uv = get_advice(advices, "indice_uv", indice_uv=indice_uv.uv_j0) if indice_uv and indice_uv.uv_j0 is not None else None
 
@@ -76,7 +76,8 @@ def index():
                 "url": "https://www.irsn.fr/FR/connaissances/Environnement/expertises-radioactivite-naturelle/radon/Pages/5-cartographie-potentiel-radon-commune.aspx#.YUyf32aA6dY"
             }],
             "validity": {
-                "area": commune.nom
+                "area": commune.nom,
+                "area_details": commune
             }
         },
         "episodes_pollution": {
@@ -92,7 +93,8 @@ def index():
                 "url": "https://donneespubliques.meteofrance.fr/?fond=produit&id_produit=299&id_rubrique=50"
             }],
             "validity": {
-                "area": commune.departement_nom
+                "area": commune.departement_nom,
+                "area_details": commune.departement
             }
         }
     }
@@ -114,7 +116,8 @@ def index():
                 "url": "https://meteofrance.com/comprendre-la-meteo/atmosphere/les-ultraviolets"
             }],
             "validity": {
-                "area": commune.nom
+                "area": commune.nom,
+                "area_details": commune
             }
         }
     return resp
