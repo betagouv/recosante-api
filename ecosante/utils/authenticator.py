@@ -3,7 +3,7 @@ from flask import current_app, request
 from flask_rebar.authenticators.base import Authenticator
 from flask_rebar import errors, messages
 from jose import jwt
-from werkzeug.security import safe_str_cmp
+from hmac import compare_digest
 import os
 
 class TempAuthenticator(Authenticator):
@@ -27,7 +27,7 @@ class TempAuthenticator(Authenticator):
         except (jwt.ExpiredSignatureError, jwt.JWTClaimsError, jwt.JWTError):
             raise errors.Unauthorized(messages.invalid_auth_token)
 
-        if not safe_str_cmp(view_uid, decoded_token.get('uid')):
+        if not compare_digest(view_uid, decoded_token.get('uid')):
             raise errors.Unauthorized(messages.invalid_auth_token)
     
     def make_token(self, uid, time_= None):
