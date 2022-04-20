@@ -28,7 +28,7 @@ def test_episode_passe(db_session, inscription):
     assert nldb.lien_recommandations_alerte == None
     assert nldb.attributes()['POLLUANT'] == ""
     assert nldb.attributes()['RECOMMANDATION'] == '<p>ça va en fait</p>'
-    assert nldb.attributes()['DEPARTEMENT'] == 'Mayenne'
+    assert nldb.attributes()['DEPARTEMENT'] == 'de la Mayenne'
 
 def test_formatted_polluants_indice_atmo_pm10(db_session, inscription, episode_pm10):
     recommandations = [published_recommandation(), published_recommandation(particules_fines=True, type_='episode_pollution')]
@@ -128,7 +128,7 @@ def test_avis_oui(db_session, client, inscription, episode_azote):
     nldb = NewsletterDB(nl)
     db_session.add(nldb)
     db_session.commit()
-    response = client.post(f'/newsletter/{nldb.short_id}/avis?appliquee=oui')
+    response = client.post(f'/newsletter/{nldb.short_id}/avis?appliquee=oui', json={})
     assert response.status_code == 200
     nldb2 = NewsletterDB.query.get(nldb.id)
     assert nldb2.appliquee == True
