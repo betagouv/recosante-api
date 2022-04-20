@@ -12,7 +12,7 @@ import concurrent.futures as cf
 import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
-from ecosante.newsletter.models import NewsletterDB, NewsletterHebdoTemplate
+from ecosante.newsletter.models import NewsletterHebdoTemplate
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
@@ -68,11 +68,11 @@ def _db(app):
 @pytest.fixture(scope='function')
 def commune(db_session) -> Commune:
     from indice_pollution.history.models import Commune, Departement, Region, Zone
-    region = Region(nom="Pays de la Loire", code="52", tncc=4)
+    region = Region(nom="Pays de la Loire", code="52", tncc=4, nccenr='Pays de la Loire')
     zone_departement = Zone(type='departement', code='53')
-    departement = Departement(nom="Mayenne", code="53", region=region, zone=zone_departement, tncc=3)
+    departement = Departement(nom="Mayenne", code="53", region=region, zone=zone_departement, tncc=3, nccenr='Mayenne')
     zone = Zone(type='commune', code='53130')
-    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, zone_pollution=departement.zone, departement=departement, tncc=0)
+    commune = Commune(nom="Laval", code="53130", codes_postaux=["53000"], zone=zone, zone_pollution=departement.zone, departement=departement, tncc=0, nccenr='Laval')
     db_session.add_all([region, zone_departement, departement, zone, commune])
     return commune
 

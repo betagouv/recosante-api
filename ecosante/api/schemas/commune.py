@@ -18,4 +18,6 @@ class CommuneSchema(Schema):
 
     @post_load
     def load_commune(self, data, **kwargs):
-        return db.session.query(CommuneModel).filter_by(insee=data['code']).first()
+        if 'code' in data:
+            return db.session.query(CommuneModel).filter_by(insee=data['code']).first()
+        return None
