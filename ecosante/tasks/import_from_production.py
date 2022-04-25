@@ -42,7 +42,7 @@ def clone_model(model, model_b=None, **kwargs):
     return model_b
 
 def import_inscriptions(prod_session):
-    faker = Faker(locale='fr_FR')
+    faker = Faker(locale='fr_FR.utf8')
 
     staging_inscriptions = {i.id: i for i in Inscription.query.all()}
     communes = {c.insee: c.id for c in Commune.query.all()}

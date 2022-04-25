@@ -425,13 +425,13 @@ class Inscription(db.Model):
                 )
             )
         elif type_ == 'quotidien':
-	        query = query\
+            query = query\
                 .filter(Inscription.indicateurs_media.contains([media]))\
                 .options(
-                selectinload(
-                    Inscription.last_month_newsletters
+                    selectinload(
+                        Inscription.last_month_newsletters
+                    )
                 )
-            )
         return query.options(
             joinedload(
                 Inscription.commune

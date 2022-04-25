@@ -961,7 +961,7 @@ class NewsletterDB(db.Model, Newsletter):
     @property
     def webpush_data(self):
         commune = self.inscription.commune
-        with different_locale('fr_FR'):
+        with different_locale('fr_FR.utf8'):
             title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
         body = ""
         first_line = []
