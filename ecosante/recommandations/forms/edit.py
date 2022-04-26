@@ -55,7 +55,7 @@ class FormAdd(BaseForm):
     population = MultiCheckboxField(
         "Montrer aux populations suivantes :",
         choices=[
-            ('enfants', 'Enfants'),
+            ('enfants', 'Enfants (de moins de 6 ans)'),
             ('personnes_sensibles', 'personnes sensibles/vulnérables à la QA'),
             ('autres', 'Autres')
         ]
@@ -80,9 +80,9 @@ class FormAdd(BaseForm):
     chauffage = MultiCheckboxField(
         "Chauffage",
         choices=[
-            ("bois", "Une cheminée ou poêle à bois"),
-            ("chaudiere", "Une chaudière au gaz, fioul ou électrique"),
-            ("appoint", "Un chauffage mobile d'appoint"),
+            ("bois", "Cheminée, insert ou poêle à bois"),
+            ("chaudiere", "Chaudière au fioul, au gaz ou électrique"),
+            ("appoint", "Chauffage mobile d’appoint au fioul"),
         ]
     )
     animal_de_compagnie = OuiNonField("Animal de compagnie")
