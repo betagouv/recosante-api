@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
   <link rel="icon" href="data:,">
-<title>Écosanté</title>
-<meta property="og:title" content="Écosanté" />
+<title>Recosanté</title>
+<meta property="og:title" content="Recosanté" />
 <meta property="og:locale" content="fr" />
-<meta property="og:site_name" content="Écosanté" />
+<meta property="og:site_name" content="Recosanté" />
 <script type="application/ld+json">
 {"@type":"WebPage","url":"/base.html","headline":"Écosanté","@context":"https://schema.org"}</script>
 <link href="https://unpkg.com/template.data.gouv.fr@1.3.1/dist/main.min.css" rel="stylesheet">
@@ -37,14 +37,11 @@
   
 </head><body>
 
-<div class="notification full-width" role="alert">Écosanté est en phase de construction, nous informons pour l'instant sur la qualité de l'air.</div>
   <header class="navbar">
     <div class="navbar__container">
-      <a class="navbar__home" href="https://recosante.beta.gouv.fr"
-        <img class="navbar__logo" src="{{ url_for('static', filename='images/Republique_Francaise.png') }}"
-          alt="ecosante.beta.gouv.fr" />
+      <a class="navbar__home" href="{{ url_for('pages.admin') }}">
         <img class="navbar__logo_right" src="{{ url_for('static', filename='images/logo.svg') }}"
-          alt="ecosante.beta.gouv.fr" />
+          alt="recosante.beta.gouv.fr" />
       </a>
    </div>
   </header>
