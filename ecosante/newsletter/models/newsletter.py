@@ -494,8 +494,8 @@ class Newsletter:
     def show_vigilance(self):
         if not self.inscription.has_indicateur("vigilance_meteo"):
             return False
-        if self.inscription.has_frequence("alerte") and self.vigilance_globale.couleur_id < 2:
-            return False
+        if self.inscription.has_frequence("alerte"):
+            return self.vigilance_globale.couleur_id > 2
         return True
 
     @property

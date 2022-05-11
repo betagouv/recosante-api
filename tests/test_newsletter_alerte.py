@@ -45,7 +45,7 @@ def test_raep(inscription_alerte, raep, expected):
 
 @pytest.mark.parametrize(
     "couleur_id, expected",
-    [(0, False), (1, False), (2, True), (3, True)]
+    [(1, False), (2, False), (3, True), (4, True)]
 )
 def test_vigilance(inscription_alerte, couleur_id, expected):
     inscription_alerte.indicateurs = ["vigilance_meteo"]
