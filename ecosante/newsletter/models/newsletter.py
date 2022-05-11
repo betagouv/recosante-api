@@ -480,15 +480,10 @@ class Newsletter:
     def show_raep(self):
         if not self.inscription.has_indicateur("raep"):
             return False
-        #On envoie pas en cas de polluants
-        #ni en cas de risque faible à un personne non-allergique
-        if type(self.raep) != int:
-            return False
-        if self.polluants:
-            return False
-        if self.raep == 0:
-            return False
-        return True
+        if self.inscription.has_frequence("alerte"):
+            return self.raep >= 1
+        else:
+            return self.raep > 0
 
     @property
     def show_vigilance(self):
