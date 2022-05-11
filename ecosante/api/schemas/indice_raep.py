@@ -39,12 +39,12 @@ class IndiceRAEP(FullIndiceSchema):
             resp['validity'] = {
                 "start": datetime.strptime(data["indice"]["data"]["periode_validite"]["debut"], date_format),
                 "end": datetime.strptime(data["indice"]["data"]["periode_validite"]["fin"], date_format),
-                "area": departement["nom"],
+                "area": departement.zone.lib,
                 "area_details": {
                     "type": "departement",
-                    "label": departement["nom"],
-                    "code": departement["code"],
-                    "charniere": departement["charniere"],
+                    "label": departement.nom,
+                    "code": departement.code,
+                    "charniere": departement.charniere,
                 }
             }
         else:

@@ -50,7 +50,7 @@ def index():
     commune = Commune.get(insee)
 
     indice_atmo  = forecast(insee, date_=date_, use_make_resp=False)
-    indice_raep = raep(insee, date_=date_) if show_raep else None
+    indice_raep = raep(insee, date_=date_, departement_as_dict=False) if show_raep else None
     potentiel_radon = PotentielRadon.get(insee)
     episodes = get_episodes(insee, date_=date_, use_make_resp=False)
     vigilance_meteo = VigilanceMeteo.get(insee=insee, date_=date_, time_=time_)
@@ -76,7 +76,7 @@ def index():
                 "url": "https://www.irsn.fr/FR/connaissances/Environnement/expertises-radioactivite-naturelle/radon/Pages/5-cartographie-potentiel-radon-commune.aspx#.YUyf32aA6dY"
             }],
             "validity": {
-                "area": commune.nom,
+                "area": commune.zone.lib,
                 "area_details": commune
             }
         },
@@ -93,7 +93,7 @@ def index():
                 "url": "https://donneespubliques.meteofrance.fr/?fond=produit&id_produit=299&id_rubrique=50"
             }],
             "validity": {
-                "area": commune.departement_nom,
+                "area": commune.departement.zone.lib,
                 "area_details": commune.departement
             }
         }
@@ -116,7 +116,7 @@ def index():
                 "url": "https://meteofrance.com/comprendre-la-meteo/atmosphere/les-ultraviolets"
             }],
             "validity": {
-                "area": commune.nom,
+                "area": commune.zone.lib,
                 "area_details": commune
             }
         }

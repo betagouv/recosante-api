@@ -40,12 +40,13 @@ class IndiceATMO(FullIndiceSchema):
         if hasattr(data["indice"], 'error'):
             resp['error'] = data["indice"].error
         else:
+            commune = data["indice"].commune
             resp["indice"] = data["indice"].dict()
             resp['validity'] = {
                 "start": data["indice"].date_ech,
                 "end": data["indice"].date_ech + timedelta(1) - timedelta(seconds=1),
-                "area": data["indice"].commune.nom,
-                "area_details": data["indice"].commune
+                "area": commune.zone.lib,
+                "area_details": commune
             }
         if data.get("advice"):
             resp['advice'] = data['advice']
