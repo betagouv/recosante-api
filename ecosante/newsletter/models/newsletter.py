@@ -497,8 +497,8 @@ class Newsletter:
     def show_qa(self):
         if not self.inscription.has_indicateur("indice_atmo"):
             return False
-        if self.inscription.has_frequence("alerte") and self.valeur < 2:
-            return False
+        if self.inscription.has_frequence("alerte"):
+            return self.valeur > 2
         return True
 
     @property
