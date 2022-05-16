@@ -14,7 +14,7 @@ class FormTemplateAdd(BaseForm):
     fin_periode_validite = DateField("Fin de la période de validité", default=date.today().replace(month=1, day=1, year=date.today().year+1))
 
     activites = FormEdit.activites
-    enfants = OuiNonField("Enfants ?")
+    enfants = OuiNonField("Enfants (de moins de 6 ans) ?")
     chauffage = FormEdit.chauffage
     deplacement = FormEdit.deplacement
     animaux_domestiques = FormEdit.animal_de_compagnie
