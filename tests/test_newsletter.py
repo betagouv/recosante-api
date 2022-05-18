@@ -5,7 +5,7 @@ import pytest
 from itertools import product
 from indice_pollution.history.models import VigilanceMeteo
 from psycopg2.extras import DateTimeTZRange
-from indice_pollution.history.models import IndiceUv
+from indice_pollution.history.models import IndiceUv, IndiceATMO
 
 def test_episode_passe(db_session, inscription):
     yesterday = date.today() - timedelta(days=1)
@@ -159,16 +159,15 @@ def test_avis_non(db_session, client, inscription, episode_azote):
     assert nldb2.avis == avis
 
 @pytest.mark.parametrize(
-    "episodes,raep,allergie_pollens,delta,indice",
+    "episodes,raep,delta,indice",
     product(
         [[], ["episode_azote"]],
         [0, 2, 6],
-        [True, False],
         range(0, 7),
         ["bon", "degrade"]
     )
 )
-def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delta, indice, request):
+def test_pollens(db_session, inscription, episodes, raep, delta, indice, request):
     if len(episodes) > 0:
         episodes = [request.getfixturevalue(episodes[0]).dict()]
     recommandations=[
@@ -184,10 +183,7 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         episode = episodes
     else:
         episode = []
-    if allergie_pollens:
-        inscription.indicateurs = ['raep']
-    else:
-        inscription.indicateurs = ['indice_atmo']
+    inscription.indicateurs = ['raep']
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": [{"date": date_, "indice": indice}]},
@@ -197,38 +193,8 @@ def test_pollens(db_session, inscription, episodes, raep, allergie_pollens, delt
         recommandations=recommandations
     )
 
-    if episode:
-        assert nl.show_raep == False
-    else:
-        if not allergie_pollens:
-            assert nl.show_raep == False
-        elif raep == 0:
-            assert nl.show_raep == False
-        elif 0 < raep < 4:
-            if allergie_pollens:
-                assert nl.show_raep == True
-                assert nl.recommandation.type_ == "pollens"
-            else:
-                assert nl.show_raep == False
-                assert nl.recommandation.type_ != "pollens"
-        else:
-            if allergie_pollens:
-                assert nl.show_raep == True
-                assert nl.recommandation.type_ == "pollens"
-            else:
-                assert nl.show_raep == True
-                assert nl.recommandation.type_ != "pollens"
-    inscription.allergie_pollens = allergie_pollens
-    inscription.indicateurs = []
-    nl = Newsletter(
-        inscription=inscription,
-        forecast={"data": [{"date": date_, "indice": indice}]},
-        episodes={"data": episode},
-        raep=raep,
-        date=date_,
-        recommandations=recommandations
-    )
-    assert nl.show_raep == False
+    assert nl.show_raep == (raep > 0)
+
 
 def test_show_qa(inscription):
     inscription.indicateurs = ['indice_atmo']
@@ -351,6 +317,41 @@ def test_export_simple(db_session, inscription, bonne_qualite_air, raep_nul):
 
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
+
+def test_indice_nul(db_session, inscription):
+    db_session.add(published_recommandation())
+    db_session.add(inscription)
+    inscription.indicateurs = ["indice_atmo"]
+    db_session.commit()
+    indice = IndiceATMO(
+        zone_id=inscription.commune.zone.id,
+        date_ech=date.today(),
+        date_dif=date.today(),
+        no2=1, so2=1, o3=1, pm10=1, pm25=1,
+        valeur=0)
+    db_session.add(indice)
+    db_session.commit()
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
+
+
+def test_indice_sept(db_session, inscription):
+    db_session.add(published_recommandation())
+    db_session.add(inscription)
+    inscription.indicateurs = ["indice_atmo"]
+    db_session.commit()
+    indice = IndiceATMO(
+        zone_id=inscription.commune.zone.id,
+        date_ech=date.today(),
+        date_dif=date.today(),
+        no2=1, so2=1, o3=1, pm10=1, pm25=1,
+        valeur=7)
+    db_session.add(indice)
+    db_session.commit()
+
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
 
 def test_ville_slug(db_session, inscription, bonne_qualite_air, raep_nul):
     # Lowercase

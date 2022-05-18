@@ -150,7 +150,6 @@ class NewsletterDB(db.Model, Newsletter):
         self.indice_uv_date = newsletter.indice_uv.date if newsletter.indice_uv else None
         self.indice_uv = newsletter.indice_uv
         self.show_raep = newsletter.show_raep
-        self.show_radon = newsletter.show_radon
         self.show_indice_uv = newsletter.show_indice_uv
         self.sous_indices = newsletter.sous_indices
         self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
@@ -237,7 +236,6 @@ class NewsletterDB(db.Model, Newsletter):
                 'SHOW_QA': convert_bool_to_yes_no(self.show_qa),
                 'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
                 'SHOW_VIGILANCE': convert_bool_to_yes_no(self.show_vigilance),
-                'SHOW_RADON': convert_bool_to_yes_no(self.show_radon),
                 'SHOW_INDICE_UV': convert_bool_to_yes_no(self.show_indice_uv),
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
@@ -257,7 +255,7 @@ class NewsletterDB(db.Model, Newsletter):
 
     header = ['EMAIL','RECOMMANDATION','LIEN_AASQA','NOM_AASQA','PRECISIONS','QUALITE_AIR','VILLE','VILLE_CODE','VILLE_SLUG','BACKGROUND_COLOR','SHORT_ID','POLLUANT',
 'LIEN_RECOMMANDATIONS_ALERTE','SHOW_RAEP','RAEP','BACKGROUND_COLOR_RAEP','USER_UID','AUTH_TOKEN','DEPARTEMENT','DEPARTEMENT_PREPOSITION','OBJECTIF','RAEP_DEBUT_VALIDITE',
-'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','INDICE_UV_VALIDITE','POLLINARIUM_SENTINELLE','INDICE_UV_LABEL','INDICE_UV_VALUE','SHOW_QA','SHOW_RADON','SHOW_INDICE_UV','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
+'RAEP_FIN_VALIDITE','QUALITE_AIR_VALIDITE','INDICE_UV_VALIDITE','POLLINARIUM_SENTINELLE','INDICE_UV_LABEL','INDICE_UV_VALUE','SHOW_QA','SHOW_INDICE_UV','INDICATEURS_FREQUENCE','RECOMMANDATION_QA','RECOMMANDATION_RAEP',
 'RECOMMANDATION_EPISODE','RECOMMANDATION_INDICE_UV','NEW_USER','INDICATEURS_MEDIA','ALLERGENE_aulne','ALLERGENE_chene','ALLERGENE_frene','ALLERGENE_rumex','ALLERGENE_saule',
 'ALLERGENE_charme','ALLERGENE_cypres','ALLERGENE_bouleau','ALLERGENE_olivier','ALLERGENE_platane','ALLERGENE_tilleul','ALLERGENE_armoises','ALLERGENE_peuplier',
 'ALLERGENE_plantain','ALLERGENE_graminees','ALLERGENE_noisetier','ALLERGENE_ambroisies','ALLERGENE_urticacees','ALLERGENE_chataignier','SS_INDICE_NO2_LABEL',

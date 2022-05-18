@@ -62,7 +62,14 @@ def test_vigilance(inscription_alerte, couleur_id, expected):
 
 @pytest.mark.parametrize(
     "valeur,enfants,expected",
-    [(v, False, False) for v in range(0, 8)] + [(8, False, True)] + [(v, True, False) for v in range(0, 3)] + [(v, True, True) for v in range(3, 8)]
+    [
+        # Pas d’enfant
+        *[(v, False, False) for v in range(0, 6)], # Pas envoyé pour les valeurs < 6
+        *[(v, False, True) for v in range(6, 9)], # Envoyé pour les valeurs >= 6
+        # Avec enfant
+        *[(v, True, False) for v in range(0, 3)], # Pas envoyé pour les valeurs < 3
+        *[(v, True, True) for v in range(3, 8)], # Envoyé pour les valeurs >= 3
+    ]
 )
 def test_indice_uv(inscription_alerte, valeur, enfants, expected):
     inscription_alerte.indicateurs = ["indice_uv"]

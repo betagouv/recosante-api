@@ -319,7 +319,7 @@ class Newsletter:
             if self.inscription.has_indicateur("indice_uv") and isinstance(self.indice_uv_value, int) and self.indice_uv_value >= 3:
                 return True
             return False
-        if self.inscription.has_indicateur("indice_atmo") and not self.label:
+        if self.inscription.has_indicateur("indice_atmo") and (not self.label or self.qualif not in range(1, 7)):
             return False
         if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
             return False
@@ -502,35 +502,16 @@ class Newsletter:
         return True
 
     @property
-    def show_radon(self):
-        if self.polluants:
-            return False
-        if type(self.raep) == int and isinstance(self.inscription.indicateurs, list):
-            if "raep" in self.inscription.indicateurs and self.raep != 0:
-                return False
-            if not "raep" in self.inscription.indicateurs and self.raep >= 4:
-                return False
-        if self.qualif not in ['bon', 'moyen']:
-            return False
-        try:
-            last_radon = next(filter(lambda nl: nl.show_radon, self.inscription.last_month_newsletters))
-        except StopIteration:
-            return True
-        days_since_last_sent = (date.today() - last_radon.date).days
-        if self.radon == 3 and days_since_last_sent >= 15:
-            return True
-        if self.radon < 3 and days_since_last_sent >= 30:
-            return True
-        return False
-
-    @property
     def show_indice_uv(self):
         if not self.inscription.has_indicateur("indice_uv"):
             return False
         if self.indice_uv == None or not isinstance(self.indice_uv.uv_j0, int):
             return False
-        if self.indice_uv.uv_j0 <= 2:
-            return False
-        if 3 <= self.indice_uv.uv_j0 <= 7:
-            return self.inscription.has_enfants
-        return True # >= 8
+        if self.inscription.has_frequence("alerte"):
+            if self.indice_uv.uv_j0 <= 2:
+                return False
+            if 3 <= self.indice_uv.uv_j0 <= 5:
+                return self.inscription.has_enfants
+            return True # >= 8
+        else:
+            return True

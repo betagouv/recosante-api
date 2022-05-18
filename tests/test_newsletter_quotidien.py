@@ -8,7 +8,7 @@ import pytest
 
 @pytest.mark.parametrize(
     "valeur",
-    list(range(0, 7))
+    list(range(1, 7))
 )
 def test_indice(commune: Commune, inscription: Inscription, valeur):
     inscription.indicateurs = ['indice_atmo']
@@ -25,6 +25,7 @@ def test_indice(commune: Commune, inscription: Inscription, valeur):
     )
     nl = Newsletter(forecast={"data": [indice.dict()]}, inscription=inscription)
     assert nl.show_qa == True
+
 
 def test_episode_pollution(inscription, episode_soufre):
     inscription.indicateurs = ['episode_pollution']
