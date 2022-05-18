@@ -42,7 +42,7 @@ class IndiceRAEP(FullIndiceSchema):
                 "area": departement.zone.lib,
                 "area_details": {
                     "type": "departement",
-                    "label": departement.nom,
+                    "nom": departement.nom,
                     "code": departement.code,
                     "charniere": departement.charniere,
                 }

@@ -94,7 +94,7 @@ def index():
             }],
             "validity": {
                 "area": commune.departement.zone.lib,
-                "area_details": commune.departement
+                "area_details": commune.departement.zone
             }
         }
     }
@@ -117,7 +117,7 @@ def index():
             }],
             "validity": {
                 "area": commune.zone.lib,
-                "area_details": commune
+                "area_details": commune.zone
             }
         }
     return resp

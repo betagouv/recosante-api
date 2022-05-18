@@ -46,7 +46,7 @@ class IndiceATMO(FullIndiceSchema):
                 "start": data["indice"].date_ech,
                 "end": data["indice"].date_ech + timedelta(1) - timedelta(seconds=1),
                 "area": commune.zone.lib,
-                "area_details": commune
+                "area_details": commune.zone
             }
         if data.get("advice"):
             resp['advice'] = data['advice']

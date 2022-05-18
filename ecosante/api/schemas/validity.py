@@ -2,10 +2,11 @@ from marshmallow import fields, Schema, pre_dump
 from indice_pollution.history.models import Zone, Commune
 
 class AreaDetails(Schema):
-    label = fields.String()
+    nom = fields.String()
     type = fields.String()
     charniere = fields.String()
     code = fields.String()
+    article = fields.String()
 
 class ValiditySchema(Schema):
     start = fields.DateTime()
@@ -20,14 +21,9 @@ class ValiditySchema(Schema):
             data['area_details'] = {
                 "type": area_details.type,
                 "code": area_details.code,
-                "label": area_details.attached_obj.nom,
-                "charniere": area_details.attached_obj.charniere if hasattr(area_details.attached_obj, "charniere") else None
-            }
-        elif isinstance(area_details, Commune):
-            data['area_details'] = {
-                "type": "commune",
-                "code": area_details.insee,
-                "label": area_details.nom,
-                "charniere": area_details.charniere
+                "nom": area_details.attached_obj.nom,
+                "charniere": getattr(area_details.attached_obj, "charniere", None),
+                "article": getattr(area_details.attached_obj, "article", None),
+
             }
         return data
