@@ -319,7 +319,7 @@ class Newsletter:
             if self.inscription.has_indicateur("indice_uv") and isinstance(self.indice_uv_value, int) and self.indice_uv_value >= 3:
                 return True
             return False
-        if self.inscription.has_indicateur("indice_atmo") and (not self.label or self.qualif not in range(1, 7)):
+        if self.inscription.has_indicateur("indice_atmo") and (not self.label or self.valeur not in range(1, 7)):
             return False
         if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
             return False

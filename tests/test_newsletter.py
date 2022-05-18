@@ -219,12 +219,17 @@ def test_show_qa(inscription):
 
 def test_show_indice_uv(inscription):
     inscription.indicateurs = ['indice_uv']
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=1,
+    )
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": []},
         episodes={"data": []},
         raep=0,
-        indice_uv=None,
+        indice_uv=indice_uv,
         recommandations=[]
     )
     assert nl.show_indice_uv == True

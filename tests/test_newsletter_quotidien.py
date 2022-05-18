@@ -1,6 +1,7 @@
+import py
 from ecosante.inscription.models import Inscription
 from ecosante.newsletter.models import Newsletter
-from indice_pollution.history.models import Commune, IndiceATMO, VigilanceMeteo
+from indice_pollution.history.models import Commune, IndiceATMO, VigilanceMeteo, IndiceUv
 from datetime import date, datetime, timedelta
 from psycopg2.extras import DateTimeTZRange
 import pytest
@@ -59,3 +60,18 @@ def test_vigilance(inscription, couleur_id):
         )
     nl = Newsletter(vigilances={'globale': {'vigilance': v, 'recommandation': None}}, inscription=inscription)
     assert nl.show_vigilance == True
+
+
+@pytest.mark.parametrize(
+    "valeur",
+    list(range(0,9))
+)
+def test_indice_uv(inscription, valeur):
+    inscription.indicateurs = ["indice_uv"]
+    indice_uv = IndiceUv(
+        zone_id=inscription.commune.zone_id,
+        date=date.today(),
+        uv_j0=valeur,
+    )
+    nl = Newsletter(indice_uv=indice_uv, inscription=inscription)
+    assert nl.show_indice_uv == True
