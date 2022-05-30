@@ -40,12 +40,7 @@ class IndiceRAEP(FullIndiceSchema):
                 "start": datetime.strptime(data["indice"]["data"]["periode_validite"]["debut"], date_format),
                 "end": datetime.strptime(data["indice"]["data"]["periode_validite"]["fin"], date_format),
                 "area": departement.zone.lib,
-                "area_details": {
-                    "type": "departement",
-                    "nom": departement.nom,
-                    "code": departement.code,
-                    "charniere": departement.charniere,
-                }
+                "area_details": departement.zone,
             }
         else:
             resp['error'] = "Inactive region"

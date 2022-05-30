@@ -77,7 +77,7 @@ def index():
             }],
             "validity": {
                 "area": commune.zone.lib,
-                "area_details": commune
+                "area_details": commune.zone
             }
         },
         "episodes_pollution": {
