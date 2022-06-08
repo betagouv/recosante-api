@@ -1,5 +1,5 @@
 from flask import current_app
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 import csv, io,  os
 from flask.helpers import url_for
@@ -297,11 +297,18 @@ Bonne journée
 
 def get_lists_ids_to_delete():
     api_instance = sib_api_v3_sdk.ContactsApi(sib)
-    offset = 10
+    offset = 0
     api_response = api_instance.get_lists(limit=10, offset=offset)
     ids = []
+    the_day_before_yesterday = datetime.today() - timedelta(days=2)
     while True:
-        ids = ids + [r['id'] for r in api_response.lists]
+        for r in api_response.lists:
+            try:
+                d = datetime.fromisoformat(r['name'][:26])
+            except ValueError:
+                d = datetime.max() # We don't have a datetime, we use min as a default one to be able to compare
+            if d.date() <= the_day_before_yesterday:
+                ids.append(r['id'])
         if not api_response.lists:
             break
         offset += 10
