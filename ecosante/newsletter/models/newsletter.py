@@ -309,22 +309,14 @@ class Newsletter:
             return self.newsletter_hebdo_template is not None
         if force_send and 'quotidien' in self.inscription.indicateurs_frequence:
             return True
-        if self.inscription.indicateurs_frequence and "alerte" in self.inscription.indicateurs_frequence:
-            if self.inscription.has_indicateur("indice_atmo") and self.polluants:
-                return True
-            if self.inscription.has_indicateur("raep") and isinstance(self.raep, int) and self.raep >= 4:
-                return True
-            if self.inscription.has_indicateur("vigilance_meteo") and isinstance(self.vigilance_globale, VigilanceMeteo) and self.vigilance_globale.couleur_id > 2:
-                return True
-            if self.inscription.has_indicateur("indice_uv") and isinstance(self.indice_uv_value, int) and self.indice_uv_value >= 3:
-                return True
+        if self.show_qa and not self.label:
             return False
-        if self.inscription.has_indicateur("indice_atmo") and (not self.label or self.valeur not in range(1, 7)):
+        if self.show_raep and not isinstance(self.raep, int):
             return False
-        if self.inscription.has_indicateur("raep") and not isinstance(self.raep, int):
+        if self.show_vigilance and not isinstance(self.vigilance_globale, VigilanceMeteo):
             return False
-        if self.inscription.has_indicateur("vigilance_meteo") and not isinstance(self.vigilance_globale, VigilanceMeteo):
-            return False
+        if self.show_indice_uv and not isinstance(self.indice_uv_value, int):
+                return False
         return True
 
     @property
