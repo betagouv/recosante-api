@@ -276,6 +276,7 @@ class Inscription(db.Model):
     def unsubscribe(self):
         from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
         self.deactivation_date = date.today()
+        self.mail = None
         db.session.add(self)
         db.session.commit()
         send_unsubscribe.apply_async(
@@ -298,22 +299,6 @@ class Inscription(db.Model):
                 for i in cls.active_query().all()
             ]
         }
-
-    @classmethod
-    def query_inactive_accounts(cls):
-        return db.session.query(cls)\
-            .filter(
-                cls.deactivation_date != None,
-                cls.deactivation_date <= (date.today() - timedelta(days=30))
-            )
-
-    @classmethod
-    def deactivate_accounts(cls):
-        r = cls.query_inactive_accounts()\
-            .filter(cls.mail != None)\
-            .update({"mail": None})
-        db.session.commit()
-        return r
 
     @property
     def diffusion_liste(self):
