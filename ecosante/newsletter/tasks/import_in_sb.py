@@ -122,7 +122,7 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
             }
         )
     row2dict = lambda r: {
-        c.name: getattr(r, c.name) for c in r.__table__.columns if c.name != "id"
+        c.name: getattr(r, c.name) for c in r.__table__.columns if not c.name in ["id", "short_id"]
     }
     to_add = []
     for nl in (newsletters or Newsletter.export(type_=type_, force_send=force_send, filter_already_sent=filter_already_sent)):
