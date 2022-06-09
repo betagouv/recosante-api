@@ -276,7 +276,6 @@ class Inscription(db.Model):
     def unsubscribe(self):
         from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
         self.deactivation_date = date.today()
-        self.mail = None
         db.session.add(self)
         db.session.commit()
         send_unsubscribe.apply_async(
@@ -285,6 +284,8 @@ class Inscription(db.Model):
             queue='send_email',
             routing_key='send_email.unsubscribe'
         )
+        self.mail = None
+
 
     @classmethod
     def export_geojson(cls):
