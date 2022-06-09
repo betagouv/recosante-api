@@ -276,8 +276,6 @@ class Inscription(db.Model):
     def unsubscribe(self):
         from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
         self.deactivation_date = date.today()
-        db.session.add(self)
-        db.session.commit()
         send_unsubscribe.apply_async(
             (self.mail,),
             link_error=send_unsubscribe_error.s(),
@@ -285,6 +283,8 @@ class Inscription(db.Model):
             routing_key='send_email.unsubscribe'
         )
         self.mail = None
+        db.session.add(self)
+        db.session.commit()
 
 
     @classmethod
