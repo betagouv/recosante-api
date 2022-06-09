@@ -60,6 +60,8 @@ class NewsletterDB(db.Model, Newsletter):
     show_raep = db.Column(db.Boolean())
     show_radon = db.Column(db.Boolean())
     show_indice_uv = db.Column(db.Boolean())
+    show_qa = db.Column(db.Boolean())
+    show_vigilance = db.Column(db.Boolean())
     sous_indices: dict = db.Column(postgresql.JSONB)
     webpush_subscription_info_id: int = db.Column(db.Integer, db.ForeignKey('webpush_subscription_info.id'), index=True)
     webpush_subscription_info: WebpushSubscriptionInfo = db.relationship(WebpushSubscriptionInfo)
@@ -151,6 +153,8 @@ class NewsletterDB(db.Model, Newsletter):
         self.indice_uv = newsletter.indice_uv
         self.show_raep = newsletter.show_raep
         self.show_indice_uv = newsletter.show_indice_uv
+        self.show_qa = newsletter.show_qa
+        self.show_vigilance = newsletter.show_vigilance
         self.sous_indices = newsletter.sous_indices
         self.webpush_subscription_info_id = newsletter.webpush_subscription_info_id
         self.webpush_subscription_info = newsletter.webpush_subscription_info
