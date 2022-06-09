@@ -117,8 +117,8 @@ def mauvaise_qualite_air(commune_commited, db_session) -> IndiceATMO:
     from datetime import date
     indice = IndiceATMO(
         zone_id=commune_commited.zone_id,
-        date_ech=date.today(),
-        date_dif=date.today(),
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
         no2=4, so2=4, o3=4, pm10=5, pm25=6,
         valeur=6)
     db_session.add(indice)
@@ -130,8 +130,8 @@ def bonne_qualite_air(commune_commited, db_session) -> IndiceATMO:
     from datetime import date
     indice = IndiceATMO(
         zone_id=commune_commited.zone_id,
-        date_ech=date.today(),
-        date_dif=date.today(),
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
         no2=1, so2=1, o3=1, pm10=1, pm25=1,
         valeur=1)
     db_session.add(indice)
@@ -214,7 +214,7 @@ def raep_eleve(db_session, commune_commited):
 
 @pytest.fixture(scope='function')
 def raep_faible(db_session, commune_commited):
-    raep = make_raep(commune_commited, 1)
+    raep = make_raep(commune_commited, 0)
     db_session.add(raep)
     return raep
 

@@ -196,11 +196,11 @@ def test_pollens(db_session, inscription, episodes, raep, delta, indice, request
     assert nl.show_raep == (raep > 0)
 
 
-def test_show_qa(inscription):
+def test_show_qa(inscription, bonne_qualite_air):
     inscription.indicateurs = ['indice_atmo']
     nl = Newsletter(
         inscription=inscription,
-        forecast={"data": []},
+        forecast={"data": [bonne_qualite_air.dict()]},
         episodes={"data": []},
         raep=0,
         recommandations=[]
@@ -210,7 +210,7 @@ def test_show_qa(inscription):
     inscription.indicateurs = []
     nl = Newsletter(
         inscription=inscription,
-        forecast={"data": []},
+        forecast={"data": [{"date": str(date.today()), "indice": "bon"}]},
         episodes={"data": []},
         raep=0,
         recommandations=[]
@@ -471,7 +471,7 @@ def test_export_user_hebdo_alerte(db_session, inscription, templates):
 @pytest.mark.parametrize(
     "inscription, episode, raep, nb_nls",
     [
-        ("inscription_alerte", "episode_soufre", "raep_faible", 1),
+        ("inscription_alerte", "episode_soufre", "raep_faible", 0),
         ("inscription_alerte", "", "raep_faible", 0),
         ("inscription_alerte", "episode_soufre", "raep_eleve", 1),
         ("inscription_alerte", "", "raep_eleve", 1)
@@ -607,13 +607,13 @@ def test_vigilance_alerte(db_session, inscription, bonne_qualite_air, raep_nul):
         db_session.delete(v)
         db_session.commit()
 
-def test_no_indice_uv_data(db_session, inscription):
+def test_no_indice_uv_data(db_session, inscription, bonne_qualite_air):
     db_session.add(published_recommandation())
-    inscription.indicateurs = ['indice_uv']
+    inscription.indicateurs = ['indice_atmo', 'indice_uv']
     db_session.add(inscription)
     db_session.commit()
 
-    newsletters = list(Newsletter.export())
+    newsletters = list(Newsletter.export(force_send=True))
     assert len(newsletters) == 1
     attributes = NewsletterDB(newsletters[0]).attributes()
     assert f'INDICE_UV_VALUE' in attributes
@@ -634,7 +634,7 @@ def test_no_indice_uv(db_session, inscription):
     )
     db_session.add(indice_uv)
     db_session.commit()
-    newsletters = list(Newsletter.export())
+    newsletters = list(Newsletter.export(force_send=True))
     assert len(newsletters) == 1
     attributes = NewsletterDB(newsletters[0]).attributes()
     assert f'INDICE_UV_VALUE' in attributes
@@ -686,23 +686,29 @@ def test_indice_uv_alerte(db_session, inscription):
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 0
 
-    db_session.delete(indice_uv)
+    indice_uv.uv_j0 = 3
+    db_session.add(indice_uv)
     db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 0
 
-    indice_uv = IndiceUv(
-        zone_id=inscription.commune.zone_id,
-        date=date.today(),
-        uv_j0=3,
-    )
+    indice_uv.uv_j0 = 8
     db_session.add(indice_uv)
     db_session.commit()
     newsletters = list(Newsletter.export())
     assert len(newsletters) == 1
     attributes = NewsletterDB(newsletters[0]).attributes()
     assert f'INDICE_UV_VALUE' in attributes
-    assert attributes[f'INDICE_UV_VALUE'] == 3
+    assert attributes[f'INDICE_UV_VALUE'] == 8
     assert f'INDICE_UV_LABEL' in attributes
-    assert attributes[f'INDICE_UV_LABEL'] == "Modéré (UV\u00a03)"
+    assert attributes[f'INDICE_UV_LABEL'] == "Très\u00a0fort (UV\u00a08)"
+
+    indice_uv.uv_j0 = 3
+    inscription.enfants = "oui"
+    db_session.add_all([indice_uv, inscription])
+    db_session.commit()
+    newsletters = list(Newsletter.export())
+    assert len(newsletters) == 1
 
     db_session.delete(indice_uv)
     db_session.commit()

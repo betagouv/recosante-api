@@ -26,6 +26,10 @@ def test_indice_atmo(inscription_alerte, commune, valeur, expected):
     )
     nl = Newsletter(forecast={"data": [indice.dict()]}, inscription=inscription_alerte, type_="")
     assert nl.show_qa == expected
+    if expected:
+        assert nl.to_send('quotidien', False) == True
+        nl = Newsletter(forecast={"data": []}, inscription=inscription_alerte, type_="")
+        assert nl.to_send('quotidien', False) == False
 
 def test_episode_pollution(inscription_alerte, episode_soufre):
     inscription_alerte.indicateurs = ['episode_pollution']
@@ -42,6 +46,10 @@ def test_raep(inscription_alerte, raep, expected):
     inscription_alerte.indicateurs = ["raep"]
     nl = Newsletter(raep=raep, inscription=inscription_alerte)
     assert nl.show_raep == expected
+    if expected:
+        assert nl.to_send('quotidien', False) == True
+        nl = Newsletter(raep=None, inscription=inscription_alerte)
+        assert nl.to_send('quotidien', False) == False
 
 @pytest.mark.parametrize(
     "couleur_id, expected",
@@ -59,6 +67,10 @@ def test_vigilance(inscription_alerte, couleur_id, expected):
         )
     nl = Newsletter(vigilances={'globale': {'vigilance': v, 'recommandation': None}}, inscription=inscription_alerte)
     assert nl.show_vigilance == expected
+    if expected:
+        assert nl.to_send('quotidien', False) == True
+        nl = Newsletter(vigilances={'globale': {'vigilance': None, 'recommandation': None}}, inscription=inscription_alerte)
+        assert nl.to_send('quotidien', False) == False
 
 @pytest.mark.parametrize(
     "valeur,enfants,expected",
