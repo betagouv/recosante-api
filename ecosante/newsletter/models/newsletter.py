@@ -45,6 +45,7 @@ class Newsletter:
     indice_uv: IndiceUv = field(default=None, init=True)
     newsletter_hebdo_template: NewsletterHebdoTemplate = field(default=None, init=True)
     type_: str = field(default="quotidien", init=True)
+    force_send: bool = False
 
     vigilances: List[VigilanceMeteo]= field(default=None, init=True)
     vigilance_vent: VigilanceMeteo = field(default=None, init=True)
@@ -256,7 +257,7 @@ class Newsletter:
         indices_uv = {k: db.session.merge(v) for k, v in indices_uv.items()}
         templates = NewsletterHebdoTemplate.get_templates()
         for inscription in Inscription.export_query(only_to, filter_already_sent, media, type_, date_).yield_per(100):
-            init_dict = {"type_": type_}
+            init_dict = {"type_": type_, "force_send": force_send}
             if type_ == 'quotidien':
                 indice = indices.get(inscription.commune_id)
                 episodes = all_episodes.get(inscription.commune.zone_pollution_id)
@@ -307,17 +308,17 @@ class Newsletter:
     def to_send(self, type_, force_send):
         if type_ == 'hebdomadaire':
             return self.newsletter_hebdo_template is not None
-        if force_send and 'quotidien' in self.inscription.indicateurs_frequence:
+        if force_send and self.inscription.has_frequence("quotidien"):
             return True
-        if self.show_qa and not self.label:
+        if not self.is_init_qa and self.inscription.has_indicateur("indice_atmo"):
             return False
-        if self.show_raep and not isinstance(self.raep, int):
+        if not self.is_init_raep and self.inscription.has_indicateur("raep"):
             return False
-        if self.show_vigilance and not isinstance(self.vigilance_globale, VigilanceMeteo):
+        if not self.is_init_vigilance and self.inscription.has_indicateur("vigilance_meteo"):
             return False
-        if self.show_indice_uv and not isinstance(self.indice_uv_value, int):
-                return False
-        return True
+        if not self.is_init_indice_uv and self.inscription.has_indicateur("indice_uv"):
+            return False
+        return self.show_qa or self.show_raep or self.show_vigilance or self.show_indice_uv
 
     @property
     def errors(self):
@@ -469,36 +470,58 @@ class Newsletter:
         return ""
 
     @property
+    def is_init_raep(self):
+        return isinstance(self.raep, int)
+
+    @property
     def show_raep(self):
         if not self.inscription.has_indicateur("raep"):
             return False
+        if not self.is_init_raep:
+            return self.force_send
         if self.inscription.has_frequence("alerte"):
             return self.raep >= 1
         else:
             return self.raep > 0
 
     @property
+    def is_init_vigilance(self):
+        return isinstance(getattr(self.vigilance_globale, 'couleur_id', None), int)
+
+    @property
     def show_vigilance(self):
         if not self.inscription.has_indicateur("vigilance_meteo"):
             return False
+        if not self.is_init_vigilance:
+            return self.force_send
         if self.inscription.has_frequence("alerte"):
             return self.vigilance_globale.couleur_id > 2
         return True
 
     @property
+    def is_init_qa(self):
+        return  isinstance(self.valeur, int)
+
+    @property
     def show_qa(self):
         if not self.inscription.has_indicateur("indice_atmo"):
             return False
+        if not self.is_init_qa:
+            return self.force_send
         if self.inscription.has_frequence("alerte"):
             return self.valeur > 2
-        return True
+        return self.valeur in range(1, 7)
+
+    @property
+    def is_init_indice_uv(self):
+        return self.indice_uv != None and isinstance(self.indice_uv.uv_j0, int)
 
     @property
     def show_indice_uv(self):
         if not self.inscription.has_indicateur("indice_uv"):
             return False
-        if self.indice_uv == None or not isinstance(self.indice_uv.uv_j0, int):
-            return False
+        if not self.is_init_indice_uv:
+            return self.force_send
         if self.inscription.has_frequence("alerte"):
             if self.indice_uv.uv_j0 <= 2:
                 return False
