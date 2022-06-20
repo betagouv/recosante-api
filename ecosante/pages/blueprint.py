@@ -112,3 +112,8 @@ def recommandation_episode_pollution():
 @bp.route('/_application_server_key')
 def vapid_public_key():
     return {"application_server_key": current_app.config['APPLICATION_SERVER_KEY']}
+
+
+@bp.route('/debug-sentry')
+def trigger_error():
+    division_by_zero = 1 / 0
