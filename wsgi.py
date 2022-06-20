@@ -14,6 +14,8 @@ if os.getenv('SENTRY_DSN'):
         integrations=[FlaskIntegration(), RedisIntegration()],
         traces_sample_rate=1.0
     )
+    logging.getLogger(__name__).info('SENTRY SDK SET')
+
 
 app = create_app()
 
