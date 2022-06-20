@@ -50,6 +50,7 @@ def app(request):
         db = app.extensions['sqlalchemy'].db
         db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
         db.metadata.bind = db.engine
+        db.metadata.create_all()
         with cf.ProcessPoolExecutor() as pool:
             pool.submit(flask_migrate.upgrade)
         yield app
@@ -214,7 +215,7 @@ def raep_eleve(db_session, commune_commited):
 
 @pytest.fixture(scope='function')
 def raep_faible(db_session, commune_commited):
-    raep = make_raep(commune_commited, 0)
+    raep = make_raep(commune_commited, 1)
     db_session.add(raep)
     return raep
 

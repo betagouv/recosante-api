@@ -471,8 +471,8 @@ def test_export_user_hebdo_alerte(db_session, inscription, templates):
 @pytest.mark.parametrize(
     "inscription, episode, raep, nb_nls",
     [
-        ("inscription_alerte", "episode_soufre", "raep_faible", 0),
-        ("inscription_alerte", "", "raep_faible", 0),
+        ("inscription_alerte", "episode_soufre", "raep_nul", 0),
+        ("inscription_alerte", "", "raep_nul", 0),
         ("inscription_alerte", "episode_soufre", "raep_eleve", 1),
         ("inscription_alerte", "", "raep_eleve", 1)
     ]
