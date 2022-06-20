@@ -33,12 +33,14 @@ class IndiceRAEP(FullIndiceSchema):
         date_format = "%d/%m/%Y"
         resp = {"sources": data.get('sources')}
         if data['indice']['data']:
+            departement = data["indice"]["departement"]
             resp['indice'] = data["indice"]["data"]
             resp['advice'] = data['advice']
             resp['validity'] = {
                 "start": datetime.strptime(data["indice"]["data"]["periode_validite"]["debut"], date_format),
                 "end": datetime.strptime(data["indice"]["data"]["periode_validite"]["fin"], date_format),
-                "area": data["indice"]["departement"]["nom"]
+                "area": departement.zone.lib,
+                "area_details": departement.zone,
             }
         else:
             resp['error'] = "Inactive region"

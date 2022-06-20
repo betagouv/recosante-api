@@ -18,6 +18,7 @@ class FullIndiceUv(FullIndiceSchema):
             resp['validity'] = {
                 "start": dt,
                 "end": dt + timedelta(1) - timedelta(seconds=1),
-                "area": data["validity"]["area"]
+                "area": data["validity"]["area"],
+                "area_details": data["validity"]["area_details"]
             }
         return resp

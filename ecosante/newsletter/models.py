@@ -918,7 +918,7 @@ class NewsletterDB(db.Model, Newsletter):
                 'BACKGROUND_COLOR_RAEP': self.couleur_raep or "",
                 'USER_UID': self.inscription.uid,
                 'AUTH_TOKEN': authenticator.make_token(self.inscription.uid),
-                'DEPARTEMENT': self.inscription.commune.departement_nom,
+                'DEPARTEMENT': self.inscription.commune.departement.nom_charniere if self.inscription.commune else "",
                 'DEPARTEMENT_PREPOSITION': self.departement_preposition or "",
                 "RAEP_DEBUT_VALIDITE": self.raep_debut_validite,
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
@@ -961,7 +961,7 @@ class NewsletterDB(db.Model, Newsletter):
     @property
     def webpush_data(self):
         commune = self.inscription.commune
-        with different_locale('fr_FR'):
+        with different_locale('fr_FR.utf8'):
             title = f'{commune.nom.capitalize()}, le {date.today().strftime("%A %d %B")}'
         body = ""
         first_line = []

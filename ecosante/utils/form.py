@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 
 class BaseForm(FlaskForm):
     class Meta:
-        locales = ['fr_FR', 'fr']
+        locales = ['fr_FR', 'fr', 'fr_FR.utf8']
 
         def get_translations(self, form):
             return super(FlaskForm.Meta, self).get_translations(form)

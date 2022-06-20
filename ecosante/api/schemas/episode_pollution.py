@@ -60,14 +60,17 @@ class EpisodePollutionSchema(FullIndiceSchema):
             if data["indice"]:
                 start = min([e.date_ech for e in data["indice"]])
                 end = max([e.date_ech for e in data["indice"]]) + timedelta(1) - timedelta(seconds=1)
-                area = data["indice"][0].zone.lib if data["indice"] else ""
+                area_details = data["indice"][0].zone
+                area = area_details.lib
             else:
                 start = None
                 end = None
                 area = None
+                area_details = None
             data['validity'] = {
                 "start": start,
                 "end": end,
-                "area": area
+                "area": area,
+                "area_details": area_details,
             }
         return data
