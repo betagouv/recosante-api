@@ -1,5 +1,6 @@
 from sqlalchemy.sql.sqltypes import Date
-from ecosante.newsletter.models import Newsletter, NewsletterDB, NewsletterHebdoTemplate, Inscription
+from ecosante.newsletter.models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
+from ecosante.inscription.models import Inscription
 from datetime import date, timedelta
 from psycopg2.extras import DateRange
 

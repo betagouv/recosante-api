@@ -1,4 +1,3 @@
-from asyncio import current_task
 from flask import (
     abort,
     current_app,
@@ -24,9 +23,9 @@ from ecosante.recommandations.models import Recommandation
 
 from ecosante.utils.decorators import admin_capability_url, admin_capability_url_no_redirect
 from ecosante.utils import Blueprint
-from ecosante.extensions import sib
+from ecosante.extensions import db, sib
 from .forms import FormAvis, FormTemplateAdd, FormTemplateEdit
-from .models import Newsletter, NewsletterDB, NewsletterHebdoTemplate, db
+from .models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
 from .tasks.import_in_sb import create_campaign, import_, send
 from .tasks.send_webpush_notifications import send_webpush_notification, vapid_claims
 from indice_pollution.history.models import IndiceATMO

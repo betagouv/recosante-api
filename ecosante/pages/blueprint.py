@@ -9,7 +9,8 @@ from dataclasses import asdict
 from ecosante.utils import Blueprint
 from ecosante.utils.decorators import admin_capability_url, webhook_capability_url
 from datetime import date, timedelta
-from ecosante.newsletter.models import NewsletterDB, Recommandation
+from ecosante.newsletter.models import NewsletterDB
+from ecosante.recommandations.models import Recommandation
 from sentry_sdk import capture_event
 from indice_pollution import forecast, episodes, raep, availability
 from indice_pollution.history.models import PotentielRadon

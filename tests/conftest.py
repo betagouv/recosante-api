@@ -50,6 +50,7 @@ def app(request):
         db = app.extensions['sqlalchemy'].db
         db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
         db.metadata.bind = db.engine
+        db.metadata.create_all()
         with cf.ProcessPoolExecutor() as pool:
             pool.submit(flask_migrate.upgrade)
         yield app
@@ -117,8 +118,8 @@ def mauvaise_qualite_air(commune_commited, db_session) -> IndiceATMO:
     from datetime import date
     indice = IndiceATMO(
         zone_id=commune_commited.zone_id,
-        date_ech=date.today(),
-        date_dif=date.today(),
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
         no2=4, so2=4, o3=4, pm10=5, pm25=6,
         valeur=6)
     db_session.add(indice)
@@ -130,8 +131,8 @@ def bonne_qualite_air(commune_commited, db_session) -> IndiceATMO:
     from datetime import date
     indice = IndiceATMO(
         zone_id=commune_commited.zone_id,
-        date_ech=date.today(),
-        date_dif=date.today(),
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
         no2=1, so2=1, o3=1, pm10=1, pm25=1,
         valeur=1)
     db_session.add(indice)
