@@ -1,7 +1,7 @@
 """Ajout NLDB.show_{qa,vigilance}
 
 Revision ID: ad12ab0c9e74
-Revises: 08bb5d4e3455
+Revises: a06c1edc439f
 Create Date: 2022-06-09 11:38:04.905718
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'ad12ab0c9e74'
-down_revision = '08bb5d4e3455'
+down_revision = 'a06c1edc439f'
 branch_labels = None
 depends_on = None
 
