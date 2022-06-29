@@ -5,15 +5,12 @@ from flask import (
     render_template,
     request
 )
-from dataclasses import asdict
 from ecosante.utils import Blueprint
 from ecosante.utils.decorators import admin_capability_url, webhook_capability_url
 from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB
-from ecosante.recommandations.models import Recommandation
 from sentry_sdk import capture_event
-from indice_pollution import forecast, episodes, raep, availability
-from indice_pollution.history.models import PotentielRadon
+from indice_pollution import availability
 
 bp = Blueprint("pages", __name__, url_prefix='/')
 
@@ -62,39 +59,6 @@ def city_availability():
     return {"availability": availability(insee)}
 
 
-@bp.route('/data')
-def data():
-    d = date.today()
-    insee = request.args.get('insee')
-    f = forecast(insee, d)
-    ep = episodes(insee, d)
-    r = raep(insee)
-    polluants = [
-        {
-            '1': 'dioxyde_soufre',
-            '5': 'particules_fines',
-            '7': 'ozone',
-            '8': 'dioxyde_azote',
-        }.get(str(e['code_pol']), f'erreur: {e["code_pol"]}')
-        for e in ep['data']
-        if e['etat'] != 'PAS DE DEPASSEMENT'\
-            and 'date' in e\
-            and e['date'] == str(d)
-    ]
-    reco = [
-        v
-        for v in Recommandation.published_query().all()
-        if v.is_relevant(None, f['data'][0]['indice'], polluants, 0, d)
-    ] if f['data'] else []
-    return {
-        "forecast": f['data'][0] if f['data'] else [],
-        "episode": ep['data'][0] if ep['data'] else [],
-        "recommandation": {k: v for k, v in (asdict(reco[0]) if reco else {}).items() if k in ["precisions", "recommandation"]},
-        "raep": r.get('data'),
-        "potentiel_radon": getattr(PotentielRadon.get(insee), 'classe_potentiel'),
-        "metadata": f['metadata']
-    }
-
 @bp.route('/recommandation-episodes-pollution')
 def recommandation_episode_pollution():
     nom_polluants = {
@@ -113,8 +77,3 @@ def recommandation_episode_pollution():
 @bp.route('/_application_server_key')
 def vapid_public_key():
     return {"application_server_key": current_app.config['APPLICATION_SERVER_KEY']}
-
-
-@bp.route('/debug-sentry')
-def trigger_error():
-    division_by_zero = 1 / 0

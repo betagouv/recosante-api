@@ -15,7 +15,7 @@ from ecosante.utils.funcs import (
     oxford_comma
 )
 
-from indice_pollution import bulk, today, forecast as get_forecast, episodes as get_episodes, raep as get_raep, get_all
+from indice_pollution import today, raep as get_raep, get_all
 from indice_pollution.history.models import VigilanceMeteo
 from indice_pollution.history.models import IndiceUv
 

@@ -99,9 +99,8 @@ def create_app(testing=False):
     configure_cache(app)
 
     with app.app_context():
-        from .inscription import models, blueprint as inscription_bp, tasks
+        from .inscription import models, tasks
         from .recommandations import models, commands, blueprint as recommandation_bp
-        from .avis import models, commands, blueprint as avis_bp
         from .stats import blueprint as stats_bp
         from .newsletter import blueprint as newsletter_bp, tasks
         from .pages import blueprint as pages_bp
@@ -109,9 +108,7 @@ def create_app(testing=False):
         from .users import blueprint #noqa
         from .utils.funcs import oxford_comma, display_check
 
-        app.register_blueprint(inscription_bp.bp)
         app.register_blueprint(stats_bp.bp)
-        app.register_blueprint(avis_bp.bp)
         app.register_blueprint(recommandation_bp.bp)
         app.register_blueprint(newsletter_bp.bp)
         app.register_blueprint(pages_bp.bp)
