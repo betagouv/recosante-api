@@ -24,7 +24,7 @@ from ecosante.recommandations.models import Recommandation
 from ecosante.utils.decorators import admin_capability_url, admin_capability_url_no_redirect
 from ecosante.utils import Blueprint
 from ecosante.extensions import db, sib
-from .forms import FormAvis, FormTemplateAdd, FormTemplateEdit
+from .forms import FormTemplateAdd, FormTemplateEdit
 from .models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
 from .tasks.import_in_sb import create_campaign, import_, send
 from .tasks.send_webpush_notifications import send_webpush_notification, vapid_claims
@@ -40,19 +40,15 @@ def avis(short_id):
     if not nl:
         abort(404)
     nl.appliquee = request.args.get('avis') == 'oui' or request.args.get('appliquee') == 'oui'
-    form = FormAvis(request.form or request.json, obj=nl)
-    if form.validate_on_submit():
-        form.populate_obj(nl)
-        db.session.add(nl)
-        db.session.commit()
-        return {
-            "short_id": nl.short_id,
-            "avis": nl.avis,
-            "recommandation": nl.recommandation,
-            "appliquee": nl.appliquee
-        }
-    errors = [f'{field}: {errors.join(",")}' for field, errors in form.errors.items()]
-    abort(400, f"Errors: {errors.join(',')}")
+    nl.avis = request.json.get('avis')
+    db.session.add(nl)
+    db.session.commit()
+    return {
+        "short_id": nl.short_id,
+        "avis": nl.avis,
+        "recommandation": nl.recommandation,
+        "appliquee": nl.appliquee
+    }
 
 @bp.route('<secret_slug>/avis/liste')
 @bp.route('/avis/liste')
