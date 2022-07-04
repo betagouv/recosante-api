@@ -17,7 +17,10 @@ def get_all_contacts(limit=100):
     contacts = []
     offset = 0
     while True:
-        result = contacts_api.get_contacts(limit=100, offset=offset)
+        try:
+            result = contacts_api.get_contacts(limit=100, offset=offset)
+        except ValueError: # Le SDK raise cette exception s’il n’y a pas de contacts, par exemple si on a une 100aine pile, on ne le catch pas deux lignes en dessous
+            break
         contacts += result.contacts
         if len(result.contacts) < limit:
             break
