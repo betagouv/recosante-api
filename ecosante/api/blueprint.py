@@ -1,21 +1,21 @@
+import json, os
 from datetime import date
-import json
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.episode_pollution import EpisodePollution
 from sqlalchemy.orm import joinedload
-from ecosante.extensions import rebar, db
-from .schemas import ResponseSchema, QuerySchema
+from ecosante.extensions import rebar, cache
+from .schemas import ResponseSchema, QuerySchema, BaignadesQuerySchema
+from .baignades import make_baignades_response
 from indice_pollution import forecast, raep, episodes as get_episodes
 from indice_pollution.history.models import PotentielRadon, IndiceATMO, VigilanceMeteo, IndiceUv
 from ecosante.recommandations.models import Recommandation
 from flask.wrappers import Response
-from flask import stream_with_context
-from flask_rebar import SwaggerV2Generator
-
+from flask import current_app, stream_with_context
+from flask_rebar import SwaggerV3Generator
 
 registry = rebar.create_handler_registry(
     prefix='/v1',
-    swagger_generator=SwaggerV2Generator(
+    swagger_generator=SwaggerV3Generator(
             title="API recosante.beta.gouv.fr",
             description='Toutes les données sont diffusées sous la licence <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL v1.0</a>'
     )
@@ -31,7 +31,6 @@ def get_advice(advices, type_, **kwargs):
         ))
     except StopIteration:
         return None
-
 
 @registry.handles(
 	rule='/',
@@ -122,11 +121,48 @@ def index():
         }
     return resp
 
+@registry.handles(
+    rule='/baignades',
+    method='GET',
+    query_string_schema=BaignadesQuerySchema(),
+    hidden=True
+)
+def baignades():
+    insee = rebar.validated_args.get('insee')
+    cache_key_format = f'baignades-{insee}'
+    resp = None
+    try:
+        resp = cache.get(cache_key_format)
+    except Exception as e:
+        current_app.logger.error(f"Cache is unavailable: {e}")
+    if resp is None:
+        # Sans cache
+        resp = make_baignades_response(insee)
+        try:
+            baignades_cache_timeout = os.getenv('BAIGNADES_CACHE_TIMEOUT', 86400) # seconds
+            cache.set(cache_key_format, resp, timeout=baignades_cache_timeout)
+        except Exception as e:
+            current_app.logger.error(f"Cache is unavailable: {e}")
+    else:
+        # Avec cache
+        current_app.logger.info("Cached version")
+    # Ajout des recommandations baignades
+    advices = Recommandation.published_query().all()
+    advice_baignades = get_advice(advices, "baignades")
+    advice_baignades_dict = None
+    if advice_baignades is not None:
+        advice_baignades_dict = {
+            "details": advice_baignades.precisions_sanitized,
+            "main": advice_baignades.recommandation_sanitized
+        }
+    resp['baignades']['advice'] = advice_baignades_dict
+    return resp
 
 @registry.handles(
-	rule='/_batch',
+    rule='/_batch',
     method='GET',
     query_string_schema=QuerySchema(),
+    hidden=True
 )
 def batch():
     date_ = rebar.validated_args.get('date', date.today())

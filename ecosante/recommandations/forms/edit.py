@@ -22,7 +22,8 @@ class FormAdd(BaseForm):
             ("pollens", "Pollens"),
             ("radon", "Radon"),
             ("vigilance_meteo", "Vigilance météo"),
-            ("indice_uv", "Indice UV")
+            ("indice_uv", "Indice UV"),
+            ("baignades", "Eaux de baignade")
         ]
     )
     saison = MultiCheckboxField("Montrer la recommandation que durant les saisons :",
