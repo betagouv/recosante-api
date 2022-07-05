@@ -95,9 +95,9 @@ def get_commune_sites(id_carte, insee, code_departement):
 def get_site_details(site_id, code_departement, season_year, id_carte):
     dptddass = code_departement.zfill(3) # préfixe avec des 0 pour atteindre une longueur de 3 caractères
     site = dptddass + site_id
-    baignades_site_details_url = os.getenv('BAIGNADES_SITES_DETAILS_URL')
+    baignades_site_details_url = os.getenv('BAIGNADES_SITE_DETAILS_URL')
     if baignades_site_details_url is None:
-        raise Exception("BAIGNADES_SITES_DETAILS_URL var env is required")
+        raise Exception("BAIGNADES_SITE_DETAILS_URL var env is required")
     url = baignades_site_details_url.format(dptddass, site, season_year)
     try:
         r = requests.get(url)
