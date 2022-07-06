@@ -277,23 +277,17 @@ def ranking_label_from_src(src):
     return ranking_label
 
 def date_from_str(date_str):
-    day, month, year = date_str.split('/')
-    return date(int(year), int(month), int(day))
+    return datetime.strptime(date_str, '%d/%m/%Y').date()
 
 def is_valid_date(date_str):
-    is_valid_date = True
     try:
         date_from_str(date_str)
     except ValueError:
-        is_valid_date = False
-    return is_valid_date
+        return False
+    return True
 
 def is_valid_year(year_str):
-    is_valid_year = False
-    if year_str and year_str.isdigit():
-        if int(year_str) >= 2020:
-            is_valid_year = True
-    return is_valid_year
+    return year_str.isdigit() and int(year_str) >= 2020
 
 def compare_date_str(date_str1, date_str2, op):
     return op(date_from_str(date_str1), date_from_str(date_str2))
