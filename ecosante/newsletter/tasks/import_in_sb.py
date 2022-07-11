@@ -2,8 +2,7 @@ from time import sleep
 from flask import current_app
 from datetime import datetime, timedelta
 from uuid import uuid4
-import csv, io,  os
-from flask.helpers import url_for
+import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from ecosante.newsletter.models import Newsletter, NewsletterDB
@@ -27,10 +26,10 @@ def get_all_contacts(limit=100):
         offset += limit
     return contacts
 
-def get_blacklisted_contacts():
-    return [c for c in get_all_contacts() if c['emailBlacklisted']]
+def get_blacklisted_contacts(contacts):
+    return [c for c in contacts if c['emailBlacklisted']]
 
-def deactivate_contacts(task):
+def deactivate_contacts(task, contacts):
     if task:
         task.update_state(
             state='STARTED',
@@ -39,7 +38,7 @@ def deactivate_contacts(task):
                 "details": "Prise en compte de la désincription des membres"
             }
         )
-    for contact in get_blacklisted_contacts():
+    for contact in get_blacklisted_contacts(contacts):
         db_contact = Inscription.active_query().filter(Inscription.mail==contact['email']).first()
         if not db_contact or not db_contact.is_active:
             continue
@@ -68,9 +67,10 @@ def delete_lists(task):
             )
 
 def import_and_send(task, type_='quotidien', force_send=False):
-    deactivate_contacts(task)
+    send_in_blue_contacts = get_all_contacts()
+    deactivate_contacts(task, send_in_blue_contacts)
     delete_lists(task)
-    result = import_(task, type_=type_, force_send=force_send)
+    result = import_(task, type_=type_, force_send=force_send, send_in_blue_contacts=send_in_blue_contacts)
     result['progress'] = 100
     if current_app.config['ENV'] == 'production':
         db.session.commit()
@@ -101,11 +101,11 @@ def get_mail_list_id(newsletter, template_id_mail_list_id, now, test):
     return template_id_mail_list_id[template_sib_id]
 
 
-def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, activate_webhook=True, filter_already_sent=True):
+def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=None, newsletters=None, activate_webhook=True, filter_already_sent=True, send_in_blue_contacts=[]):
     
     now = datetime.now()
     errors, template_id_mail_list_id = import_in_db(task, now, type_, force_send, test, mail_list_id, newsletters, filter_already_sent)
-    import_contacts_in_sb_all(template_id_mail_list_id, now, type_, test, activate_webhook)
+    import_contacts_in_sb_all(template_id_mail_list_id, now, type_, test, activate_webhook, send_in_blue_contacts)
 
     return {
         "state": "STARTED",
@@ -145,13 +145,6 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
         current_app.logger.info("Commit des newsletters dans la base de données")
     return errors, template_id_mail_list_id
 
-def get_file_body(attributes):
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=NewsletterDB.header)
-    writer.writeheader()
-    writer.writerows(attributes)
-    return output.getvalue()
-
 def wait_for_import_completion(process_id):
     process_api = sib_api_v3_sdk.ProcessApi(sib)
     tries = 0
@@ -167,36 +160,45 @@ def wait_for_import_completion(process_id):
             return True
         tries += 1
 
-def import_contacts_in_sb(template_id, mail_list_id, now, type_, activate_webhook):
+def import_contacts_in_sb(mail_list_id, send_in_blue_contacts):
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
-    window_size = 500  # or whatever limit you like
+    window_size = 100  # or whatever limit you like
     window_idx = 0
+    send_in_blue_mails = {c['email'] for c in send_in_blue_contacts}
     while True:
         start,stop = window_size*window_idx, window_size*(window_idx+1)
-        attributes = [nl.attributes() for nl in NewsletterDB.query.filter_by(mail_list_id=mail_list_id).slice(start, stop).all()]
-        if attributes is None or len(attributes) < window_size:
+        attributes = [
+            nl.attributes()
+            for nl in NewsletterDB.query.filter_by(mail_list_id=mail_list_id).slice(start, stop).all()
+            if nl.inscription.mail in send_in_blue_mails
+        ]
+        if attributes is None or len(attributes) == 0:
             break
         window_idx += 1
-        request_contact_import = sib_api_v3_sdk.RequestContactImport()
-        request_contact_import.list_ids = [mail_list_id]
-        request_contact_import.email_blacklist = False
-        request_contact_import.sms_blacklist = False
-        request_contact_import.update_existing_contacts = True
-        request_contact_import.empty_contacts_attributes = True
-        request_contact_import.file_body = get_file_body(attributes)
-        current_app.logger.info("About to import contacts with params")
-        current_app.logger.info(request_contact_import)
+        update_batch_contacts = sib_api_v3_sdk.UpdateBatchContacts(
+            [
+                sib_api_v3_sdk.UpdateBatchContactsContacts(
+                    email=a['EMAIL'],
+                    list_ids=[mail_list_id],
+                    attributes=a,
+                    email_blacklisted=False,
+                    sms_blacklisted=False
+                )
+                for a in attributes
+            ]
+        )
+        current_app.logger.info("About to update contacts with params")
         try:
-            import_response = contact_api.import_contacts(request_contact_import)
-            wait_for_import_completion(import_response.process_id)
-            current_app.logger.info("contacts imported")
+            update_response = contact_api.update_batch_contacts(update_batch_contacts)
+            wait_for_import_completion(update_response.process_id)
+            current_app.logger.info("contacts updated")
         except ApiException as e:
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
 
-def import_contacts_in_sb_all(template_id_mail_list_id, now, type_, test, activate_webhook):
+def import_contacts_in_sb_all(template_id_mail_list_id, now, type_, test, activate_webhook, send_in_blue_contacts):
     if current_app.config['ENV'] == 'production' or test:
         for template_id, mail_list_id in template_id_mail_list_id.items():
-            import_contacts_in_sb(template_id, mail_list_id, now, type_, activate_webhook)
+            import_contacts_in_sb(mail_list_id, send_in_blue_contacts)
             campaign_id = create_campaign(now, mail_list_id=mail_list_id, template_id=template_id, type_=type_)
             send(campaign_id)
 
