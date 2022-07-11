@@ -2,8 +2,7 @@ from time import sleep
 from flask import current_app
 from datetime import datetime, timedelta
 from uuid import uuid4
-import csv, io,  os
-from flask.helpers import url_for
+import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from ecosante.newsletter.models import Newsletter, NewsletterDB
@@ -145,13 +144,6 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
         current_app.logger.info("Commit des newsletters dans la base de données")
     return errors, template_id_mail_list_id
 
-def get_file_body(attributes):
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=NewsletterDB.header)
-    writer.writeheader()
-    writer.writerows(attributes)
-    return output.getvalue()
-
 def wait_for_import_completion(process_id):
     process_api = sib_api_v3_sdk.ProcessApi(sib)
     tries = 0
@@ -174,7 +166,7 @@ def import_contacts_in_sb(template_id, mail_list_id, now, type_, activate_webhoo
     while True:
         start,stop = window_size*window_idx, window_size*(window_idx+1)
         attributes = [nl.attributes() for nl in NewsletterDB.query.filter_by(mail_list_id=mail_list_id).slice(start, stop).all()]
-        if attributes is None or len(attributes) < window_size:
+        if attributes is None or len(attributes) == 0:
             break
         window_idx += 1
         request_contact_import = sib_api_v3_sdk.RequestContactImport()
@@ -183,7 +175,7 @@ def import_contacts_in_sb(template_id, mail_list_id, now, type_, activate_webhoo
         request_contact_import.sms_blacklist = False
         request_contact_import.update_existing_contacts = True
         request_contact_import.empty_contacts_attributes = True
-        request_contact_import.file_body = get_file_body(attributes)
+        request_contact_import.json_body = attributes
         current_app.logger.info("About to import contacts with params")
         current_app.logger.info(request_contact_import)
         try:
