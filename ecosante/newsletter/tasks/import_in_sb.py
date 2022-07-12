@@ -145,21 +145,6 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
         current_app.logger.info("Commit des newsletters dans la base de données")
     return errors, template_id_mail_list_id
 
-def wait_for_import_completion(process_id):
-    process_api = sib_api_v3_sdk.ProcessApi(sib)
-    tries = 0
-    while 'waiting for contacts to be imported':
-        sleep(10)
-        if tries > 30:
-            return False
-        try:
-            process_response = process_api.get_process(process_id)
-        except ApiException as e:
-            current_app.logger.error("Exception when calling ProcessApi->get_process: %s\n" % e)
-        if process_response.status == 'completed':
-            return True
-        tries += 1
-
 def import_contacts_in_sb(mail_list_id, send_in_blue_contacts):
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     window_size = 100  # or whatever limit you like
@@ -190,7 +175,6 @@ def import_contacts_in_sb(mail_list_id, send_in_blue_contacts):
         current_app.logger.info("About to update contacts with params")
         try:
             update_response = contact_api.update_batch_contacts(update_batch_contacts)
-            wait_for_import_completion(update_response.process_id)
             current_app.logger.info("contacts updated")
         except ApiException as e:
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
