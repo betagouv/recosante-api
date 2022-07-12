@@ -331,7 +331,7 @@ def get_lists_ids_to_delete():
             try:
                 d = datetime.fromisoformat(r['name'][:26])
             except ValueError:
-                d = datetime.max() # We don't have a datetime, we use min as a default one to be able to compare
+                d = datetime.max # We don't have a datetime, we use min as a default one to be able to compare
             if d <= the_day_before_yesterday:
                 ids.append(r['id'])
         if not api_response.lists:
