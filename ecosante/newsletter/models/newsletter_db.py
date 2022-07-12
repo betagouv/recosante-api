@@ -208,8 +208,6 @@ class NewsletterDB(db.Model, Newsletter):
                 return next(filter(lambda s: s.get('polluant_name', '').lower() == nom.lower(), self.sous_indices))
             except StopIteration:
                 return {}
-        def convert_bool_to_yes_no(b):
-            return "Yes" if b else "No"
         return {
             **{
                 'EMAIL': self.inscription.mail,
@@ -234,19 +232,19 @@ class NewsletterDB(db.Model, Newsletter):
                 "RAEP_FIN_VALIDITE": self.raep_fin_validite,
                 'QUALITE_AIR_VALIDITE': self.date.strftime('%d/%m/%Y'),
                 'INDICE_UV_VALIDITE': self.date.strftime('%d/%m/%Y'),
-                'POLLINARIUM_SENTINELLE': convert_bool_to_yes_no((False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True)),
+                'POLLINARIUM_SENTINELLE': (False if not self.inscription.commune or not self.inscription.commune.pollinarium_sentinelle else True),
                 'INDICE_UV_LABEL': self.indice_uv_label or "",
                 'INDICE_UV_VALUE': self.indice_uv_value or "",
-                'SHOW_QA': convert_bool_to_yes_no(self.show_qa),
-                'SHOW_RAEP': convert_bool_to_yes_no(self.show_raep),
-                'SHOW_VIGILANCE': convert_bool_to_yes_no(self.show_vigilance),
-                'SHOW_INDICE_UV': convert_bool_to_yes_no(self.show_indice_uv),
+                'SHOW_QA': self.show_qa,
+                'SHOW_RAEP': self.show_raep,
+                'SHOW_VIGILANCE': self.show_vigilance,
+                'SHOW_INDICE_UV': self.show_indice_uv,
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
                 'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
                 'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
                 'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
                 'RECOMMANDATION_INDICE_UV': (self.recommandation_indice_uv.format(self.inscription) or "") if self.recommandation_indice_uv else "",
-                'NEW_USER': convert_bool_to_yes_no(str(self.inscription.date_inscription) > '2021-10-14'),
+                'NEW_USER': str(self.inscription.date_inscription) > '2021-10-14',
                 'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib,
                 "VIGILANCE_VALIDITE_DEBUT": VigilanceMeteo.make_start_date([self.vigilance_globale]).strftime('%d/%m/%Y à %H:%M') if self.vigilance_globale else "",
                 "VIGILANCE_VALIDITE_FIN": VigilanceMeteo.make_end_date([self.vigilance_globale]).strftime('%d/%m/%Y à %H:%M') if self.vigilance_globale else "",
