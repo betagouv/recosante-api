@@ -304,8 +304,11 @@ class Recommandation(db.Model):
             return False
         return self.type_ in types
 
-    def format(self, inscription):
-        return self.recommandation_sanitized
+    def format(self, inscription: Inscription):
+        return self.recommandation_sanitized.format(
+            aasqa_nom=inscription.commune.departement.region.aasqa_nom,
+            aasqa_website=inscription.commune.departement.region.aasqa_website
+        )
 
     @property
     def filtres(self):

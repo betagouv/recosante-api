@@ -197,7 +197,6 @@ def test_pollens(db_session, inscription, episodes, raep, delta, indice, request
 
     assert nl.show_raep == (raep > 0)
 
-
 def test_show_qa(inscription, bonne_qualite_air):
     inscription.indicateurs = ['indice_atmo']
     nl = Newsletter(
@@ -238,6 +237,9 @@ def test_show_qa_evenement(inscription, evenement_qualite_air):
     )
     assert nl.show_qa == True
     assert nl.recommandation != None
+    nldb = NewsletterDB(nl)
+    assert f'<a href="{inscription.commune.departement.region.aasqa_website}">{inscription.commune.departement.region.aasqa_nom}</a>' in nldb.attributes()['RECOMMANDATION']
+
     inscription.indicateurs = []
     nl = Newsletter(
         inscription=inscription,
