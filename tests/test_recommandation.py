@@ -65,6 +65,13 @@ def test_is_relevant_enfants():
     i = Inscription(enfants='non')
     assert not r.is_relevant(i, None, [], 0, date.today())
 
+
+def test_is_qualite_evenement():
+    r = published_recommandation(qa_evenement=True)
+    i = Inscription()
+    assert r.is_relevant(i, "evenement", [], 0, date.today())
+    assert not r.is_relevant(i, "extrement_mauvais", [], 0, date.today())
+
 def test_is_qualite_mauvaise():
     r = published_recommandation(qa_mauvaise=True)
     i = Inscription()

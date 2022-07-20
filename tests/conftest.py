@@ -139,6 +139,19 @@ def bonne_qualite_air(commune_commited, db_session) -> IndiceATMO:
     return indice
 
 @pytest.fixture(scope='function')
+def evenement_qualite_air(commune_commited, db_session) -> IndiceATMO:
+    from indice_pollution.history.models import IndiceATMO
+    from datetime import date
+    indice = IndiceATMO(
+        zone_id=commune_commited.zone_id,
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
+        no2=1, so2=1, o3=1, pm10=1, pm25=1,
+        valeur=7)
+    db_session.add(indice)
+    return indice
+
+@pytest.fixture(scope='function')
 def recommandation(db_session) -> Recommandation:
     recommandation = published_recommandation()
     db_session.add(recommandation)

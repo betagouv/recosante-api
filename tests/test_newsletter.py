@@ -1,5 +1,7 @@
 from ecosante.newsletter.models import Newsletter, NewsletterDB
 from datetime import date, datetime, timedelta
+
+from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
 import pytest
 from itertools import product
@@ -211,6 +213,35 @@ def test_show_qa(inscription, bonne_qualite_air):
     nl = Newsletter(
         inscription=inscription,
         forecast={"data": [{"date": str(date.today()), "indice": "bon"}]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[]
+    )
+    assert nl.show_qa == False
+
+
+
+def test_show_qa_evenement(inscription, evenement_qualite_air):
+    inscription.indicateurs = ['indice_atmo']
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [evenement_qualite_air.dict()]},
+        episodes={"data": []},
+        raep=0,
+        recommandations=[
+            Recommandation(
+                type_="indice_atmo",
+                qa_evenement=True,
+                recommandation='Événement en cours, consultez le site de <a href="{aasqa_website}">{aasqa_nom}</a>'
+            )
+        ]
+    )
+    assert nl.show_qa == True
+    assert nl.recommandation != None
+    inscription.indicateurs = []
+    nl = Newsletter(
+        inscription=inscription,
+        forecast={"data": [evenement_qualite_air.dict()]},
         episodes={"data": []},
         raep=0,
         recommandations=[]
