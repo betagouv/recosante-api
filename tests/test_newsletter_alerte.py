@@ -9,7 +9,7 @@ from ecosante.newsletter.models.newsletter import Newsletter
 
 @pytest.mark.parametrize(
     "valeur,expected",
-    [(v, False) for v in range(0, 3)] + [(v, True) for v in range(3, 7)]
+    [(v, False) for v in range(0, 3)] + [(v, True) for v in range(3, 8)]
 )
 def test_indice_atmo(inscription_alerte, commune, valeur, expected):
     inscription_alerte.indicateurs = ['indice_atmo']

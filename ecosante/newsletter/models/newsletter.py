@@ -510,7 +510,7 @@ class Newsletter:
             return self.force_send
         if self.inscription.has_frequence("alerte"):
             return self.valeur > 2
-        return self.valeur in range(1, 7)
+        return self.valeur in range(1, 8)
 
     @property
     def is_init_indice_uv(self):

@@ -12,6 +12,7 @@ from typing import List, Set
 RECOMMANDATION_FILTERS = [
     ("qa_mauvaise", "👎", "Qualité de l’air mauvaise"),
     ("qa_bonne", "👍", "Qualité de l’air bonne"),
+    ("qa_evenement", "👊", "Qualité de l’air événement"),
     ("menage", "🧹", "Ménage"),
     ("bricolage", "🔨", "Bricolage"),
     ("chauffage", "🔥", "Chauffage"),
@@ -46,6 +47,7 @@ class Recommandation(db.Model):
     type_: str = db.Column("type", db.String)
     qa_mauvaise: bool = db.Column(db.Boolean, nullable=True)
     qa_bonne: bool = db.Column(db.Boolean, nullable=True)
+    qa_evenement: bool = db.Column(db.Boolean, nullable=True)
     menage: bool = db.Column(db.Boolean)
     bricolage: bool = db.Column(db.Boolean)
     chauffage: List[str] = db.Column(postgresql.ARRAY(db.String))
@@ -114,11 +116,11 @@ class Recommandation(db.Model):
 
     @property
     def qa(self):
-        return self._multi_getter("qa_", ['bonne', 'mauvaise'])
+        return self._multi_getter("qa_", ['bonne', 'mauvaise', 'evenement'])
 
     @qa.setter
     def qa(self, value):
-        self._multi_setter('qa_', ['bonne', 'mauvaise'], value)
+        self._multi_setter('qa_', ['bonne', 'mauvaise', 'evenement'], value)
 
     @property
     def polluants(self):
@@ -167,6 +169,8 @@ class Recommandation(db.Model):
             return "bon"
         elif qualif in ['degrade', 'mauvais', 'tres_mauvais', 'extrement_mauvais']:
             return "mauvais"
+        elif qualif == "evenement":
+            return "evenement"
         else:
             return None
 
@@ -196,7 +200,7 @@ class Recommandation(db.Model):
         if self.type_ != "indice_atmo":
             return True
         # S’il n’y a pas de catégorie spécifiée, c’est qu’on ne s’en occupe pas
-        if self.qa_bonne == None and self.qa_mauvaise == None:
+        if self.qa_bonne == None and self.qa_mauvaise == None and self.qa_evenement == None:
             return True
         qualif_categorie = self.qualif_categorie(qualif)
         # Si la qualité de l’air est bonne
@@ -206,6 +210,8 @@ class Recommandation(db.Model):
         # Si la qualité de l’air est mauvaise
         # que la reco concerne la qualité de l’air mauvaise
         elif qualif_categorie == "mauvais" and self.qa_mauvaise:
+            return True
+        elif qualif_categorie == "evenement" and self.qa_evenement:
             return True
         # Sinon c’est pas bon
         else:
@@ -298,8 +304,11 @@ class Recommandation(db.Model):
             return False
         return self.type_ in types
 
-    def format(self, inscription):
-        return self.recommandation_sanitized
+    def format(self, inscription: Inscription):
+        return self.recommandation_sanitized.format(
+            aasqa_nom=inscription.commune.departement.region.aasqa_nom,
+            aasqa_website=inscription.commune.departement.region.aasqa_website
+        )
 
     @property
     def filtres(self):

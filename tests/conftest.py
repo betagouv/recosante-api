@@ -69,7 +69,7 @@ def _db(app):
 @pytest.fixture(scope='function')
 def commune(db_session) -> Commune:
     from indice_pollution.history.models import Commune, Departement, Region, Zone
-    region = Region(nom="Pays de la Loire", code="52", tncc=4, nccenr='Pays de la Loire')
+    region = Region(nom="Pays de la Loire", code="52", tncc=4, nccenr='Pays de la Loire', aasqa_nom='Air Pays de la Loire', aasqa_website='https://airpl.org')
     zone_departement = Zone(type='departement', code='53')
     departement = Departement(nom="Mayenne", code="53", region=region, zone=zone_departement, tncc=3, nccenr='Mayenne')
     zone = Zone(type='commune', code='53130')
@@ -135,6 +135,19 @@ def bonne_qualite_air(commune_commited, db_session) -> IndiceATMO:
         date_dif=datetime.now(),
         no2=1, so2=1, o3=1, pm10=1, pm25=1,
         valeur=1)
+    db_session.add(indice)
+    return indice
+
+@pytest.fixture(scope='function')
+def evenement_qualite_air(commune_commited, db_session) -> IndiceATMO:
+    from indice_pollution.history.models import IndiceATMO
+    from datetime import date
+    indice = IndiceATMO(
+        zone_id=commune_commited.zone_id,
+        date_ech=datetime.now(),
+        date_dif=datetime.now(),
+        no2=1, so2=1, o3=1, pm10=1, pm25=1,
+        valeur=7)
     db_session.add(indice)
     return indice
 
