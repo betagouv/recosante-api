@@ -154,7 +154,7 @@ def test_avis_non(db_session, client, inscription, episode_azote):
     db_session.add(nldb)
     db_session.commit()
     avis = "Je ne suis pas concerné !"
-    response = client.post(f'/newsletter/{nldb.short_id}/avis?appliquee=non', data={"avis": avis}, headers={"Accept": "application/json"})
+    response = client.post(f'/newsletter/{nldb.short_id}/avis?appliquee=non', json={"avis": avis}, headers={"Accept": "application/json"})
     assert response.status_code == 200
     nldb2 = NewsletterDB.query.get(nldb.id)
     assert nldb2.appliquee == False
