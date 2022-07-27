@@ -211,7 +211,7 @@ class NewsletterDB(db.Model, Newsletter):
         return {
             **{
                 'EMAIL': self.inscription.mail,
-                'RECOMMANDATION': (self.recommandation.format(self.inscription) or "") if self.recommandation else "",
+                'RECOMMANDATION': (self.recommandation.format(self.inscription.commune) or "") if self.recommandation else "",
                 'LIEN_AASQA': self.lien_aasqa,
                 'NOM_AASQA': self.nom_aasqa,
                 'PRECISIONS': (self.recommandation.precisions or "") if self.recommandation else "",
@@ -240,10 +240,10 @@ class NewsletterDB(db.Model, Newsletter):
                 'SHOW_VIGILANCE': self.show_vigilance,
                 'SHOW_INDICE_UV': self.show_indice_uv,
                 'INDICATEURS_FREQUENCE': self.inscription.indicateurs_frequence[0] if self.inscription.indicateurs_frequence else "",
-                'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription) or "") if self.recommandation_qa else "",
-                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription) if self.recommandation_raep else "",
-                'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription) if self.recommandation_episode else "",
-                'RECOMMANDATION_INDICE_UV': (self.recommandation_indice_uv.format(self.inscription) or "") if self.recommandation_indice_uv else "",
+                'RECOMMANDATION_QA': (self.recommandation_qa.format(self.inscription.commune) or "") if self.recommandation_qa else "",
+                'RECOMMANDATION_RAEP': self.recommandation_raep.format(self.inscription.commune) if self.recommandation_raep else "",
+                'RECOMMANDATION_EPISODE': self.recommandation_episode.format(self.inscription.commune) if self.recommandation_episode else "",
+                'RECOMMANDATION_INDICE_UV': (self.recommandation_indice_uv.format(self.inscription.commune) or "") if self.recommandation_indice_uv else "",
                 'NEW_USER': str(self.inscription.date_inscription) > '2021-10-14',
                 'INDICATEURS_MEDIA': self.inscription.indicateurs_medias_lib,
                 "VIGILANCE_VALIDITE_DEBUT": VigilanceMeteo.make_start_date([self.vigilance_globale]).strftime('%d/%m/%Y à %H:%M') if self.vigilance_globale else "",
