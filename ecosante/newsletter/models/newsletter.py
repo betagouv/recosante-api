@@ -412,7 +412,7 @@ class Newsletter:
             self.couleur,
             self.forecast['metadata']['region']['nom'],
             self.forecast['metadata']['region']['website'],
-            self.recommandation.format(self.inscription),
+            self.recommandation.format(self.inscription.commune),
             self.recommandation.precisions,
             self.recommandation.id
         ])

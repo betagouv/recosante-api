@@ -304,10 +304,13 @@ class Recommandation(db.Model):
             return False
         return self.type_ in types
 
-    def format(self, inscription: Inscription):
+
+    def format(self, commune):
+        if not commune or not isinstance(self.recommandation_sanitized, str):
+            return self.recommandation_sanitized
         return self.recommandation_sanitized.format(
-            aasqa_nom=inscription.commune.departement.region.aasqa_nom,
-            aasqa_website=inscription.commune.departement.region.aasqa_website
+            aasqa_nom=commune.departement.region.aasqa_nom,
+            aasqa_website=commune.departement.region.aasqa_website
         )
 
     @property

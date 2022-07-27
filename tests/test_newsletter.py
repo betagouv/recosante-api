@@ -389,7 +389,7 @@ def test_indice_sept(db_session, inscription):
     db_session.commit()
 
     newsletters = list(Newsletter.export())
-    assert len(newsletters) == 0
+    assert len(newsletters) == 1
 
 def test_ville_slug(db_session, inscription, bonne_qualite_air, raep_nul):
     # Lowercase

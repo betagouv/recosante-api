@@ -12,7 +12,7 @@ class IndiceDetailsSchema(Schema):
     indice = fields.Nested(NestedIndiceSchema)
 
 class AdviceSchema(Schema):
-    main = fields.String(attribute='recommandation_sanitized')
+    main = fields.Function(lambda recommandation, context:recommandation.format(context.get('commune')))
     details = fields.String(attribute='precisions_sanitized')
 
 class IndiceSchema(NestedIndiceSchema):

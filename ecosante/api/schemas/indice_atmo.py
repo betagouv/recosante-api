@@ -50,4 +50,5 @@ class IndiceATMO(FullIndiceSchema):
             }
         if data.get("advice"):
             resp['advice'] = data['advice']
+            self.fields['advice'].schema.context = {'commune': commune}
         return resp
