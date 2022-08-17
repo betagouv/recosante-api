@@ -184,22 +184,23 @@ def get_site_details(site_id, code_departement, season_year, id_carte):
     sample_date = None
     sample_label = None
     if isinstance(cadre_dotted, list) and len(cadre_dotted) > 0:
-        last_cadre_dotted = cadre_dotted[-1]
-        if isinstance(last_cadre_dotted, bs4.PageElement):
-            strong = last_cadre_dotted.find('strong')
-            if isinstance(strong, bs4.PageElement):
-                sample_date = strong.text.strip()
-                children = last_cadre_dotted.find_all()
-                for c in children:
-                    if isinstance(c, bs4.PageElement):
-                        c.extract()
-                sample_label = sample_label_from_value(last_cadre_dotted.text.strip())
-    if None not in (sample_date, sample_label) and is_valid_date(sample_date):
-        sample_dict = {
-            "label": sample_label,
-            "date": sample_date
-        }
-        url = url + '&plv=all'
+        for last_cadre_dotted in reversed(cadre_dotted):
+            if isinstance(last_cadre_dotted, bs4.PageElement):
+                strong = last_cadre_dotted.find('strong')
+                if isinstance(strong, bs4.PageElement):
+                    sample_date = strong.text.strip()
+                    children = last_cadre_dotted.find_all()
+                    for c in children:
+                        if isinstance(c, bs4.PageElement):
+                            c.extract()
+                    sample_label = sample_label_from_value(last_cadre_dotted.text.strip())
+                    if None not in (sample_date, sample_label) and is_valid_date(sample_date):
+                        sample_dict = {
+                            "label": sample_label,
+                            "date": sample_date
+                        }
+                        url = url + '&plv=all'
+                        break
     ranking_dict = None
     ranking_year = None
     cellule_titre = soup.find_all(class_="cellule_titre")
