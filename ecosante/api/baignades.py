@@ -265,8 +265,6 @@ def get_site_order(details):
         order = 0
     else:
         order = 10
-    sample_label = details['sample']['label']
-    order += order_from_sample_label(sample_label) # mauvais résultats ensuite
     return order
             
 def order_from_sample_label(label):
