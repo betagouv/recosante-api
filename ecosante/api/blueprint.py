@@ -139,7 +139,7 @@ def baignades():
         # Sans cache
         resp = make_baignades_response(insee)
         try:
-            baignades_cache_timeout = os.getenv('BAIGNADES_CACHE_TIMEOUT', 86400) # seconds
+            baignades_cache_timeout = int(os.getenv('BAIGNADES_CACHE_TIMEOUT', 86400)) # seconds
             cache.set(cache_key_format, resp, timeout=baignades_cache_timeout)
         except Exception as e:
             current_app.logger.error(f"Cache is unavailable: {e}")
