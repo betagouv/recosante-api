@@ -356,11 +356,11 @@ def make_main_label(now, start_dt, end_dt, commune_nb_sites, nb_mauvais_resultat
     elif nb_mauvais_resultats == 0 and nb_resultats_moyens == 0 and nb_bons_resultats == 0:
         label = "Pas de résultats"
     elif nb_mauvais_resultats > 0 and nb_resultats_moyens == 0 and nb_bons_resultats == 0:
-        label = "Mauvais résultats"
+        label = "Mauvaise"
     elif nb_resultats_moyens > 0 and nb_mauvais_resultats == 0 and nb_bons_resultats == 0:
-        label = "Résultats moyens"
+        label = "Moyenne"
     elif nb_bons_resultats > 0 and nb_mauvais_resultats == 0 and nb_resultats_moyens == 0:
-        label = "Bons résultats"
+        label = "Bonne"
     else:
-        label = "Résultats mixtes"
+        label = "Variable"
     return label
