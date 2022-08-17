@@ -138,7 +138,9 @@ def get_site_details(site_id, code_departement, season_year, id_carte):
             texte_interdiction_type = table.select_one('.texte_interdiction:-soup-contains("Type :")')
             if isinstance(texte_interdiction_type, bs4.PageElement):
                 full_type = texte_interdiction_type.text.strip()
-                if "TEMPORAIRE" in full_type:
+                if "PREVENTIVE" in full_type:
+                    interdiction_type = "préventive"
+                elif "TEMPORAIRE" in full_type:
                     interdiction_type = "temporaire"
                 elif "PERMANENTE" in full_type:
                     interdiction_type = "permanente"
