@@ -60,7 +60,7 @@ def make_baignades_response(insee):
                     "details": details,
                 },
                 "sources": [{
-                    "label": "le site Baignades du Ministère des Solidarités et de la Santé",
+                    "label": "le site Baignades du ministère de la Santé et de la Prévention",
                     "url": "https://baignades.sante.gouv.fr/"
                 }],
                 "validity": {
