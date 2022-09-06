@@ -30,7 +30,7 @@ class User(Schema):
     enfants = list_str(["oui", "non", "aucun"], temp=True)
     chauffage = list_str(["bois", "chaudiere", "appoint", "aucun"])
     animaux_domestiques = list_str(["chat", "chien", "aucun"])
-    connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "autrement"])
+    connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "pro", "autrement"])
     population = list_str(["pathologie_respiratoire", "allergie_pollens", "aucun"])
     indicateurs = list_str(["indice_atmo", "raep", "indice_uv", "vigilance_meteo"])
     indicateurs_frequence = list_str(["quotidien", "hebdomadaire", "alerte"], 1)
