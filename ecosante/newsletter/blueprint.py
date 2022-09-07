@@ -21,7 +21,7 @@ from sqlalchemy import func
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 
-from ecosante.utils.decorators import admin_capability_url, admin_capability_url_no_redirect
+from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from ecosante.extensions import db, sib
 from .forms import FormTemplateAdd, FormTemplateEdit
@@ -74,47 +74,6 @@ def export_avis():
             "Content-Disposition": f"attachment; filename=export-avis-{datetime.now()}"
         }
     )
-
-@bp.route('<secret_slug>/<int:mail_list_id>/export.csv', methods=['GET', 'POST'])
-@admin_capability_url_no_redirect
-def export(mail_list_id, secret_slug):
-    class Line(object):
-        def __init__(self):
-            self._line = None
-        def write(self, line):
-            self._line = line
-        def read(self):
-            return self._line
-    def iter_csv(query):
-        line = Line()
-        writer = csv.DictWriter(line, fieldnames=NewsletterDB.header)
-        writer.writeheader()
-        yield line.read()
-        for nl in query.yield_per(1000):
-            if nl.inscription.mail is None:
-                continue
-            writer.writerow(nl.attributes())
-            yield line.read()
-    newsletters_query = db.session.query(NewsletterDB).filter_by(
-        mail_list_id=mail_list_id
-        ).options(
-            joinedload(
-                NewsletterDB.inscription
-            ).joinedload(
-                Inscription.commune
-            ).joinedload(
-                Commune.departement
-            ).joinedload(
-                Departement.region
-            )
-        ).options(joinedload(NewsletterDB.recommandation)
-        ).options(joinedload(NewsletterDB.recommandation_qa)
-        ).options(joinedload(NewsletterDB.recommandation_raep)
-        ).populate_existing()
-    response = Response(stream_with_context(iter_csv(newsletters_query)), mimetype='text/csv')
-    response.headers['Content-Disposition'] = 'attachment; filename=export.csv'
-    return response
-
 
 @bp.route('<secret_slug>/test', methods=['GET', 'POST'])
 @bp.route('/test', methods=['GET', 'POST'])
