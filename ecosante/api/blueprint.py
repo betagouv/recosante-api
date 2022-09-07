@@ -1,10 +1,11 @@
-import json, os
+from csv import DictWriter
+import json, os, io
 from datetime import date
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.episode_pollution import EpisodePollution
 from sqlalchemy.orm import joinedload
 from ecosante.extensions import rebar, cache
-from .schemas import ResponseSchema, QuerySchema, BaignadesQuerySchema
+from .schemas import ResponseSchema, QuerySchema, BaignadesQuerySchema, RecommandationSchema
 from .baignades import make_baignades_response
 from indice_pollution import forecast, raep, episodes as get_episodes
 from indice_pollution.history.models import PotentielRadon, IndiceATMO, VigilanceMeteo, IndiceUv
@@ -12,6 +13,7 @@ from ecosante.recommandations.models import Recommandation
 from flask.wrappers import Response
 from flask import current_app, stream_with_context
 from flask_rebar import SwaggerV3Generator
+from ecosante.recommandations.models import Recommandation
 
 registry = rebar.create_handler_registry(
     prefix='/v1',
@@ -157,6 +159,36 @@ def baignades():
         }
     resp['baignades']['advice'] = advice_baignades_dict
     return resp
+
+@registry.handles(
+    rule='/recommandations.json',
+    method='GET',
+    response_body_schema=RecommandationSchema(many=True)
+)
+def recommandations():
+    return Recommandation.published_query().all()
+
+@current_app.route('/v1/recommandations.csv')
+def recommandations_csv():
+    recommandations = RecommandationSchema(
+        many=True
+    ).dump(
+        Recommandation.published_query().all()
+    )
+    output = io.StringIO()
+    csv_writer = DictWriter(
+        output,
+        list(RecommandationSchema._declared_fields.keys()),
+    )
+    csv_writer.writeheader()
+    csv_writer.writerows(recommandations)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=recommandations.csv"
+        }
+    )
 
 @registry.handles(
     rule='/_batch',
