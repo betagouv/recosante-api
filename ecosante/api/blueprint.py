@@ -11,7 +11,7 @@ from indice_pollution import forecast, raep, episodes as get_episodes
 from indice_pollution.history.models import PotentielRadon, IndiceATMO, VigilanceMeteo, IndiceUv
 from ecosante.recommandations.models import Recommandation
 from flask.wrappers import Response
-from flask import current_app, stream_with_context
+from flask import current_app, stream_with_context, redirect, url_for
 from flask_rebar import SwaggerV3Generator
 from ecosante.recommandations.models import Recommandation
 
@@ -167,6 +167,10 @@ def baignades():
 )
 def recommandations():
     return Recommandation.published_query().all()
+
+@current_app.route('/v1/recommandations')
+def reco_redirect():
+    return redirect(url_for('v1.recommandations'))
 
 @current_app.route('/v1/recommandations.csv')
 def recommandations_csv():
