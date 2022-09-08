@@ -1,16 +1,23 @@
+from crypt import methods
 from flask.globals import current_app
 from ecosante.tasks.inscriptions_patients import inscription_patients_task
 from flask import (
+    abort,
     redirect,
     render_template,
-    request
+    request,
+    session,
 )
 from ecosante.utils import Blueprint
+from ecosante.utils.authenticator import AdminAuthenticator
 from ecosante.utils.decorators import admin_capability_url, webhook_capability_url
 from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB
 from sentry_sdk import capture_event
 from indice_pollution import availability
+from jose import jwt
+from hmac import compare_digest
+
 
 bp = Blueprint("pages", __name__, url_prefix='/')
 
@@ -34,6 +41,30 @@ def admin():
             NewsletterDB.date==date.today())\
         .count()
     return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
+
+@bp.route('/login')
+def login():
+    return 'pouet'
+
+@bp.route('/authenticate')
+def authenticate():
+    admin_authenticator = AdminAuthenticator()
+    
+    if (encoded_token := request.args.get('token')) == None:
+        abort(401)
+    if (email := request.args.get('email')) == None:
+        abort(401)
+
+    try:
+        decoded_token = admin_authenticator.decode_token(encoded_token)
+    except (jwt.ExpiredSignatureError, jwt.JWTClaimsError, jwt.JWTError):
+        abort(401)
+
+    if not compare_digest(email, decoded_token.get('email')):
+        raise(401)
+    else:
+        session['admin_email'] = email
+        return redirect('pages.admin')
 
 @bp.route('<secret_slug>/sib_error', methods=['POST'])
 @webhook_capability_url
