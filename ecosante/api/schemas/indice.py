@@ -15,6 +15,10 @@ class AdviceSchema(Schema):
     main = fields.Function(lambda recommandation, context:recommandation.format(context.get('commune')))
     details = fields.String(attribute='precisions_sanitized')
 
+class RecommandationSchema(Schema):
+    recommandation = fields.Function(lambda recommandation, context:recommandation.format(context.get('commune')))
+    type = fields.String(attribute='type_')
+
 class IndiceSchema(NestedIndiceSchema):
     details = fields.List(fields.Nested(IndiceDetailsSchema))
 
