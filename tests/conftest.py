@@ -1,6 +1,4 @@
 from datetime import date, datetime, timedelta
-from unittest import TextTestResult
-from indice_pollution.history.models import zone
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
 from indice_pollution.history.models.raep import RAEP
@@ -9,8 +7,6 @@ import pytest
 import os
 import sqlalchemy as sa
 from psycopg2.extras import DateRange
-import concurrent.futures as cf
-import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
 from ecosante.newsletter.models import NewsletterHebdoTemplate
@@ -56,8 +52,6 @@ def app(request):
             db.engine.execute(query)
         db.metadata.bind = db.engine
         db.metadata.create_all()
-        with cf.ProcessPoolExecutor() as pool:
-            pool.submit(flask_migrate.upgrade)
         yield app
         db.metadata.drop_all()
         db_indice_pollution.metadata.drop_all()
