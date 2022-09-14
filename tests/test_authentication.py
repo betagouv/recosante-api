@@ -1,10 +1,11 @@
-from ecosante.utils.authenticator import APIAuthenticator, AdminAuthenticatorDecorator
+from ecosante.utils.authenticator import APIAuthenticator, AdminAuthenticator
 from time import time
 from jose import jwt
 import os
 import pytest
 from flask import session
 from werkzeug.exceptions import HTTPException
+from ecosante.extensions import admin_authenticator
 
 def test_no_token(client):
     response = client.get('/users/uid1')
@@ -46,9 +47,10 @@ def test_bon_uid(client, inscription, db_session):
     assert response.status_code == 200
 
 def test_no_admins_list_env():
-    os.unsetenv('ADMINS_LIST')
+    os.environ.pop('ADMINS_LIST')
     with pytest.raises(Exception) as exc_info:
-        @AdminAuthenticatorDecorator
+        admin_authenticator_test = AdminAuthenticator()
+        @admin_authenticator_test.route
         def f():
             pass
     assert str(exc_info.value) == "ADMINS_LIST var env is required"
@@ -56,7 +58,8 @@ def test_no_admins_list_env():
 def test_empty_admins_list_env():
     os.environ['ADMINS_LIST'] = ""
     with pytest.raises(Exception) as exc_info:
-        @AdminAuthenticatorDecorator
+        admin_authenticator._set_admin_list()
+        @admin_authenticator.route
         def f():
             pass
     assert str(exc_info.value) == "ADMINS_LIST can not be empty"
@@ -64,30 +67,32 @@ def test_empty_admins_list_env():
 
 def test_one_email_in_admins_list_env():
     os.environ['ADMINS_LIST'] = "test@test.com"
-    admin_decorator = AdminAuthenticatorDecorator(None)
-    assert admin_decorator.admin_emails == ["test@test.com"]
+    admin_authenticator._set_admin_list()
+    assert admin_authenticator.admin_emails == ["test@test.com"]
 
 
 def test_two_emails_in_admins_list_env():
     os.environ['ADMINS_LIST'] = "test@test.com test2@pouet.com"
-    admin_decorator = AdminAuthenticatorDecorator(None)
-    assert admin_decorator.admin_emails == ["test@test.com", "test2@pouet.com"]
+    admin_authenticator._set_admin_list()
+    assert admin_authenticator.admin_emails == ["test@test.com", "test2@pouet.com"]
 
 def test_no_admin_email_in_session(app):
     os.environ['ADMINS_LIST'] = 'test@test.com'
+    admin_authenticator._set_admin_list()
     with app.test_request_context('/'):
-        @AdminAuthenticatorDecorator
+        @admin_authenticator.route
         def f():
             pass
         
         response = f()
-    assert response.location == '/login'
+    assert response.location == '/admin_login'
 
 def test_unknown_email_in_session(app):
     os.environ['ADMINS_LIST'] = 'test@test.com'
+    admin_authenticator._set_admin_list()
     with app.test_request_context('/'):
         session['admin_email'] = 'unknown@email.com'
-        @AdminAuthenticatorDecorator
+        @admin_authenticator.route
         def f():
             pass
         with pytest.raises(HTTPException) as exc_info:
@@ -96,12 +101,44 @@ def test_unknown_email_in_session(app):
 
 def test_authorized_email_in_session(app):
     os.environ['ADMINS_LIST'] = 'test@test.com second@autredomaine.com'
+    admin_authenticator._set_admin_list()
     with app.test_request_context('/'):
         session['admin_email'] = 'test@test.com'
-        @AdminAuthenticatorDecorator
+        @admin_authenticator.route
         def f():
             return session.get('admin_email')
         assert f() == 'test@test.com'
 
         session['admin_email'] = 'second@autredomaine.com'
         assert f() == 'second@autredomaine.com'
+
+def test_authenticate_no_token(client):
+    os.environ['ADMINS_LIST'] = 'test@test.com second@autredomaine.com'
+    admin_authenticator._set_admin_list()
+    with pytest.raises(HTTPException) as exc_info:
+        client.get('/authenticate')
+    assert exc_info.value.code == 401
+
+def test_authenticate_bad_token(client):
+    os.environ['ADMINS_LIST'] = 'test@test.com second@autredomaine.com'
+    admin_authenticator._set_admin_list()
+    with pytest.raises(HTTPException) as exc_info:
+        client.get('/authenticate?token=bad_token')
+    assert exc_info.value.code == 401
+
+def test_authenticate_bad_email(client):
+    os.environ['ADMINS_LIST'] = 'test@test.com second@autredomaine.com'
+    admin_authenticator._set_admin_list()
+    token = admin_authenticator.make_token('bad@email.com')
+    with pytest.raises(HTTPException) as exc_info:
+        client.get(f'/authenticate?token={token}')
+    assert exc_info.value.code == 401
+
+def test_good_authentication(app):
+    os.environ['ADMINS_LIST'] = 'test@test.com second@autredomaine.com'
+    admin_authenticator._set_admin_list()
+    token = admin_authenticator.make_token('test@test.com')
+    with app.test_client() as c:
+        rv = c.get(f'/authenticate?token={token}')
+        assert 'admin_email' in session
+        assert session['admin_email'] == 'test@test.com'

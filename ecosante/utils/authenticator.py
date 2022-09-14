@@ -1,3 +1,4 @@
+import functools
 from lib2to3.pytree import Base
 from time import time
 from flask import current_app, request, session, redirect, url_for, abort
@@ -16,18 +17,21 @@ class BaseAuthenticator:
     def decode_token(self, encoded_token):
         return jwt.decode(encoded_token, self.secret, options={"require_exp": True, "leeway": 0})
     
-    def make_token(self, uid, time_= None):
+    def make_token(self, payload, time_= None):
         time_ = time_ or time() + current_app.config['TEMP_AUTHENTICATOR_EXP_TIME']
         return jwt.encode(
             {
-                'exp': time_,
-                'uid': uid
+                **{'exp': time_},
+                **payload
             },
             self.secret,
             'HS256'
         )
 
 class APIAuthenticator(Authenticator, BaseAuthenticator):
+    def make_token(self, uid, time_=None):
+        return super().make_token({"uid": uid}, time_)
+
     def authenticate(self):
         encoded_token = request.args.get('token')
         if not encoded_token:
@@ -46,24 +50,27 @@ class APIAuthenticator(Authenticator, BaseAuthenticator):
 class AdminAuthenticator(BaseAuthenticator):
     def __init__(self) -> None:
         super().__init__()
+        self._set_admin_list()
+        
+    def _set_admin_list(self):
         if (admin_str := os.getenv('ADMINS_LIST')) != None:
             self.admin_emails = [v for v in admin_str.split(' ') if v]
             if len(self.admin_emails) < 1:
                 raise Exception("ADMINS_LIST can not be empty")
         else:
             raise Exception("ADMINS_LIST var env is required")
-        
 
-class AdminAuthenticatorDecorator(AdminAuthenticator):
-    def __init__(self, f) -> None:
-        super().__init__()
-        self.f = f
+    def make_token(self, email, time_=None):
+        return super().make_token({"email": email}, time_)
     
-    def __call__(self):
-        admin_email = session.get('admin_email')
-        if admin_email is None:
-            return redirect(url_for('pages.login'))
-        elif admin_email not in self.admin_emails:
-            abort(401)
-        else:
-            return self.f()
+    def route(self, f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            admin_email = session.get('admin_email')
+            if admin_email is None:
+                return redirect(url_for('pages.admin_login'))
+            elif admin_email not in self.admin_emails:
+                abort(401)
+            else:
+                return f(*args, **kwargs)
+        return wrapper

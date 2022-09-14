@@ -1,22 +1,25 @@
-from crypt import methods
 from flask.globals import current_app
-from ecosante.tasks.inscriptions_patients import inscription_patients_task
+from ecosante.tasks import inscription_patients_task, send_admin_link
 from flask import (
     abort,
     redirect,
     render_template,
     request,
     session,
+    url_for,
 )
 from ecosante.utils import Blueprint
-from ecosante.utils.authenticator import AdminAuthenticator
-from ecosante.utils.decorators import admin_capability_url, webhook_capability_url
+from ecosante.extensions import admin_authenticator 
+from ecosante.utils.decorators import webhook_capability_url
 from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB
 from sentry_sdk import capture_event
 from indice_pollution import availability
 from jose import jwt
 from hmac import compare_digest
+from wtforms import EmailField
+
+from ecosante.utils.form import BaseForm
 
 
 bp = Blueprint("pages", __name__, url_prefix='/')
@@ -26,9 +29,8 @@ def redirection_index():
     return redirect("https://recosante.beta.gouv.fr/", code=301)
 
 
-@bp.route('/admin/<secret_slug>')
-@bp.route('/admin/')
-@admin_capability_url
+@bp.route('/admin')
+@admin_authenticator.route
 def admin():
     count_avis_hier = NewsletterDB.query\
         .filter(
@@ -42,29 +44,35 @@ def admin():
         .count()
     return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
 
-@bp.route('/login')
-def login():
-    return 'pouet'
+@bp.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    class AdminForm(BaseForm):
+        email = EmailField()
+    form = AdminForm()
+    if request.method == 'GET':
+        return render_template("admin_login.html", form=form)
+    elif request.method == 'POST':
+        if not form.validate():
+            abort(400)
+        send_admin_link.delay(form.email.data)
+        return render_template("admin_login_done.html")
 
 @bp.route('/authenticate')
-def authenticate():
-    admin_authenticator = AdminAuthenticator()
-    
+def authenticate():    
     if (encoded_token := request.args.get('token')) == None:
         abort(401)
-    if (email := request.args.get('email')) == None:
-        abort(401)
-
     try:
         decoded_token = admin_authenticator.decode_token(encoded_token)
     except (jwt.ExpiredSignatureError, jwt.JWTClaimsError, jwt.JWTError):
         abort(401)
-
-    if not compare_digest(email, decoded_token.get('email')):
-        raise(401)
+    decoded_email = decoded_token.get('email')
+    for email in admin_authenticator.admin_emails:
+        if compare_digest(email, decoded_email):
+            session['admin_email'] = email
+            return redirect(url_for('pages.admin'))
     else:
-        session['admin_email'] = email
-        return redirect('pages.admin')
+        abort(401)
+    
 
 @bp.route('<secret_slug>/sib_error', methods=['POST'])
 @webhook_capability_url
