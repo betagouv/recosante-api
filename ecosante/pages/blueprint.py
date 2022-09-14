@@ -9,7 +9,7 @@ from flask import (
     url_for,
 )
 from ecosante.utils import Blueprint
-from ecosante.extensions import admin_authenticator 
+from ecosante.extensions import admin_authenticator, celery
 from ecosante.utils.decorators import webhook_capability_url
 from datetime import date, timedelta
 from ecosante.newsletter.models import NewsletterDB
@@ -54,7 +54,12 @@ def admin_login():
     elif request.method == 'POST':
         if not form.validate():
             abort(400)
-        send_admin_link.delay(form.email.data)
+        celery.send_task(
+            'ecosante.tasks.send_admin_link.send_admin_link',
+            (form.email.data, ),
+            queue='send_email',
+            routing_key='send_email.admin_link'
+        )
         return render_template("admin_login_done.html")
 
 @bp.route('/authenticate')
