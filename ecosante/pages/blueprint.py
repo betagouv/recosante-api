@@ -29,7 +29,7 @@ def redirection_index():
     return redirect("https://recosante.beta.gouv.fr/", code=301)
 
 
-@bp.route('/admin')
+@bp.route('/admin', strict_slashes=False)
 @admin_authenticator.route
 def admin():
     count_avis_hier = NewsletterDB.query\
@@ -44,7 +44,7 @@ def admin():
         .count()
     return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
 
-@bp.route('/admin_login', methods=['GET', 'POST'])
+@bp.route('/admin_login/', methods=['GET', 'POST'], strict_slashes=False)
 def admin_login():
     class AdminForm(BaseForm):
         email = EmailField()

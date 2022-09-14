@@ -85,7 +85,7 @@ def test_no_admin_email_in_session(app):
             pass
         
         response = f()
-    assert response.location == '/admin_login'
+    assert response.location == '/admin_login/'
 
 def test_unknown_email_in_session(app):
     os.environ['ADMINS_LIST'] = 'test@test.com'
