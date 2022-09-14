@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from unittest import TextTestResult
 from indice_pollution.history.models import zone
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
@@ -16,6 +17,7 @@ from ecosante.newsletter.models import NewsletterHebdoTemplate
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
+from sqlalchemy import text
 
 # Retrieve a database connection string from the shell environment
 try:
@@ -49,6 +51,9 @@ def app(request):
     with app.app_context():
         db = app.extensions['sqlalchemy'].db
         db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
+        with open("migrations/data/generate-random-short-id.sql") as f:
+            query = text(f.read())
+            db.engine.execute(query)
         db.metadata.bind = db.engine
         db.metadata.create_all()
         with cf.ProcessPoolExecutor() as pool:
