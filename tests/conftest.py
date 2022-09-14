@@ -55,6 +55,10 @@ def app(request):
         yield app
         db.metadata.drop_all()
         db_indice_pollution.metadata.drop_all()
+        db_indice_pollution.engine.execute('DROP SCHEMA IF EXISTS indice_schema')
+        db.engine.execute("DROP FUNCTION IF EXISTS get_random_string")
+        db.engine.execute("DROP FUNCTION IF EXISTS generate_random_id")
+
 
 @pytest.fixture(scope='function')
 def _db(app):
