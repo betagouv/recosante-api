@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta
-from indice_pollution.history.models import zone
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
 from indice_pollution.history.models.raep import RAEP
@@ -8,14 +7,13 @@ import pytest
 import os
 import sqlalchemy as sa
 from psycopg2.extras import DateRange
-import concurrent.futures as cf
-import flask_migrate
 from ecosante import create_app
 from indice_pollution import create_app as create_app_indice_pollution
 from ecosante.newsletter.models import NewsletterHebdoTemplate
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
 from .utils import published_recommandation
+from sqlalchemy import text
 
 # Retrieve a database connection string from the shell environment
 try:
@@ -49,13 +47,18 @@ def app(request):
     with app.app_context():
         db = app.extensions['sqlalchemy'].db
         db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
+        with open("migrations/data/generate-random-short-id.sql") as f:
+            query = text(f.read())
+            db.engine.execute(query)
         db.metadata.bind = db.engine
         db.metadata.create_all()
-        with cf.ProcessPoolExecutor() as pool:
-            pool.submit(flask_migrate.upgrade)
         yield app
         db.metadata.drop_all()
         db_indice_pollution.metadata.drop_all()
+        db_indice_pollution.engine.execute('DROP SCHEMA IF EXISTS indice_schema')
+        db.engine.execute("DROP FUNCTION IF EXISTS get_random_string")
+        db.engine.execute("DROP FUNCTION IF EXISTS generate_random_id")
+
 
 @pytest.fixture(scope='function')
 def _db(app):
