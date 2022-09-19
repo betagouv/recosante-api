@@ -87,4 +87,46 @@ def test_indice_uv_show(client, commune_commited, db_session):
 
     response = client.get(f"/v1/?insee={commune_commited.code}&show_indice_uv=true")
     assert response.status_code == 200
-    helper_test(response, 'indice_uv', 'Nul (UV\xa00)', "la commune de Laval", "de ", "53130")
+    helper_test(response, 'indice_uv', 'Nul (UV\u00a00)', "la commune de Laval", "de ", "53130")
+
+def test_indice_uv_j1(client, commune_commited, db_session):
+    indice_uv = IndiceUv(
+        zone_id=commune_commited.zone_id,
+        date=date.today(),
+        uv_j1=11,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    tomorrow = date.today() + timedelta(days=1)
+    tomorrow_string = tomorrow.strftime('%Y-%m-%d')
+    response = client.get(f"/v1/?insee={commune_commited.code}&date={tomorrow_string}&time=12:00&show_indice_uv=true")
+    assert response.status_code == 200
+    helper_test(response, 'indice_uv', 'Extrême (UV\u00a011)', "la commune de Laval", "de ", "53130")
+
+def test_indice_uv_j2(client, commune_commited, db_session):
+    indice_uv = IndiceUv(
+        zone_id=commune_commited.zone_id,
+        date=date.today(),
+        uv_j2=11,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    in2days = date.today() + timedelta(days=2)
+    in2days_string = in2days.strftime('%Y-%m-%d')
+    response = client.get(f"/v1/?insee={commune_commited.code}&date={in2days_string}&time=12:00&show_indice_uv=true")
+    assert response.status_code == 200
+    helper_test(response, 'indice_uv', 'Extrême (UV\u00a011)', "la commune de Laval", "de ", "53130")
+
+def test_indice_uv_j3(client, commune_commited, db_session):
+    indice_uv = IndiceUv(
+        zone_id=commune_commited.zone_id,
+        date=date.today(),
+        uv_j3=11,
+    )
+    db_session.add(indice_uv)
+    db_session.commit()
+    in3days = date.today() + timedelta(days=3)
+    in3days_string = in3days.strftime('%Y-%m-%d')
+    response = client.get(f"/v1/?insee={commune_commited.code}&date={in3days_string}&time=12:00&show_indice_uv=true")
+    assert response.status_code == 200
+    helper_test(response, 'indice_uv', 'Extrême (UV\u00a011)', "la commune de Laval", "de ", "53130")
