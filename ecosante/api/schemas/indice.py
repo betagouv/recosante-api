@@ -19,6 +19,22 @@ class RecommandationSchema(Schema):
     recommandation = fields.Function(lambda recommandation, context:recommandation.format(context.get('commune')))
     type = fields.String(attribute='type_')
 
+class RecommandationExportSchema(RecommandationSchema):
+    qa_bonne = fields.Boolean()
+    qa_mauvaise = fields.Boolean()
+    qa_evenement = fields.Boolean()
+    categorie = fields.String()
+    ozone = fields.Boolean()
+    dioxyde_azote = fields.Boolean()
+    dioxyde_soufre = fields.Boolean()
+    particules_fines = fields.Boolean()
+    min_raep = fields.Integer()
+    vigilance_couleur_ids = fields.List(fields.Integer())
+    vigilance_phenomene_ids = fields.List(fields.Integer())
+    min_indice_uv = fields.Integer()
+
+
+
 class IndiceSchema(NestedIndiceSchema):
     details = fields.List(fields.Nested(IndiceDetailsSchema))
 
