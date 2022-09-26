@@ -22,7 +22,7 @@ DEPENDENCIES = [
     'flask-rebar',
     'html2text', # to convert from HTML to markdown, used by one alembic revision
     'wtforms[email]',
-    'indice_pollution>=0.54',
+    'indice_pollution>=0.55',
     'markdown',
     'markdown-link-attr-modifier',
     'openpyxl',

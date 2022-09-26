@@ -243,3 +243,13 @@ def test_update_user_with_existing_email(commune_commited, client):
     authenticator = APIAuthenticator()
     response = client.post(f'/users/{uid}?token={authenticator.make_token(uid)}', json=data)
     assert response.status_code == 409
+
+def test_deactivate(db_session, inscription, client):
+    db_session.add(inscription)
+    db_session.commit()
+
+    uid = inscription.uid
+    authenticator = TempAuthenticator()
+    response = client.post(f'/users/{uid}/_deactivate?token={authenticator.make_token(uid)}', headers={"Content-type": "application/json"})
+
+    assert response.status_code == 200

@@ -1,13 +1,10 @@
-from dataclasses import field
-from marshmallow import Schema, ValidationError, post_load, schema
+from marshmallow import Schema, ValidationError, post_load
 from marshmallow.validate import OneOf, Length
 from marshmallow.fields import Bool, Str, List, Nested, Email
 from flask_rebar import ResponseSchema, RequestSchema, errors
 from ecosante.inscription.models import Inscription
 from ecosante.utils.custom_fields import TempList
 from ecosante.api.schemas.commune import CommuneSchema
-from ecosante.extensions import celery
-from indice_pollution.history.models import Commune as CommuneModel
 from flask import request
 
 
@@ -30,7 +27,7 @@ class User(Schema):
     enfants = list_str(["oui", "non", "aucun"], temp=True)
     chauffage = list_str(["bois", "chaudiere", "appoint", "aucun"])
     animaux_domestiques = list_str(["chat", "chien", "aucun"])
-    connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "autrement"])
+    connaissance_produit = list_str(["medecin", "association", "reseaux_sociaux", "publicite", "ami", "pro", "autrement"])
     population = list_str(["pathologie_respiratoire", "allergie_pollens", "aucun"])
     indicateurs = list_str(["indice_atmo", "raep", "indice_uv", "vigilance_meteo"])
     indicateurs_frequence = list_str(["quotidien", "hebdomadaire", "alerte"], 1)
@@ -44,7 +41,8 @@ class User(Schema):
 class Response(User, ResponseSchema):
     is_active = Bool(attribute='is_active')
     authentication_token = Str(dump_only=True, required=False)
-    
+    mail = Email(required=True, allow_none=True) # allow_none=True Dans le cas d’une désinscription
+
 
 class RequestPOST(User, RequestSchema):
     @post_load
