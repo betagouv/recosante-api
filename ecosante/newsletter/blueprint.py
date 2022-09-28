@@ -40,7 +40,6 @@ def avis(short_id):
     if not nl:
         abort(404)
     nl.appliquee = request.args.get('avis') == 'oui' or request.args.get('appliquee') == 'oui'
-    nl.avis = request.json.get('avis')
     db.session.add(nl)
     db.session.commit()
     return {
