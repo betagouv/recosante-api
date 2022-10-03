@@ -166,7 +166,7 @@ def baignades():
     response_body_schema=RecommandationExportSchema(many=True)
 )
 def recommandations():
-    return Recommandation.published_query().all()
+    return Recommandation.not_draft_query().all()
 
 @current_app.route('/v1/recommandations')
 def reco_redirect():
@@ -177,7 +177,7 @@ def recommandations_csv():
     recommandations = RecommandationExportSchema(
         many=True
     ).dump(
-        Recommandation.published_query().all()
+        Recommandation.not_draft_query().all()
     )
     output = io.StringIO()
     csv_writer = DictWriter(
