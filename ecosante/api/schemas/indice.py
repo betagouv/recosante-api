@@ -1,4 +1,7 @@
-from marshmallow import fields, Schema
+from attr import attrib
+from marshmallow import fields, Schema, pre_dump
+
+from ecosante.recommandations.models import Recommandation
 from .validity import ValiditySchema
 from .source import SourceSchema
 
@@ -12,11 +15,15 @@ class IndiceDetailsSchema(Schema):
     indice = fields.Nested(NestedIndiceSchema)
 
 class AdviceSchema(Schema):
-    main = fields.Function(lambda recommandation, context:recommandation.format(context.get('commune')))
+    main = fields.Function(
+        lambda recommandation, context: recommandation.format(context.get('commune'))
+    )
     details = fields.String(attribute='precisions_sanitized')
 
 class RecommandationSchema(Schema):
-    recommandation = fields.Function(lambda recommandation, context:recommandation.format(context.get('commune')))
+    recommandation = fields.Function(
+        lambda recommandation, context: recommandation.format(context.get('commune'))
+    )
     type = fields.String(attribute='type_')
 
 class RecommandationExportSchema(RecommandationSchema):
@@ -33,7 +40,20 @@ class RecommandationExportSchema(RecommandationSchema):
     vigilance_phenomene_ids = fields.List(fields.Integer())
     min_indice_uv = fields.Integer()
 
-
+    @pre_dump
+    def filter_attributes(self, data, many, **kwargs):
+        attributes_per_type = {
+            "episode_pollution": ["ozone", "dioxyde_azote", "dioxyde_soufre", "particules_fines",],
+            "indice_atmo": ["qa_bonne", "qa_mauvaise", "qa_evenement", "categorie",],
+            "pollens": ["min_raep", "qa_bonne", "qa_mauvaise", "qa_evenement", "categorie"],
+            "vigilance_meteo": ["vigilance_couleur_ids", "vigilance_phenomene_ids"],
+            "indice_uv": ["min_indice_uv"],
+            "radon": [],
+            "baignades": []
+        }
+        return Recommandation(
+            **{attribute: getattr(data, attribute) for attribute in attributes_per_type[data.type_] + ["type_", "recommandation"]}
+        )
 
 class IndiceSchema(NestedIndiceSchema):
     details = fields.List(fields.Nested(IndiceDetailsSchema))
