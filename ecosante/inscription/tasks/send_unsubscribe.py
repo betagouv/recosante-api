@@ -7,12 +7,16 @@ from flask import current_app
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 
+
 @celery.task()
 def call_sib_unsubscribe(mail):
+    contact_api = sib_api_v3_sdk.ContactsApi(sib)
     try:
-        sib.delete_contact(mail)
+        contact_api.update_contact(
+            mail, sib_api_v3_sdk.UpdateContact(email_blacklisted=True)
+        )
     except ApiException as e:
-        print("Exception when calling ContactsApi->delete_contact: %s\n" % e)
+        print("Exception when calling ContactsApi->update_contact: %s\n" % e)
 
 
 @celery.task()
