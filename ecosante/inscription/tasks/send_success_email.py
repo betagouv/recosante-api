@@ -22,7 +22,7 @@ def send_success_email(inscription_id, new_version=False):
         success_template_id = int(os.getenv('SIB_SUCCESS_TEMPLATE_ID', 108))
     else:
         if inscription.recommandations_actives == ['oui']:
-	        success_template_id = int(os.getenv('SIB_SUCCESS_RECOMMANDATIONS_TEMPLATE_ID', 1453))
+            success_template_id = int(os.getenv('SIB_SUCCESS_RECOMMANDATIONS_TEMPLATE_ID', 1453))
         else:
             success_template_id = int(os.getenv('SIB_SUCCESS_INDICATEURS_TEMPLATE_ID', 1452))
     if not success_template_id:
