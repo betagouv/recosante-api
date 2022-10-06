@@ -12,9 +12,11 @@ from sib_api_v3_sdk.rest import ApiException
 def call_sib_unsubscribe(mail):
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     try:
-        contact_api.update_contact(
-            mail, sib_api_v3_sdk.UpdateContact(email_blacklisted=True)
-        )
+        r = contact_api.get_contact_info(mail)
+        if not r.email_blacklisted:
+            contact_api.update_contact(
+                mail, sib_api_v3_sdk.UpdateContact(email_blacklisted=True)
+            )
     except ApiException as e:
         print("Exception when calling ContactsApi->update_contact: %s\n" % e)
 
