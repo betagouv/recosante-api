@@ -43,9 +43,9 @@ class RecommandationExportSchema(RecommandationSchema):
     @pre_dump
     def filter_attributes(self, data, many, **kwargs):
         attributes_per_type = {
-            "episode_pollution": ["ozone", "dioxyde_azote", "dioxyde_soufre", "particules_fines",],
-            "indice_atmo": ["qa_bonne", "qa_mauvaise", "qa_evenement", "categorie",],
-            "pollens": ["min_raep", "qa_bonne", "qa_mauvaise", "qa_evenement", "categorie"],
+            "episode_pollution": ["ozone", "dioxyde_azote", "dioxyde_soufre", "particules_fines"],
+            "indice_atmo": ["qa_bonne", "qa_mauvaise", "qa_evenement", "categorie"],
+            "pollens": ["min_raep"],
             "vigilance_meteo": ["vigilance_couleur_ids", "vigilance_phenomene_ids"],
             "indice_uv": ["min_indice_uv"],
             "radon": [],
