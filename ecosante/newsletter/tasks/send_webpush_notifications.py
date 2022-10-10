@@ -3,6 +3,7 @@ from time import sleep
 from flask import current_app
 from py_vapid import Vapid
 from ecosante.newsletter.models import Newsletter, NewsletterDB
+from ecosante.inscription.tasks.deactivate_notification_contact import deactivate_nofication_contact
 from ecosante.extensions import db, celery
 from pywebpush import WebPushException, webpush
 from copy import deepcopy
@@ -32,6 +33,12 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
             except ValueError:
                 current_app.logger.error(f"Unable to retry after: {retry_after}")
                 return None
+        elif ex.response and ex.response.status_code == 410:
+            deactivate_nofication_contact.apply_async(
+                (nldb.inscription_id,),
+                queue='send_email',
+                routing_key='send_email.unsubscribe_notification'
+            )
         else:
             current_app.logger.error(f"Error sending notification to {nldb.inscription.mail}")
             current_app.logger.error(ex)
