@@ -11,13 +11,13 @@ from flask import (
     flash,
     stream_with_context
 )
+from ecosante.extensions import admin_authenticator
 from flask.wrappers import Response
 from datetime import datetime
 from itertools import chain
 from .models import Recommandation, db
 from ecosante.newsletter.models import NewsletterDB
 from .forms import FormAdd, FormEdit, FormSearch
-from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
 from ecosante.utils.funcs import generate_line
 from sqlalchemy import or_, func
@@ -37,9 +37,8 @@ def list_recommandations():
 def rendu_markdown():
     return Recommandation.sanitizer(request.form.get('to_render'))
 
-@bp.route('<secret_slug>/add', methods=['GET', 'POST'])
 @bp.route('add', methods=['GET', 'POST'])
-@admin_capability_url
+@admin_authenticator.route
 def add():
     form = FormAdd()
     if request.method == "POST":
@@ -55,9 +54,8 @@ def add():
         action="Ajouter"
     )
 
-@bp.route('<secret_slug>/edit/<id>', methods=['GET', 'POST'])
 @bp.route('edit/<id>', methods=['GET', 'POST'])
-@admin_capability_url
+@admin_authenticator.route
 def edit(id):
     recommandation = db.session.query(Recommandation).get(id)
     if not recommandation:
@@ -75,9 +73,8 @@ def edit(id):
         recommandation=recommandation
     )
 
-@bp.route('<secret_slug>/remove/<id>', methods=["GET", "POST"])
 @bp.route('remove/<id>', methods=["GET", "POST"])
-@admin_capability_url
+@admin_authenticator.route
 def remove(id):
     recommandation = Recommandation.query.get(id)
     if request.method == "POST":
@@ -121,9 +118,8 @@ def make_query(form):
     else:
         return query.order_by(Recommandation.id)
 
-@bp.route('<secret_slug>/', methods=["GET", "POST"])
 @bp.route('/', methods=["GET", "POST"])
-@admin_capability_url
+@admin_authenticator.route
 def list_():
     form = FormSearch(request.args)
     query = make_query(form)
@@ -134,9 +130,8 @@ def list_():
         form=form,
     )
 
-@bp.route('<secret_slug>/csv', methods=["GET", "POST"])
 @bp.route('/csv', methods=["GET", "POST"])
-@admin_capability_url
+@admin_authenticator.route
 def csv():
     form = FormSearch(request.args)
     query = make_query(form)
@@ -157,9 +152,8 @@ def csv():
         }
     )
 
-@bp.route('/<secret_slug>/<id>/details')
 @bp.route('/<id>/details')
-@admin_capability_url
+@admin_authenticator.route
 def details(id):
     recommandation = Recommandation.query.get(id)
     if not recommandation:

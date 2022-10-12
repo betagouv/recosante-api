@@ -2,6 +2,8 @@ from celery.schedules import crontab
 from ecosante.extensions import celery
 from flask import current_app
 from .import_from_production import import_from_production
+from .send_admin_link import send_admin_link
+from .inscriptions_patients import inscription_patients_task
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):

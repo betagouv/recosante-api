@@ -21,9 +21,8 @@ from sqlalchemy import func
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 
-from ecosante.utils.decorators import admin_capability_url
 from ecosante.utils import Blueprint
-from ecosante.extensions import db, sib
+from ecosante.extensions import db, sib, admin_authenticator
 from .forms import FormTemplateAdd, FormTemplateEdit
 from .models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
 from .tasks.import_in_sb import create_campaign, import_, send
@@ -49,9 +48,8 @@ def avis(short_id):
         "appliquee": nl.appliquee
     }
 
-@bp.route('<secret_slug>/avis/liste')
 @bp.route('/avis/liste')
-@admin_capability_url
+@admin_authenticator.route
 def liste_avis():
     newsletters = NewsletterDB.query\
         .filter(NewsletterDB.avis.isnot(None))\
@@ -60,9 +58,8 @@ def liste_avis():
     return render_template('liste_avis.html', newsletters=newsletters)
 
 
-@bp.route('<secret_slug>/avis/csv')
 @bp.route('/avis/csv')
-@admin_capability_url
+@admin_authenticator.route
 def export_avis():
     return Response(
         stream_with_context(
@@ -74,9 +71,8 @@ def export_avis():
         }
     )
 
-@bp.route('<secret_slug>/test', methods=['GET', 'POST'])
 @bp.route('/test', methods=['GET', 'POST'])
-@admin_capability_url
+@admin_authenticator.route
 def test():
     if request.method == "GET":
         return render_template("test.html")
@@ -131,9 +127,8 @@ def test():
 
     return render_template("test_ok.html", nb_mails=nb_mails, nb_notifications=nb_notifications, nb_notifications_sent=nb_notifications_sent)
 
-@bp.route('<secret_slug>/newsletter_hebdo_templates', methods=['GET', 'POST'])
 @bp.route('/newsletter_hebdo_templates', methods=['GET', 'POST'])
-@admin_capability_url
+@admin_authenticator.route
 def newsletter_hebdo():
     templates_db = NewsletterHebdoTemplate.query.order_by(NewsletterHebdoTemplate.ordre).all()
     templates = []
@@ -150,11 +145,9 @@ def newsletter_hebdo():
     return render_template("newsletter_hebdo_templates.html", templates=templates)
 
 
-@bp.route('<secret_slug>/newsletter_hebdo/_add', methods=['GET', 'POST'])
 @bp.route('/newsletter_hebdo/_add', methods=['GET', 'POST'])
-@bp.route('<secret_slug>/newsletter_hebdo/<int:id_>/_edit', methods=['GET', 'POST'])
 @bp.route('/newsletter_hebdo/<int:id_>/_edit', methods=['GET', 'POST'])
-@admin_capability_url
+@admin_authenticator.route
 def newsletter_hebdo_form(id_=None):
     form_cls = FormTemplateEdit if id_ else FormTemplateAdd
     form = form_cls(obj=NewsletterHebdoTemplate.query.get(id_))

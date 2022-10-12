@@ -1,6 +1,5 @@
 from flask.globals import request
-from ecosante.extensions import rebar, db
-from ecosante.utils.decorators import admin_capability_url
+from ecosante.extensions import rebar, db, admin_authenticator
 from .schemas import RequestPOST, Response, RequestPOSTID, RequestUpdateProfile
 from ecosante.inscription.models import Inscription
 from ecosante.extensions import celery, authenticator
@@ -12,7 +11,7 @@ registry = rebar.create_handler_registry('/users/')
     hidden=True,
     response_body_schema={200:Response(many=True)}
 )
-@admin_capability_url
+@admin_authenticator.route
 def search_users():
     mail = request.args.get('mail')
     return Inscription.active_query()\
