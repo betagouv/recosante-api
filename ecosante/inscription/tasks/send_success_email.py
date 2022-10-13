@@ -32,16 +32,22 @@ def send_success_email(inscription_id, new_version=False):
         return
 
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
+
     try:
-        contact_api.create_contact(
-            sib_api_v3_sdk.CreateContact(email=inscription.mail,)
-        )
+        response = contact_api.get_contact_info(inscription.mail)
+        if response.email_blacklisted:
+            contact_api.update_contact(inscription.mail, {'emailBlacklisted': False})
     except ApiException as e:
-        if json.loads(e.body)['code'] != 'duplicate_parameter':
-            current_app.logger.error(
-                f"Unable to create_contact: {e}"
+        try:
+            contact_api.create_contact(
+                sib_api_v3_sdk.CreateContact(email=inscription.mail,)
             )
-            raise e
+        except ApiException as e:
+            if json.loads(e.body)['code'] != 'duplicate_parameter':
+                current_app.logger.error(
+                    f"Unable to create_contact: {e}"
+                )
+                raise e
 
     newsletter = NewsletterDB(Newsletter(inscription=inscription))
     sleep(0.5)
