@@ -274,7 +274,7 @@ class Inscription(db.Model):
             .filter(Inscription.mail != "", Inscription.mail.isnot(None))
 
     def unsubscribe(self):
-        from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error
+        from ecosante.inscription.tasks.send_unsubscribe import send_unsubscribe, send_unsubscribe_error, call_sib_unsubscribe
         if not self.mail:
             return
         send_unsubscribe.apply_async(
@@ -282,6 +282,11 @@ class Inscription(db.Model):
             link_error=send_unsubscribe_error.s(),
             queue='send_email',
             routing_key='send_email.unsubscribe'
+        )
+        call_sib_unsubscribe.apply_async(
+            (self.mail,),
+            queue='send_email',
+            routing_key='send_email.unsubscribe_sib'
         )
         self.deactivation_date = date.today()
         self.mail = None

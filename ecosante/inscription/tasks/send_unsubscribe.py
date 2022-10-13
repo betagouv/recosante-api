@@ -4,6 +4,22 @@ import os
 from ecosante.extensions import celery, sib
 from ecosante.utils.send_log_mail import send_log_mail
 from flask import current_app
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
+
+
+@celery.task()
+def call_sib_unsubscribe(mail):
+    contact_api = sib_api_v3_sdk.ContactsApi(sib)
+    try:
+        r = contact_api.get_contact_info(mail)
+        if not r.email_blacklisted:
+            contact_api.update_contact(
+                mail, sib_api_v3_sdk.UpdateContact(email_blacklisted=True)
+            )
+    except ApiException as e:
+        print("Exception when calling ContactsApi->update_contact: %s\n" % e)
+
 
 @celery.task()
 def send_unsubscribe(mail, send_mail=True):
