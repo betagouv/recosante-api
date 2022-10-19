@@ -336,6 +336,10 @@ class Recommandation(db.Model):
     def published_query(cls):
         return cls.query.filter_by(status="published").order_by(func.random())
 
+    @classmethod
+    def not_draft_query(cls):
+        return cls.query.filter(cls.status.in_(["published", "hidden"]))
+
     def to_dict(self):
         return asdict(self)
 

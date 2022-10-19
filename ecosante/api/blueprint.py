@@ -5,7 +5,7 @@ from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.episode_pollution import EpisodePollution
 from sqlalchemy.orm import joinedload
 from ecosante.extensions import rebar, cache
-from .schemas import ResponseSchema, QuerySchema, BaignadesQuerySchema, RecommandationSchema
+from .schemas import ResponseSchema, QuerySchema, BaignadesQuerySchema, RecommandationSchema, RecommandationExportSchema
 from .baignades import make_baignades_response
 from indice_pollution import forecast, raep, episodes as get_episodes
 from indice_pollution.history.models import PotentielRadon, IndiceATMO, VigilanceMeteo, IndiceUv
@@ -163,10 +163,10 @@ def baignades():
 @registry.handles(
     rule='/recommandations.json',
     method='GET',
-    response_body_schema=RecommandationSchema(many=True)
+    response_body_schema=RecommandationExportSchema(many=True)
 )
 def recommandations():
-    return Recommandation.published_query().all()
+    return Recommandation.not_draft_query().all()
 
 @current_app.route('/v1/recommandations')
 def reco_redirect():
@@ -174,15 +174,15 @@ def reco_redirect():
 
 @current_app.route('/v1/recommandations.csv')
 def recommandations_csv():
-    recommandations = RecommandationSchema(
+    recommandations = RecommandationExportSchema(
         many=True
     ).dump(
-        Recommandation.published_query().all()
+        Recommandation.not_draft_query().all()
     )
     output = io.StringIO()
     csv_writer = DictWriter(
         output,
-        list(RecommandationSchema._declared_fields.keys()),
+        list(RecommandationExportSchema._declared_fields.keys()),
     )
     csv_writer.writeheader()
     csv_writer.writerows(recommandations)

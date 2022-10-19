@@ -7,6 +7,7 @@ from .episode_pollution import EpisodePollutionSchema
 from .vigilance_meteo import VigilanceMeteoSchema
 from .indice_uv import FullIndiceUv
 from .indice import RecommandationSchema
+from .indice import RecommandationExportSchema
 
 class ResponseSchema(Schema):
     commune = fields.Nested(CommuneSchema)
