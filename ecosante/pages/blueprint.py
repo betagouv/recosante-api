@@ -2,6 +2,7 @@ from flask.globals import current_app
 from ecosante.tasks import inscription_patients_task, send_admin_link
 from flask import (
     abort,
+    flash,
     redirect,
     render_template,
     request,
@@ -44,10 +45,11 @@ def admin():
         .count()
     return render_template("admin.html", count_avis_hier=count_avis_hier, count_avis_aujourdhui=count_avis_aujourdhui)
 
+class AdminForm(BaseForm):
+    email = EmailField()
+
 @bp.route('/admin_login/', methods=['GET', 'POST'], strict_slashes=False)
 def admin_login():
-    class AdminForm(BaseForm):
-        email = EmailField()
     form = AdminForm()
     if request.method == 'GET':
         return render_template("admin_login.html", form=form)
@@ -65,18 +67,21 @@ def admin_login():
 @bp.route('/authenticate')
 def authenticate():    
     if (encoded_token := request.args.get('token')) == None:
-        abort(401)
+        flash("Impossible de vous authentifier, veuillez entrer votre mail", "error")
+        return render_template("admin_login.html", form=AdminForm()), 401
     try:
         decoded_token = admin_authenticator.decode_token(encoded_token)
     except (jwt.ExpiredSignatureError, jwt.JWTClaimsError, jwt.JWTError):
-        abort(401)
+        flash("Impossible de vous authentifier, veuillez entrer votre mail", "error")
+        return render_template("admin_login.html", form=AdminForm()), 401
     decoded_email = decoded_token.get('email')
     for email in admin_authenticator.admin_emails:
         if compare_digest(email, decoded_email):
             session['admin_email'] = email
             return redirect(url_for('pages.admin'))
     else:
-        abort(401)
+        flash("Impossible de vous authentifier, veuillez entrer votre mail", "error")
+        return render_template("admin_login.html", form=AdminForm()), 401
     
 
 @bp.route('<secret_slug>/sib_error', methods=['POST'])
