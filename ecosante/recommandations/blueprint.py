@@ -103,7 +103,12 @@ def make_query(form):
     if form.status.data:
         query = query.filter(Recommandation.status==form.status.data)
     else:
-        query = query.filter(Recommandation.status!='deleted')
+        query = query.filter(
+            or_(
+                Recommandation.status==None,
+                Recommandation.status!='deleted'
+            )
+        )
     for categorie in form.categories.data:
         attr = getattr(Recommandation, categorie)
         if attr.type.python_type == list:
