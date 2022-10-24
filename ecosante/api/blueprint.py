@@ -60,7 +60,7 @@ def index():
     advice_atmo = get_advice(advices, "indice_atmo", qualif=indice_atmo.indice) if indice_atmo and not hasattr(indice_atmo, "error") else None
     advice_raep = get_advice(advices, "pollens", raep=int(indice_raep["data"]["total"])) if indice_raep and indice_raep.get('data') else None
     advice_radon = get_advice(advices, "radon", potentiel_radon=potentiel_radon.classe_potentiel if potentiel_radon else None)
-    advice_episode = get_advice(advices, "episode_pollution", polluants=[e.lib_pol_normalized for e in EpisodePollution.filter_etat_haut(episodes)])
+    advice_episode = get_advice(advices, "episode_pollution", episodes_pollution=[(e.lib_pol_normalized, e.etat) for e in EpisodePollution.filter_etat_haut(episodes)])
     advice_indice_uv = get_advice(advices, "indice_uv", indice_uv=indice_uv.uv_j0) if indice_uv and indice_uv.uv_j0 is not None else None
 
     resp =  {

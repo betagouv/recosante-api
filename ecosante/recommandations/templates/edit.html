@@ -48,6 +48,7 @@
         <div class="panel" id="episode_pollution">
             <h4 class="subtitle">Polluants</h4>
             {{ render_field(form.polluants) }}
+            {{ render_field(form.etat_episode_pollution) }}
             <div class="form__group">
                 <button class="button" type="submit" id="submit">{{ action }}</button>
                 <button class="button-outline primary raz">RàZ du panel</button>

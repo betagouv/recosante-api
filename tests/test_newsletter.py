@@ -62,7 +62,7 @@ def test_formatted_polluants_indice_atmo_pm10_no2(db_session, inscription, episo
     assert nl.polluants_symbols == ['pm10', 'no2']
     assert nl.lien_recommandations_alerte == 'http://localhost:5000/recommandation-episodes-pollution?population=generale&polluants=pm10&polluants=no2'
     assert nl.recommandation.particules_fines == True
-    assert nl.recommandation_qa.particules_fines == True
+    assert nl.recommandation_episode.particules_fines == True
 
 def test_formatted_polluants_indice_atmo_tous(db_session, inscription, episode_soufre, episode_pm10, episode_ozone, episode_azote):
     recommandations = [published_recommandation(particules_fines=True, type_='episode_pollution')]

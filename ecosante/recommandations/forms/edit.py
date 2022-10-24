@@ -48,6 +48,10 @@ class FormAdd(BaseForm):
             ('particules_fines', 'aux particules fines')
         ]
     )
+    etat_episode_pollution = SelectField(
+        'État épisode de pollution',
+        choices=[(None, ""), ("information", "Information"), ("alerte", "Alerte")],
+    )
     min_raep = SelectField(
         'Montrer pour un raep',
         choices=[(0, "de 0"), (1, "de 1 à 3"), (4, "4 à 6")],

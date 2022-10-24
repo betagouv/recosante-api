@@ -3,6 +3,7 @@ from ecosante.recommandations.models import Recommandation
 from ecosante.inscription.models import Inscription
 from ecosante.newsletter.models import NewsletterDB, Newsletter
 from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
+from indice_pollution.history.models.episode_pollution import EpisodePollution
 from datetime import date, timedelta
 from itertools import product
 
@@ -108,34 +109,59 @@ def test_is_qualite_bonne_mauvaise():
 def test_is_relevant_ozone():
     r = published_recommandation(ozone=True, type_="episode_pollution")
     i = Inscription()
-    assert r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
-    assert r.is_relevant(inscription=i, qualif="moyen", polluants=["ozone", "particules_fines"], raep=0, date_=date.today())
-    assert not r.is_relevant(inscription=i, qualif="degrade", polluants=[], raep=0, date_=date.today())
-    assert not r.is_relevant(inscription=i, qualif="degrade", polluants=["particules_fines"], raep=0, date_=date.today())
+    assert r.is_relevant(inscription=i, qualif="bon", episodes_pollution=[("ozone", None)], raep=0, date_=date.today())
+    assert r.is_relevant(inscription=i, qualif="moyen", episodes_pollution=[("ozone", None), ("particules_fines", None)], raep=0, date_=date.today())
+    assert not r.is_relevant(inscription=i, qualif="degrade", episodes_pollution=[], raep=0, date_=date.today())
+    assert not r.is_relevant(inscription=i, qualif="degrade", episodes_pollution=[("particules_fines", None)], raep=0, date_=date.today())
 
 def test_is_relevant_particules_fines():
     r = published_recommandation(particules_fines=True, type_="episode_pollution")
     i = Inscription()
-    assert r.is_relevant(i, "degrade", ["particules_fines"], 0, date.today())
-    assert r.is_relevant(i, "moyen", ["ozone", "particules_fines"], 0, date.today())
+    assert r.is_relevant(i, "degrade", [("particules_fines", None)], 0, date.today())
+    assert r.is_relevant(i, "moyen", [("ozone", None), ("particules_fines", None)], 0, date.today())
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(i, "bon", [("ozone", None)], 0, date.today())
 
 def test_is_relevant_dioxyde_azote():
     r = published_recommandation(dioxyde_azote=True, type_="episode_pollution")
     i = Inscription()
-    assert r.is_relevant(i, "degrade", ["dioxyde_azote"], 0, date.today())
-    assert r.is_relevant(i, "moyen", ["ozone", "dioxyde_azote"], 0, date.today())
+    assert r.is_relevant(i, "degrade", [("dioxyde_azote", None)], 0, date.today())
+    assert r.is_relevant(i, "moyen", [("ozone", None), ("dioxyde_azote", None)], 0, date.today())
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(i, "bon", [("ozone", None)], 0, date.today())
 
 def test_is_relevant_dioxyde_soufre():
     r = published_recommandation(dioxyde_soufre=True, type_="episode_pollution")
     i = Inscription()
-    assert r.is_relevant(i, "degrade", ["dioxyde_soufre"], 0, date.today())
-    assert r.is_relevant(i, "moyen", ["ozone", "dioxyde_soufre"], 0, date.today())
+    assert r.is_relevant(i, "degrade", [("dioxyde_soufre", None)], 0, date.today())
+    assert r.is_relevant(i, "moyen", [("ozone", None), ("dioxyde_soufre", None)], 0, date.today())
     assert not r.is_relevant(i, "degrade", [], 0, date.today())
-    assert not r.is_relevant(i, "bon", ["ozone"], 0, date.today())
+    assert not r.is_relevant(i, "bon", [("ozone", None)], 0, date.today())
+
+
+@pytest.mark.parametrize(
+    "niveau_recommandation,polluant_recommandation,etat_episode,code_pol",
+    product(
+        ["info", "alerte"],
+        ["ozone", "dioxyde_azote", "dioxyde_soufre", "particules_fines"],
+        ["PAS DE DEPASSEMENT", "Information", "ALERTE SUR PERSISTANCE", "ALERTE", "INFORMATION ET RECOMMANDATION"],
+        [1, 3, 5, 7, 8, 24]
+    )
+)
+def test_is_relevant_niveau_episode(niveau_recommandation, polluant_recommandation, etat_episode, code_pol):
+    recommandation = Recommandation(
+        status="published",
+        etat_episode_pollution=niveau_recommandation,
+        type_="episode_pollution"
+    )
+    setattr(recommandation, polluant_recommandation, True)
+    episode = EpisodePollution(
+        code_pol=code_pol,
+        etat=etat_episode,
+        date_ech=date.today()
+    )
+    resultat_attendu = niveau_recommandation in etat_episode.lower() and polluant_recommandation == episode.lib_pol_normalized
+    assert recommandation.is_relevant(None, episodes_pollution=[(episode.lib_pol_normalized, episode.etat)]) == resultat_attendu
 
 def test_qualite_air_bonne_menage_bricolage():
     r = published_recommandation(menage=True, bricolage=True, qa_bonne=True)
@@ -148,24 +174,6 @@ def test_qualite_air_bonne_menage_bricolage():
 
     i = Inscription(activites=["bricolage", "menage"])
     assert r.is_relevant(i, "bon", [], 0, date.today())
-
-
-def test_reco_pollen_pollution():
-    r = published_recommandation(type_="pollens")
-
-    i = Inscription(allergie_pollens=False)
-    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
-
-    i = Inscription(allergie_pollens=True)
-    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
-
-    r = published_recommandation(type_="indice_atmo")
-
-    i = Inscription(allergie_pollens=False)
-    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
-
-    i = Inscription(allergie_pollens=True)
-    assert not r.is_relevant(inscription=i, qualif="bon", polluants=["ozone"], raep=0, date_=date.today())
 
 def test_reco_pollen_pas_pollution_raep_nul(commune):
     r = published_recommandation(type_="pollens")
@@ -197,10 +205,10 @@ def test_reco_pollen_pas_pollution_raep_faible_atmo_bon(commune, delta, qualif, 
 
     date_ = date.today() + timedelta(days=delta)
     i = Inscription(indicateurs=["indice_atmo"])
-    assert not r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_)
+    assert not r.is_relevant(inscription=i, qualif=qualif, episodes_pollution=[], raep=raep, date_=date_)
 
     i = Inscription(indicateurs=["raep"])
-    assert r.is_relevant(inscription=i, qualif=qualif, polluants=[], raep=raep, date_=date_)
+    assert r.is_relevant(inscription=i, qualif=qualif, episodes_pollution=[], raep=raep, date_=date_)
 
 
 def test_chauffage():

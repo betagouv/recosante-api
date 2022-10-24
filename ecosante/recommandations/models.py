@@ -72,6 +72,7 @@ class Recommandation(db.Model):
     dioxyde_soufre: bool = db.Column(db.Boolean, nullable=True)
     particules_fines: bool = db.Column(db.Boolean, nullable=True)
     episode_pollution: bool = db.Column(db.Boolean, nullable=True)
+    etat_episode_pollution: str = db.Column(db.String, nullable=True)
     min_raep: int = db.Column(db.Integer, nullable=True)
     ordre: int = db.Column(db.Integer, nullable=True)
     potentiel_radon: List[int] = db.Column(postgresql.ARRAY(db.Integer), nullable=True)
@@ -277,30 +278,37 @@ class Recommandation(db.Model):
             return False
         return True
 
-    def is_relevant(self, inscription: Inscription=None, qualif=None, polluants: List[str]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
-        if not self.is_relevant_inscription(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances):
+    def is_relevant_episode_pollution(self, episodes_pollution, types):
+        if self.type_ != "episode_pollution":
+            return True
+        if isinstance(episodes_pollution, list) and len(episodes_pollution) > 0:
+            has_polluants = any([getattr(self, e[0], False) for e in episodes_pollution])
+            has_etat = any([self.etat_episode_pollution is None or self.etat_episode_pollution in e[1].lower() for e in episodes_pollution])
+            return has_polluants and has_etat
+        return False
+
+    def is_relevant(self, inscription: Inscription=None, qualif=None, episodes_pollution: list[tuple[str, str]]=None, raep: int=None, potentiel_radon: int=None, date_: date=None, media: str = 'mail', types: List[str] = ["indice_atmo", "episode_pollution", "pollens", "vigilance_meteo", "indice_uv"], vigilances=[], indice_uv: int=None):
+        if not self.is_relevant_inscription(inscription, qualif, episodes_pollution, raep, potentiel_radon, date_, media, types, vigilances):
             return False
         # Environnement
-        if polluants and self.type_ != "episode_pollution" and "episode_pollution" in types:
+        if self.is_relevant_episode_pollution(episodes_pollution, types) == False:
             return False
-        if self.type_ == "episode_pollution" and isinstance(polluants, list):
-            return any([getattr(self, polluant) for polluant in polluants])
         if not self.is_relevant_qualif(qualif):
             return False
         # Pollens
-        if not self.is_relevant_pollens(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
+        if not self.is_relevant_pollens(inscription, qualif, episodes_pollution, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         # Radon
         if self.type_ == "radon" and potentiel_radon not in self.potentiel_radon:
                 return False
         # Saison
-        if not self.is_relevant_season(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
+        if not self.is_relevant_season(inscription, qualif, episodes_pollution, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         # Vigilance météo
-        if not self.is_relevant_vigilance_meteo(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
+        if not self.is_relevant_vigilance_meteo(inscription, qualif, episodes_pollution, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         # Indice UV
-        if not self.is_relevant_indice_uv(inscription, qualif, polluants, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
+        if not self.is_relevant_indice_uv(inscription, qualif, episodes_pollution, raep, potentiel_radon, date_, media, types, vigilances, indice_uv):
             return False
         return self.type_ in types
 

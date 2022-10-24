@@ -82,7 +82,7 @@ class Newsletter:
             if 'data' in self.episodes:
                 self.episodes = self.episodes['data']
             self.polluants = [
-                e['lib_pol_normalized']
+                (e['lib_pol_normalized'], e['etat'])
                 for e in self.episodes
                 if e['etat'] != 'PAS DE DEPASSEMENT'\
                 and 'date' in e\
@@ -165,7 +165,7 @@ class Newsletter:
             'ozone': 'à l’ozone',
             'dioxyde_azote': 'au dioxyde d’azote'
         }
-        return oxford_comma([label_to_formatted_text.get(pol) for pol in self.polluants])
+        return oxford_comma([label_to_formatted_text.get(pol[0]) for pol in self.polluants])
 
     @property
     def polluants_symbols(self):
@@ -177,11 +177,11 @@ class Newsletter:
             'dioxyde_azote': "no2",
             "dioxyde_soufre": "so2"
         }
-        return [label_to_symbols.get(label) for label in self.polluants]
+        return [label_to_symbols.get(label[0]) for label in self.polluants]
 
     @property
     def polluants_symbols_formatted(self):
-        return oxford_comma([p.upper() for p in self.polluants_symbols])
+        return oxford_comma([p[0].upper() for p in self.polluants_symbols])
 
     @property
     def today_forecast(self):
@@ -376,7 +376,7 @@ class Newsletter:
             if recommandations[r[1]].is_relevant(
                 inscription=self.inscription,
                 qualif=self.qualif,
-                polluants=self.polluants,
+                episodes_pollution=self.polluants,
                 raep=self.raep,
                 date_=self.date,
                 indice_uv=self.indice_uv_value,
