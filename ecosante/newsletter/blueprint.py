@@ -17,7 +17,7 @@ from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.departement import Departement
 from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
 from sqlalchemy.orm import joinedload
-from sqlalchemy import func
+from sqlalchemy import func, funcfilter
 from ecosante.inscription.models import Inscription
 from ecosante.recommandations.models import Recommandation
 
@@ -51,25 +51,29 @@ def avis(short_id):
 @bp.route('/avis/liste')
 @admin_authenticator.route
 def liste_avis():
-    newsletters = NewsletterDB.query\
-        .filter(NewsletterDB.avis.isnot(None))\
-        .order_by(NewsletterDB.date.desc())\
-        .all()
-    return render_template('liste_avis.html', newsletters=newsletters)
+    liste_avis_hebdos = db.session.query(\
+                NewsletterDB.newsletter_hebdo_template_id,
+                func.count('1').label('nb_envois'),
+                funcfilter(func.count('1'), NewsletterDB.appliquee.is_(True)).label('nb_avis_positifs'),
+                funcfilter(func.count('1'), NewsletterDB.appliquee.is_not(None)).label('nb_avis'),
+            )\
+            .filter(
+                NewsletterDB.newsletter_hebdo_template_id.is_not(None),
+                NewsletterDB.date >= (datetime.now() - timedelta(days=30)).date())\
+            .group_by(NewsletterDB.newsletter_hebdo_template_id)\
+            .all()
+    nb_avis = sum(i['nb_avis'] for i in liste_avis_hebdos)
+    nb_avis_positifs = sum(i['nb_avis_positifs'] for i in liste_avis_hebdos)
+    nb_envois = sum(i['nb_envois'] for i in liste_avis_hebdos)
 
-
-@bp.route('/avis/csv')
-@admin_authenticator.route
-def export_avis():
-    return Response(
-        stream_with_context(
-            NewsletterDB.generate_csv_avis()
-        ),
-        mimetype="text/csv",
-        headers={
-            "Content-Disposition": f"attachment; filename=export-avis-{datetime.now()}"
-        }
+    return render_template(
+        'liste_avis.html',
+        liste_avis_hebdos=liste_avis_hebdos,
+        nb_avis=nb_avis,
+        nb_avis_positifs=nb_avis_positifs,
+        nb_envois=nb_envois
     )
+
 
 @bp.route('/test', methods=['GET', 'POST'])
 @admin_authenticator.route

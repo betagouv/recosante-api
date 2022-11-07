@@ -1,29 +1,56 @@
+
 {% extends 'base_admin.html' %}
 
 {% block content %}
 <section class="section">
     <div class="container">
         <div class="main">
-            <h1>Avis suite à une réponse «non» à la question «Allez-vous appliquer cette recommandation»</h1>
-            <a href="{{ url_for('newsletter.export_avis') }}">Export CSV</a>
-            {% for nl in newsletters %}
-            <div class="panel">
-                <div class="panel__header">
-                    <h3>Avis</h3>
-                    <small class="panel__header-extra">Déposé le {{ nl.date }}</small>
-                    <p>
-                        {{ nl.avis }}
-                    </p>
-                </div>
-                <div>
-                    <h3>Recommandation</h3>
-                    <p>{{ nl.recommandation.recommandation }}</p>
-                    <a href="{{ url_for("recommandations.details", id=nl.recommandation.id)}}">Voir la recommandation</a>
+            <h1>Avis sur la newsletter hebdo du mois dernier</h1>
+            <div class="section section-grey">
+                <div class="container">
+                    <div class="tiles">
+                        <div class="grid">
+                            <div class="tile">
+                                <div class="tile__icon">Nombre d’envois</div>
+                                <h3>{{ nb_envois }}</h3>
+                            </div>
+                            <div class="tile">
+                                <div class="tile__icon">Nombre d’avis</div>
+                                <h3>{{ nb_avis }}</h3>
+                            </div>
+                            <div class="tile">
+                                <div class="tile__icon">Nombre d’avis positifs</div>
+                                <h3>{{ nb_avis_positifs }}</h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% else %}
-            Pas encore d'avis déposé
-            {% endfor %}
+            <div class="section">
+                <div class="panel">
+                <h2>Avis par newsletters</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Newsletter</th>
+                            <th>Nombre d’envois</th>
+                            <th>Nombre d’avis</th>
+                            <th>Nombre d’avis positifs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for nl in liste_avis_hebdos %}
+                        <tr>
+                            <td>{{ nl.newsletter_hebdo_template_id}}</td>
+                            <td>{{ nl.nb_envois }}</td>
+                            <td>{{ nl.nb_avis }}</td>
+                            <td>{{ nl.nb_avis_positifs }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
         </div>        
     </div>
 </section>
