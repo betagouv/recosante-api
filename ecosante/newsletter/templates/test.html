@@ -212,7 +212,7 @@ function displayForecast(commune) {
 function displayUser(uid) {
   document.getElementById("div_user").style.display = 'none'
   document.getElementById("div_forecast").style.display = 'none'
-  fetch(`/users/${uid}`)
+  fetch(`/users/${uid}`, {credentials: "same-origin"})
     .then(response => response.json())
     .then(data => {
       document.getElementById("div_user").style.display = 'block'
@@ -232,7 +232,9 @@ function loadSuggestions() {
   }
   status = 'loading'
   let mail = document.getElementById("search_input").value
-  fetch('/users/_search?' + new URLSearchParams({ mail }))
+  fetch('/users/_search?' + new URLSearchParams({ mail }), {
+    credentials: "same-origin"
+  })
     .then(response => response.json())
     .then(data => {
       data.forEach(
