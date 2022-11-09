@@ -10,6 +10,7 @@ from ecosante.inscription.models import Inscription
 from ecosante.extensions import db, sib, celery
 from ecosante.utils.send_log_mail import send_log_mail
 from ecosante.utils.cache import cache_lock, cache_unlock
+from ecosante.utils.healthchecksio import ping
 
 def get_all_contacts(limit=100):
     contacts_api = sib_api_v3_sdk.ContactsApi(sib)
@@ -266,6 +267,7 @@ def format_errors(errors):
 
 @celery.task(bind=True)
 def import_send_and_report(self, type_='quotidien', force_send=False, report=False):
+    ping("envoi-webpush-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire", "start")
     current_app.logger.info("Début !")
     lock_id = f"type={type_}"
     with cache_lock(lock_id, self.app.oid) as aquired:
@@ -302,6 +304,7 @@ Bonne journée
         }
     )
     cache_unlock(lock_id)
+    ping("envoi-webpush-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire", "success")
     return result
 
 def get_lists_ids_to_delete():
