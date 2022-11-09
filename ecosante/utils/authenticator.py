@@ -63,6 +63,13 @@ class AdminAuthenticator(BaseAuthenticator):
     def make_token(self, email, time_=None):
         return super().make_token({"email": email}, time_)
     
+    def authenticate(self):
+        admin_email = session.get('admin_email')
+        if admin_email is None:
+            raise errors.Unauthorized(messages.missing_auth_token)
+        elif admin_email not in self.admin_emails:
+            raise errors.Unauthorized(messages.invalid_auth_token)
+
     def route(self, f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
