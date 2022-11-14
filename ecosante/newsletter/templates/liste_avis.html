@@ -41,7 +41,7 @@
                     <tbody>
                     {% for nl in liste_avis_hebdos %}
                         <tr>
-                            <td>{{ nl.newsletter_hebdo_template_id}}</td>
+                            <td><a href="https://my.sendinblue.com/camp/template/{{ nl.sib_id }}/message-setup" target="_blank">{{ nl.sib_id }}</a></td>
                             <td>{{ nl.nb_envois }}</td>
                             <td>{{ nl.nb_avis }}</td>
                             <td>{{ nl.nb_avis_positifs }}</td>
@@ -54,4 +54,27 @@
         </div>        
     </div>
 </section>
+<script type="text/javascript">
+    window.onload = () => {
+        const options = {
+            method: 'GET',
+            headers: {
+              accept: 'application/json',
+              'api-key': '{{ sib_api_key }}'
+            }
+        };
+        document.querySelectorAll('tbody > tr').forEach(
+	        tr => {
+                let td = tr.cells[0];
+                let innera = td.children[0]
+                fetch(`https://api.sendinblue.com/v3/smtp/templates/${innera.innerHTML}`, options)
+                    .then(response => response.json())
+                    .then(response => {
+                        innera.innerHTML = response.name
+                    })
+                    .catch(err => console.error(err));
+            }
+        )
+    }
+</script>
 {% endblock content %}

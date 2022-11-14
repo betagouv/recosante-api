@@ -53,13 +53,15 @@ def avis(short_id):
 def liste_avis():
     liste_avis_hebdos = db.session.query(\
                 NewsletterDB.newsletter_hebdo_template_id,
+                NewsletterHebdoTemplate.sib_id,
                 func.count('1').label('nb_envois'),
                 funcfilter(func.count('1'), NewsletterDB.appliquee.is_(True)).label('nb_avis_positifs'),
                 funcfilter(func.count('1'), NewsletterDB.appliquee.is_not(None)).label('nb_avis'),
             )\
+            .join(NewsletterHebdoTemplate)\
             .filter(
                 NewsletterDB.newsletter_hebdo_template_id.is_not(None))\
-            .group_by(NewsletterDB.newsletter_hebdo_template_id)\
+            .group_by(NewsletterDB.newsletter_hebdo_template_id, NewsletterHebdoTemplate.sib_id)\
             .all()
     nb_avis = sum(i['nb_avis'] for i in liste_avis_hebdos)
     nb_avis_positifs = sum(i['nb_avis_positifs'] for i in liste_avis_hebdos)
@@ -70,7 +72,8 @@ def liste_avis():
         liste_avis_hebdos=liste_avis_hebdos,
         nb_avis=nb_avis,
         nb_avis_positifs=nb_avis_positifs,
-        nb_envois=nb_envois
+        nb_envois=nb_envois,
+        sib_api_key=sib.configuration.api_key['api-key']
     )
 
 
