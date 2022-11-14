@@ -34,6 +34,7 @@
                         <tr>
                             <th class="ascending">Newsletter</th>
                             <th>Nombre d’envois</th>
+                            <th>Nombre d’envois la semaine passée</th>
                             <th>Nombre d’avis</th>
                             <th>Nombre d’avis positifs</th>
                             <th>Proportion d’avis positifs</th>
@@ -44,6 +45,7 @@
                         <tr>
                             <td><a href="https://my.sendinblue.com/camp/template/{{ nl.sib_id }}/message-setup" target="_blank">{{ nl.sib_id }}</a></td>
                             <td>{{ nl.nb_envois }}</td>
+                            <td>{{ nl.nb_envois_semaine_passee }}</td>
                             <td>{{ nl.nb_avis }}</td>
                             <td>{{ nl.nb_avis_positifs }}</td>
                             <td>{{ (100 * (nl.nb_avis_positifs / nl.nb_avis))|round(2) if nl.nb_avis else '-' }} %</td>

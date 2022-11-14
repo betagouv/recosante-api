@@ -9,7 +9,8 @@ from flask import (
 )
 from flask.helpers import flash
 from flask.wrappers import Response
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from calendar import THURSDAY
 import csv
 
 from indice_pollution.helpers import today
@@ -51,12 +52,15 @@ def avis(short_id):
 @bp.route('/avis/liste')
 @admin_authenticator.route
 def liste_avis():
+    offset = (date.today().weekday() - THURSDAY) % 7
+    last_thursday = date.today() - timedelta(days=offset)
     liste_avis_hebdos = db.session.query(\
                 NewsletterDB.newsletter_hebdo_template_id,
                 NewsletterHebdoTemplate.sib_id,
                 func.count('1').label('nb_envois'),
                 funcfilter(func.count('1'), NewsletterDB.appliquee.is_(True)).label('nb_avis_positifs'),
                 funcfilter(func.count('1'), NewsletterDB.appliquee.is_not(None)).label('nb_avis'),
+                funcfilter(func.count('&'), NewsletterDB.date == last_thursday).label('nb_envois_semaine_passee')
             )\
             .join(NewsletterHebdoTemplate)\
             .filter(
