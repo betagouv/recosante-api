@@ -58,8 +58,7 @@ def liste_avis():
                 funcfilter(func.count('1'), NewsletterDB.appliquee.is_not(None)).label('nb_avis'),
             )\
             .filter(
-                NewsletterDB.newsletter_hebdo_template_id.is_not(None),
-                NewsletterDB.date >= (datetime.now() - timedelta(days=30)).date())\
+                NewsletterDB.newsletter_hebdo_template_id.is_not(None))\
             .group_by(NewsletterDB.newsletter_hebdo_template_id)\
             .all()
     nb_avis = sum(i['nb_avis'] for i in liste_avis_hebdos)
