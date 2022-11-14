@@ -2,6 +2,7 @@ import json
 from time import sleep
 from flask import current_app
 from py_vapid import Vapid
+from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.newsletter.models import Newsletter, NewsletterDB
 from ecosante.inscription.tasks.deactivate_notification_contact import deactivate_nofication_contact
 from ecosante.extensions import db, celery
@@ -34,21 +35,39 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
                 current_app.logger.error(f"Unable to retry after: {retry_after}")
                 return None
         elif ex.response and ex.response.status_code == 410:
-            deactivate_nofication_contact.apply_async(
-                (nldb.inscription_id,),
-                queue='send_email',
-                routing_key='send_email.unsubscribe_notification'
-            )
+            db.session.remove(nldb.webpush_subscription_info)
         else:
             current_app.logger.error(f"Error sending notification to {nldb.inscription.mail}")
             current_app.logger.error(ex)
             return None
 
+
 @celery.task(bind=True)
 def send_webpush_notifications(self, only_to=None, filter_already_sent=True, force_send=False):
+    inscription_ids_with_error = set()
     for nl in Newsletter.export(media='notifications_web', only_to=only_to, filter_already_sent=filter_already_sent, force_send=force_send):
         nldb = NewsletterDB(nl)
         nldb = send_webpush_notification(nldb, vapid_claims)
         if nldb:
             db.session.add(nldb)
+        else:
+            inscription_ids_with_error.add(nldb.inscription_id)
     db.session.commit()
+
+    still_in_db = db.session\
+        .query(WebpushSubscriptionInfo.inscription_id)\
+        .filter(WebpushSubscriptionInfo.inscription_id.in_(inscription_ids_with_error))\
+        .all()
+
+    ids_to_send_deactivate_notifcation_contact = set()
+    if still_in_db:
+        ids_to_send_deactivate_notifcation_contact = inscription_ids_with_error - {v[0] for v in still_in_db}
+    else:
+        ids_to_send_deactivate_notifcation_contact = inscription_ids_with_error
+
+    for inscription_id in ids_to_send_deactivate_notifcation_contact:
+        deactivate_nofication_contact.apply_async(
+                (inscription_id,),
+                queue='send_email',
+                routing_key='send_email.unsubscribe_notification'
+            )
