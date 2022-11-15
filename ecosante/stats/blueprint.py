@@ -238,6 +238,18 @@ def stats_email():
     }
     return to_return
 
+@bp.route('/email/last2d')
+def stats_email_last2d():
+    to_return = {}
+    yesterday = date.today() - timedelta(days=1)
+    inscriptions = db.session.query(Inscription).filter(Inscription.ville_insee.isnot(None) | Inscription.commune_id.isnot(None)).filter(func.date(Inscription.date_inscription) >= yesterday).count()
+    desinscriptions = db.session.query(Inscription).filter(Inscription.deactivation_date.isnot(None)).filter(func.date(Inscription.deactivation_date) >= yesterday).count()
+    if inscriptions > 0:
+        to_return['inscriptions'] = inscriptions
+    if desinscriptions > 0:
+        to_return['desinscriptions'] = desinscriptions
+    return to_return
+
 @bp.route('/email/openings')
 def stats_email_openings():
     total_unique_views = 0
