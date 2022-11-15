@@ -242,7 +242,9 @@ def stats_email():
 def stats_email_last2d():
     to_return = {}
     yesterday = date.today() - timedelta(days=1)
+    # Nombre d'inscriptions ces 2 derniers jours
     inscriptions = db.session.query(Inscription).filter(Inscription.ville_insee.isnot(None) | Inscription.commune_id.isnot(None)).filter(func.date(Inscription.date_inscription) >= yesterday).count()
+    # Nombre de désinscriptions ces 2 derniers jours
     desinscriptions = db.session.query(Inscription).filter(Inscription.deactivation_date.isnot(None)).filter(func.date(Inscription.deactivation_date) >= yesterday).count()
     if inscriptions > 0:
         to_return['inscriptions'] = inscriptions
