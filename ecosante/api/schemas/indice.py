@@ -16,13 +16,13 @@ class IndiceDetailsSchema(Schema):
 
 class AdviceSchema(Schema):
     main = fields.Function(
-        lambda recommandation, context: recommandation.format(context.get('commune'))
+        lambda recommandation, context: recommandation.format(context.get('commune')), swagger_type="string"
     )
     details = fields.String(attribute='precisions_sanitized')
 
 class RecommandationSchema(Schema):
     recommandation = fields.Function(
-        lambda recommandation, context: recommandation.format(context.get('commune'))
+        lambda recommandation, context: recommandation.format(context.get('commune')), swagger_type="string"
     )
     type = fields.String(attribute='type_')
 
