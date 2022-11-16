@@ -16,6 +16,7 @@ from indice_pollution.helpers import today
 from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.departement import Departement
 from indice_pollution.history.models.vigilance_meteo import VigilanceMeteo
+from indice_pollution.history.models.indice_uv import IndiceUv
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
 from ecosante.inscription.models import Inscription
@@ -85,6 +86,8 @@ def test():
     phenomene_to_phenomene_id = {v: k for k, v in VigilanceMeteo.phenomenes.items()}
     couleur_to_couleur_id = {v: k for k, v in VigilanceMeteo.couleurs.items()}
     recommandations = Recommandation.published_query().all()
+    indice_uv = IndiceUv()
+    indice_uv.uv_jo = request.form.get("indice_uv", type=int)
     for media in inscription.indicateurs_media:
         nl = Newsletter(
             inscription=inscription,
@@ -112,7 +115,7 @@ def test():
                 recommandations
             ),
             recommandations=recommandations,
-            indice_uv=request.form.get("indice_uv", type=int)
+            indice_uv=indice_uv
         )
         if media == "mail":
             import_(None, newsletters=[nl], force_send=True, test=True)
