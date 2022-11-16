@@ -1,10 +1,10 @@
 from datetime import date, datetime, timedelta
-import requests, requests_mock
+import os
+import requests_mock
 from ecosante.newsletter.tasks.send_webpush_notifications import *
 from ecosante.newsletter.models import Newsletter, NewsletterDB
 from indice_pollution.history.models import VigilanceMeteo
 from indice_pollution.history.models import IndiceUv
-from tests.conftest import inscription
 from psycopg2.extras import DateTimeTZRange
 from datetime import date
 
@@ -27,23 +27,27 @@ def test_cas_send_wepush_notification(inscription_notifications, recommandation,
 def test_cas_send_wepush_notifications(inscription_notifications, recommandation, bonne_qualite_air, raep_eleve, **kw):
     mock = kw['mock']
     mock.post('https://updates.push.services.mozilla.com/wpush/v2/pouet', text='data')
+    mock.get(f'https://hc-ping.com/{os.getenv("HEALTCHECKSIO_API_KEY")}/envoi-webpush-quotidien/start')
+    mock.get(f'https://hc-ping.com/{os.getenv("HEALTCHECKSIO_API_KEY")}/envoi-webpush-quotidien')
 
     send_webpush_notifications()
-    assert mock.call_count == 1
+    assert mock.call_count == 3
     nls = NewsletterDB.query.all()
     assert len(nls) == 1
     assert nls[0].webpush_subscription_info.id == inscription_notifications.webpush_subscriptions_info[0].id
 
     send_webpush_notifications()
-    assert mock.call_count == 1
+    assert mock.call_count == 5
 
 @requests_mock.Mocker(kw='mock')
 def test_cas_send_wepush_notifications_pas_de_donnee(inscription_notifications, recommandation, **kw):
     mock = kw['mock']
     mock.post('https://updates.push.services.mozilla.com/wpush/v2/pouet', text='data')
+    mock.get(f'https://hc-ping.com/{os.getenv("HEALTCHECKSIO_API_KEY")}/envoi-webpush-quotidien/start')
+    mock.get(f'https://hc-ping.com/{os.getenv("HEALTCHECKSIO_API_KEY")}/envoi-webpush-quotidien')
 
     send_webpush_notifications()
-    assert mock.call_count == 0
+    assert mock.call_count == 2
     nls = NewsletterDB.query.all()
     assert len(nls) == 0
 

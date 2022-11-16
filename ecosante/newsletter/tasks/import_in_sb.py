@@ -77,11 +77,23 @@ def import_and_send(task, type_='quotidien', force_send=False):
         db.session.commit()
     return result
 
-def send(campaign_id, test=False):
+def send(task, campaign_id, type_, test=False):
     if current_app.config['ENV'] == 'production' or test:
         current_app.logger.info(f"Envoi en cours de la campagne: {campaign_id}")
         send_email_api = sib_api_v3_sdk.EmailCampaignsApi(sib)
-        send_email_api.send_email_campaign_now(campaign_id=campaign_id)
+        try:
+            send_email_api.send_email_campaign_now(campaign_id=campaign_id)
+        except ApiException as e:
+            current_app.logger.error("Impossible d’envoyer la campagne %s\n" % e)
+            ping(make_nom_ping(type_), "fail")
+            task.update_state(
+                state='FAILURE',
+                meta={
+                    "progress": 100,
+                    "details": "Impossible d’envoyer la campagne %s\n" % e,
+                }
+            )
+            raise e
         current_app.logger.info(f"Envoi terminé de la campagne: {campaign_id}")
 
 def create_mail_list(now, test):
@@ -106,7 +118,7 @@ def import_(task, type_='quotidien', force_send=False, test=False, mail_list_id=
     
     now = datetime.now()
     errors, template_id_mail_list_id = import_in_db(task, now, type_, force_send, test, mail_list_id, newsletters, filter_already_sent)
-    import_contacts_in_sb_all(template_id_mail_list_id, now, type_, test, activate_webhook, send_in_blue_contacts)
+    import_contacts_in_sb_all(task, template_id_mail_list_id, now, type_, test, activate_webhook, send_in_blue_contacts)
 
     return {
         "state": "STARTED",
@@ -146,7 +158,7 @@ def import_in_db(task, now, type_='quotidien', force_send=False, test=False, mai
         current_app.logger.info("Commit des newsletters dans la base de données")
     return errors, template_id_mail_list_id
 
-def import_contacts_in_sb(mail_list_id, send_in_blue_contacts):
+def import_contacts_in_sb(task, mail_list_id, send_in_blue_contacts, type_):
     contact_api = sib_api_v3_sdk.ContactsApi(sib)
     window_size = 100  # or whatever limit you like
     window_idx = 0
@@ -179,13 +191,23 @@ def import_contacts_in_sb(mail_list_id, send_in_blue_contacts):
             current_app.logger.info("contacts updated")
         except ApiException as e:
             current_app.logger.error("Exception when calling ContactsApi->import_contacts: %s\n" % e)
+            ping(make_nom_ping(type_), "fail")
+            task.update_state(
+                state='FAILURE',
+                meta={
+                    "progress": 100,
+                    "details": "Exception when calling ContactsApi->import_contacts: %s\n" % e,
+                }
+            )
+            raise e
 
-def import_contacts_in_sb_all(template_id_mail_list_id, now, type_, test, activate_webhook, send_in_blue_contacts):
+
+def import_contacts_in_sb_all(task, template_id_mail_list_id, now, type_, test, activate_webhook, send_in_blue_contacts):
     if current_app.config['ENV'] == 'production' or test:
         for template_id, mail_list_id in template_id_mail_list_id.items():
-            import_contacts_in_sb(mail_list_id, send_in_blue_contacts)
-            campaign_id = create_campaign(now, mail_list_id=mail_list_id, template_id=template_id, type_=type_)
-            send(campaign_id)
+            import_contacts_in_sb(task, mail_list_id, send_in_blue_contacts, type_)
+            campaign_id = create_campaign(task, now, mail_list_id=mail_list_id, template_id=template_id, type_=type_)
+            send(task, campaign_id, type_)
 
 def check_campaign_already_sent(email_campaign_api, mail_list_id):
     api_response = email_campaign_api.get_email_campaigns(limit=20)
@@ -197,7 +219,7 @@ def check_campaign_already_sent(email_campaign_api, mail_list_id):
         ]
     )
 
-def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test=False):
+def create_campaign(task, now, mail_list_id, template_id=None, type_='quotidien', test=False):
     def get_tag(test, type_):
         if test:
             return "test_newsletter"
@@ -215,23 +237,35 @@ def create_campaign(now, mail_list_id, template_id=None, type_='quotidien', test
         transactional_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         template = transactional_api.get_smtp_template(int(template_id))
         current_app.logger.info(f"Appel à Send in blue pour l’envoi de la campagne avec la liste {mail_list_id}, now: {now}, template_id:{template_id}")
-        r = email_campaign_api.create_email_campaign(
-            sib_api_v3_sdk.CreateEmailCampaign(
-                sender=sib_api_v3_sdk.CreateEmailCampaignSender(
-                    email=template.sender.email,
-                    name=template.sender.name
-                ),
-                name = f'{now}',
-                template_id = template_id,
-                subject = template.subject,
-                reply_to = "newsletter@recosante.beta.gouv.fr",
-                recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
-                    list_ids=[mail_list_id]
-                ),
-                header="Aujourd’hui, la qualité de l’air autour de chez vous est…" if type_ == 'quotidien' else "Découvrez les bons gestes de Recosanté",
-                tag=get_tag(test, type_)
+        try:
+            r = email_campaign_api.create_email_campaign(
+                sib_api_v3_sdk.CreateEmailCampaign(
+                    sender=sib_api_v3_sdk.CreateEmailCampaignSender(
+                        email=template.sender.email,
+                        name=template.sender.name
+                    ),
+                    name = f'{now}',
+                    template_id = template_id,
+                    subject = template.subject,
+                    reply_to = "newsletter@recosante.beta.gouv.fr",
+                    recipients = sib_api_v3_sdk.CreateEmailCampaignRecipients(
+                        list_ids=[mail_list_id]
+                    ),
+                    header="Aujourd’hui, la qualité de l’air autour de chez vous est…" if type_ == 'quotidien' else "Découvrez les bons gestes de Recosanté",
+                    tag=get_tag(test, type_)
+                )
             )
-        )
+        except ApiException as e:
+            task.update_state(
+                state='FAILURE',
+                meta={
+                    "progress": 100,
+                    "details": f"Erreur lors de la création de la campagne. {e}",
+                }
+            )
+            ping(make_nom_ping(type_), "fail")
+            current_app.logger.error(f"Impossible de créer la campagne {e}")
+            raise e
         email_campaign_id = r.id
     else:
         email_campaign_id = 0
@@ -265,14 +299,27 @@ def format_errors(errors):
 
     return r
 
+def make_nom_ping(type_):
+    return "envoi-webpush-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire"
+
 @celery.task(bind=True)
 def import_send_and_report(self, type_='quotidien', force_send=False, report=False):
-    ping("envoi-webpush-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire", "start")
+    nom_ping = make_nom_ping(type_)
+    ping(nom_ping, "start")
     current_app.logger.info("Début !")
     lock_id = f"type={type_}"
     with cache_lock(lock_id, self.app.oid) as aquired:
         if not aquired:
             current_app.logger.error(f"Import et envoi déjà en cours (type: {type_})")
+            ping(nom_ping, "fail")
+            self.update_state(
+                state='FAILURE',
+                meta={
+                    "progress": 100,
+                    "details": f"Fin en erreur, un autre envoi est déjà en cours.",
+                }
+            )
+            return
     new_task_id = str(uuid4())
     self.update_state(
         state='STARTED',
@@ -297,14 +344,14 @@ Bonne journée
     """
         send_log_mail("Rapport d’envoi de la newsletter", body, name="Rapport recosante", email="rapport-envoi@recosante.beta.gouv.fr")
     self.update_state(
-        state='SUCESS',
+        state='SUCCESS',
         meta={
             "progress": 100,
             "details": f"Fin",
         }
     )
     cache_unlock(lock_id)
-    ping("envoi-webpush-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire", "success")
+    ping(nom_ping, "success")
     return result
 
 def get_lists_ids_to_delete():
