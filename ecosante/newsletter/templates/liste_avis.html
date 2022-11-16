@@ -22,6 +22,10 @@
                                 <div class="tile__icon">Nombre d’avis positifs</div>
                                 <h3>{{ nb_avis_positifs }}</h3>
                             </div>
+                            <div class="tile">
+                                <div class="tile__icon">Proportion d’avis positifs</div>
+                                <h3>{{ (100 * (nb_avis_positifs / nb_avis))|round(2) if nb_avis else '-' }} %</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -58,6 +62,16 @@
         </div>        
     </div>
 </section>
+<style>
+    .table thead th.ascending:hover::after {
+        content: "▼";
+        color: grey;
+    }
+    .table thead th:not(.ascending):hover::after {
+        content: "▲";
+        color: grey;
+    }
+</style>
 <script type="text/javascript">
 
     let sortTable = (table, col) => {
@@ -67,10 +81,14 @@
         let th = table.tHead.rows[0].cells[col];
         let reverse = th.classList.contains('ascending') ? -1 : 1;
         tr = tr.sort(function (a, b) { // sort rows
-            return reverse // `-1 *` if want opposite order
-                * (a.cells[col].textContent.trim() // using `.textContent.trim()` for test
-                    .localeCompare(b.cells[col].textContent.trim())
-                   );
+            let match_groups_a = a.cells[col].textContent.trim().match(/[+-]?([0-9]*[.])?[0-9]+/);
+            let match_groups_b = b.cells[col].textContent.trim().match(/[+-]?([0-9]*[.])?[0-9]+/);
+            let a_value = match_groups_a === null ? Infinity : match_groups_a[0];
+            let b_value = match_groups_b === null ? Infinity : match_groups_b[0];
+            if (a_value === b_value === Infinity) {
+                return 0;
+            }
+            return reverse * (parseFloat(a_value) - parseFloat(b_value))
         });
         for(i = 0; i < tr.length; ++i) tb.appendChild(tr[i]); // append each row in order
         for (const [idx, th] of Array.from(table.tHead.rows[0].cells).entries()) {
