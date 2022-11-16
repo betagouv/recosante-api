@@ -1,30 +1,129 @@
+
 {% extends 'base_admin.html' %}
 
 {% block content %}
 <section class="section">
     <div class="container">
         <div class="main">
-            <h1>Avis suite à une réponse «non» à la question «Allez-vous appliquer cette recommandation»</h1>
-            <a href="{{ url_for('newsletter.export_avis') }}">Export CSV</a>
-            {% for nl in newsletters %}
-            <div class="panel">
-                <div class="panel__header">
-                    <h3>Avis</h3>
-                    <small class="panel__header-extra">Déposé le {{ nl.date }}</small>
-                    <p>
-                        {{ nl.avis }}
-                    </p>
-                </div>
-                <div>
-                    <h3>Recommandation</h3>
-                    <p>{{ nl.recommandation.recommandation }}</p>
-                    <a href="{{ url_for("recommandations.details", id=nl.recommandation.id)}}">Voir la recommandation</a>
+            <h1>Avis sur la newsletter hebdo</h1>
+            <div class="section section-grey">
+                <div class="container">
+                    <div class="tiles">
+                        <div class="grid">
+                            <div class="tile">
+                                <div class="tile__icon">Nombre d’envois</div>
+                                <h3>{{ nb_envois }}</h3>
+                            </div>
+                            <div class="tile">
+                                <div class="tile__icon">Nombre d’avis</div>
+                                <h3>{{ nb_avis }}</h3>
+                            </div>
+                            <div class="tile">
+                                <div class="tile__icon">Nombre d’avis positifs</div>
+                                <h3>{{ nb_avis_positifs }}</h3>
+                            </div>
+                            <div class="tile">
+                                <div class="tile__icon">Proportion d’avis positifs</div>
+                                <h3>{{ (100 * (nb_avis_positifs / nb_avis))|round(2) if nb_avis else '-' }} %</h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% else %}
-            Pas encore d'avis déposé
-            {% endfor %}
+            <div class="section">
+                <div class="panel">
+                <h2>Avis par newsletters</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="ascending">Newsletter</th>
+                            <th>Nombre d’envois</th>
+                            <th>Nombre d’envois la semaine passée</th>
+                            <th>Nombre d’avis</th>
+                            <th>Nombre d’avis positifs</th>
+                            <th>Proportion d’avis positifs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for nl in liste_avis_hebdos %}
+                        <tr>
+                            <td><a href="https://my.sendinblue.com/camp/template/{{ nl.sib_id }}/message-setup" target="_blank">{{ nl.sib_id }}</a></td>
+                            <td>{{ nl.nb_envois }}</td>
+                            <td>{{ nl.nb_envois_semaine_passee }}</td>
+                            <td>{{ nl.nb_avis }}</td>
+                            <td>{{ nl.nb_avis_positifs }}</td>
+                            <td>{{ (100 * (nl.nb_avis_positifs / nl.nb_avis))|round(2) if nl.nb_avis else '-' }} %</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
         </div>        
     </div>
 </section>
+<style>
+    .table thead th.ascending:hover::after {
+        content: "▼";
+        color: grey;
+    }
+    .table thead th:not(.ascending):hover::after {
+        content: "▲";
+        color: grey;
+    }
+</style>
+<script type="text/javascript">
+
+    let sortTable = (table, col) => {
+        var tb = table.tBodies[0], // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+            tr = Array.prototype.slice.call(tb.rows, 0), // put rows into array
+            i;
+        let th = table.tHead.rows[0].cells[col];
+        let reverse = th.classList.contains('ascending') ? -1 : 1;
+        tr = tr.sort(function (a, b) { // sort rows
+            let match_groups_a = a.cells[col].textContent.trim().match(/[+-]?([0-9]*[.])?[0-9]+/);
+            let match_groups_b = b.cells[col].textContent.trim().match(/[+-]?([0-9]*[.])?[0-9]+/);
+            let a_value = match_groups_a === null ? Infinity : match_groups_a[0];
+            let b_value = match_groups_b === null ? Infinity : match_groups_b[0];
+            if (a_value === b_value === Infinity) {
+                return 0;
+            }
+            return reverse * (parseFloat(a_value) - parseFloat(b_value))
+        });
+        for(i = 0; i < tr.length; ++i) tb.appendChild(tr[i]); // append each row in order
+        for (const [idx, th] of Array.from(table.tHead.rows[0].cells).entries()) {
+            th.classList.remove('ascending');
+            th.classList.remove('descending');
+            if (idx === col) {
+                th.classList.add(reverse == 1 ? 'ascending' : 'descending')
+            }
+        }
+    }
+
+    window.onload = () => {
+        const options = {
+            method: 'GET',
+            headers: {
+              accept: 'application/json',
+              'api-key': '{{ sib_api_key }}'
+            }
+        };
+        let table = document.querySelector('table')
+        Array.from(table.tBodies[0].rows).forEach(
+	        tr => {
+                let innera = tr.cells[0].children[0]
+                fetch(`https://api.sendinblue.com/v3/smtp/templates/${innera.innerHTML}`, options)
+                    .then(response => response.json())
+                    .then(response => {
+                        innera.innerHTML = response.name
+                    })
+                    .catch(err => console.error(err));
+            }
+        )
+        let ths = table.tHead.rows[0].cells;
+        for (const [idx, th] of Array.from(ths).entries()) {
+            th.addEventListener('click', () => sortTable(table, idx))
+        }
+    }
+</script>
 {% endblock content %}
