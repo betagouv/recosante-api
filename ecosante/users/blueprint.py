@@ -9,7 +9,8 @@ registry = rebar.create_handler_registry('/users/')
 @registry.handles(
     rule='/_search',
     hidden=True,
-    response_body_schema={200:Response(many=True)}
+    response_body_schema={200:Response(many=True)},
+    authenticators=[admin_authenticator]
 )
 @admin_authenticator.route
 def search_users():
@@ -25,7 +26,8 @@ def search_users():
     request_body_schema=RequestPOST(),
     response_body_schema={
         201: Response()
-    }
+    },
+    authenticators=[admin_authenticator],
 )
 def post_users():
     inscription = rebar.validated_body
@@ -40,11 +42,12 @@ def post_users():
     inscription.authentication_token = authenticator.make_token(uid=inscription.uid)
     return inscription, 201
 
+
 @registry.handles(
     rule='/<uid>',
     method='GET',
     response_body_schema={200: Response()},
-    authenticators=[authenticator]
+    authenticators=[authenticator, admin_authenticator]
 )
 def get_user(uid):
     inscription = Inscription.query.filter_by(uid=uid).first()
