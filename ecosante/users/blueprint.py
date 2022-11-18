@@ -27,7 +27,6 @@ def search_users():
     response_body_schema={
         201: Response()
     },
-    authenticators=[admin_authenticator],
 )
 def post_users():
     inscription = rebar.validated_body
