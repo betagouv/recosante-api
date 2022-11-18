@@ -249,7 +249,7 @@ def test_deactivate(db_session, inscription, client):
     db_session.commit()
 
     uid = inscription.uid
-    authenticator = TempAuthenticator()
+    authenticator = APIAuthenticator()
     response = client.post(f'/users/{uid}/_deactivate?token={authenticator.make_token(uid)}', headers={"Content-type": "application/json"})
 
     assert response.status_code == 200
