@@ -250,7 +250,7 @@ class NewsletterDB(db.Model, Newsletter):
                 "VIGILANCE_VALIDITE_FIN": VigilanceMeteo.make_end_date([self.vigilance_globale]).strftime('%d/%m/%Y à %H:%M') if self.vigilance_globale else "",
                 "VIGILANCE_LABEL": VigilanceMeteo.make_label(self.vigilance_globale.couleur_id) if self.vigilance_globale else "",
             },
-            **{f'ALLERGENE_{a[0]}': int(a[1]) for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
+            **{f'ALLERGENE_{a[0]}': int(a[1]) if a[1] is not None else None for a in (self.allergenes if type(self.allergenes) == dict else dict() ).items()},
             **dict(chain(*[[(f'SS_INDICE_{si.upper()}_LABEL', get_sous_indice(si).get('label') or ""), (f'SS_INDICE_{si.upper()}_COULEUR', get_sous_indice(si).get('couleur') or "")] for si in noms_sous_indices])),
             **self.vigilances_dict
         }
