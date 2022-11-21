@@ -81,3 +81,4 @@ class RequestPOSTID(User, RequestSchema):
 
 class RequestUpdateProfile(Schema):
     mail = Email(required=True)
+    redirect_path = Str()

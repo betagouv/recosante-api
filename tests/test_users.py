@@ -1,9 +1,8 @@
-from redis import AuthenticationError
-from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
-from ecosante.users.schemas import User
-from ecosante.extensions import authenticator
 import json
 
+from ecosante.inscription.models import Inscription
+from ecosante.users.schemas import User
+from ecosante.extensions import authenticator
 from ecosante.utils.authenticator import APIAuthenticator
 
 def test_no_mail(client):
@@ -253,3 +252,46 @@ def test_deactivate(db_session, inscription, client):
     response = client.post(f'/users/{uid}/_deactivate?token={authenticator.make_token(uid)}', headers={"Content-type": "application/json"})
 
     assert response.status_code == 200
+
+def test_send_auth_link(db_session, inscription, client, mocker):
+    db_session.add(inscription)
+    db_session.commit()
+    spy = mocker.patch('ecosante.extensions.celery.send_task', name='send_task')
+    response = client.post('/users/_send_auth_link', json={'mail': inscription.mail})
+    
+    assert response.status_code == 200
+    spy.assert_called_once_with(
+        "ecosante.inscription.tasks.send_auth_link.send_auth_link",
+        (inscription.id, None),
+        queue='send_email',
+        routing_key='send_email.subscribe',
+    )
+
+
+def test_send_auth_link_with_redirect_path(db_session, inscription, client, mocker):
+    db_session.add(inscription)
+    db_session.commit()
+    spy = mocker.patch('ecosante.extensions.celery.send_task', name='send_task')
+    response = client.post('/users/_send_auth_link', json={'mail': inscription.mail, 'redirect_path': '/notifications/'})
+
+    assert response.status_code == 200
+    spy.assert_called_once_with(
+        "ecosante.inscription.tasks.send_auth_link.send_auth_link",
+        (inscription.id, '/notifications/'),
+        queue='send_email',
+        routing_key='send_email.subscribe',
+    )
+
+def test_send_update_profile(db_session, inscription, client, mocker):
+    db_session.add(inscription)
+    db_session.commit()
+    spy = mocker.patch('ecosante.extensions.celery.send_task', name='send_task')
+    response = client.post('/users/_send_update_profile', json={'mail': inscription.mail})
+
+    assert response.status_code == 200
+    spy.assert_called_once_with(
+        "ecosante.inscription.tasks.send_auth_link.send_auth_link",
+        (inscription.id, None),
+        queue='send_email',
+        routing_key='send_email.subscribe',
+    )
