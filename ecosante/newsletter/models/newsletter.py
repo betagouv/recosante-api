@@ -97,7 +97,7 @@ class Newsletter:
                 self.allergenes = raep['allergenes']
                 self.validite_raep = raep['periode_validite']
         try:
-            self.raep = int(self.raep)
+            self.raep = int(self.raep) if self.raep is not None else None
         except ValueError as e:
             current_app.logger.error(f"Parsing error for raep of {self.inscription.mail}")
             current_app.logger.error(e)
