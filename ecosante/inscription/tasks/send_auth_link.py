@@ -7,27 +7,14 @@ from time import sleep
 from flask import current_app
 
 @celery.task()
-def send_update_profile(inscription_id):
-    success_template_id = int(os.getenv('SIB_UPDATE_PROFILE_TEMPLATE_ID', 1454))
-    inscription = Inscription.query.get(inscription_id)
-    contact_api = sib_api_v3_sdk.ContactsApi(sib)
-    try:
-        contact_api.update_contact(
-            inscription.mail,
-            sib_api_v3_sdk.UpdateContact(
-                attributes={
-                    "USER_UID": inscription.uid,
-                    "AUTH_TOKEN": authenticator.make_token(inscription.uid)
-                }
-            )
-        )
-    except ApiException as e:
-        current_app.logger.error(
-            f"Error: {e}"
-        )
-        raise e
-    sleep(0.5)
+def send_auth_link(inscription_id, redirect_path):
+    template_keys = {
+        '/notifications/': ('SIB_UPDATE_NOTIFICATIONS_TEMPLATE_ID', None),
+    }
+    template_key, default_id = template_keys.get(redirect_path, ('SIB_UPDATE_PROFILE_TEMPLATE_ID', 1454))
+    success_template_id = int(os.getenv(template_key, default_id))
 
+    inscription = Inscription.query.get(inscription_id)
     email_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
     try:
         email_api.send_transac_email(
@@ -41,7 +28,11 @@ def send_update_profile(inscription_id):
                     name="Recosanté",
                     email="hi@recosante.beta.gouv.fr"
                 ),
-                template_id=success_template_id
+                template_id=success_template_id,
+                params={
+                    "USER_UID": inscription.uid,
+                    "AUTH_TOKEN": authenticator.make_token(inscription.uid)
+                }
             )
         )
     except ApiException as e:

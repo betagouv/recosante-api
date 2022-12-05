@@ -68,22 +68,30 @@ def post_user_id(uid):
 
 
 @registry.handles(
-    rule='/_send_update_profile',
+    rule='/_send_auth_link',
     method='POST',
     request_body_schema=RequestUpdateProfile()
 )
-def send_update_profile():
+def send_auth_link():
     r = rebar.validated_body
     inscription = Inscription.query.filter_by(mail=r['mail']).first()
     if not inscription:
         return {}, 404
     celery.send_task(
-        "ecosante.inscription.tasks.send_update_profile.send_update_profile",
-        (inscription.id,),
+        "ecosante.inscription.tasks.send_auth_link.send_auth_link",
+        (inscription.id, r.get('redirect_path')),
         queue='send_email',
         routing_key='send_email.subscribe'
     )
     return 'ok', 200
+
+@registry.handles(
+    rule='/_send_update_profile',
+    method='POST',
+    request_body_schema=RequestUpdateProfile()
+)
+def send_update_profile():
+    return send_auth_link()
 
 @registry.handles(
     rule='/<uid>/_deactivate',
