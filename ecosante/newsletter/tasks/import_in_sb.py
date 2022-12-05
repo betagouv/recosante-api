@@ -300,7 +300,7 @@ def format_errors(errors):
     return r
 
 def make_nom_ping(type_):
-    return "envoi-webpush-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire"
+    return "envoi-email-quotidien" if type_ == "quotidien" else "envoi-email-hebdomadaire"
 
 @celery.task(bind=True)
 def import_send_and_report(self, type_='quotidien', force_send=False, report=False):
