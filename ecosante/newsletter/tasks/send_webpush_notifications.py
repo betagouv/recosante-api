@@ -7,6 +7,8 @@ from ecosante.extensions import db, celery
 from pywebpush import WebPushException, webpush
 from copy import deepcopy
 
+from ecosante.utils.healthchecksio import ping
+
 
 vapid_claims = {"sub": "mailto:contact@recosante.beta.gouv.fr"}
 
@@ -39,9 +41,11 @@ def send_webpush_notification(nldb: NewsletterDB, vapid_claims, retry=0):
 
 @celery.task(bind=True)
 def send_webpush_notifications(self, only_to=None, filter_already_sent=True, force_send=False):
+    ping("envoi-webpush-quotidien", "start")
     for nl in Newsletter.export(media='notifications_web', only_to=only_to, filter_already_sent=filter_already_sent, force_send=force_send):
         nldb = NewsletterDB(nl)
         nldb = send_webpush_notification(nldb, vapid_claims)
         if nldb:
             db.session.add(nldb)
     db.session.commit()
+    ping("envoi-webpush-quotidien", "success")

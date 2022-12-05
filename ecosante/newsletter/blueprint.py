@@ -27,7 +27,7 @@ from ecosante.utils import Blueprint
 from ecosante.extensions import db, sib, admin_authenticator
 from .forms import FormTemplateAdd, FormTemplateEdit
 from .models import Newsletter, NewsletterDB, NewsletterHebdoTemplate
-from .tasks.import_in_sb import create_campaign, import_, send
+from .tasks.import_in_sb import import_
 from .tasks.send_webpush_notifications import send_webpush_notification, vapid_claims
 from indice_pollution.history.models import IndiceATMO
 import sib_api_v3_sdk

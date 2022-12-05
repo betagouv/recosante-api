@@ -1,5 +1,5 @@
 from redis import AuthenticationError
-from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
+from ecosante.inscription.models import Inscription
 from ecosante.users.schemas import User
 from ecosante.extensions import authenticator
 import json
