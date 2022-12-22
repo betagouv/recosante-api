@@ -9,7 +9,7 @@ from ecosante.recommandations.forms.edit import FormEdit
 
 class FormTemplateAdd(BaseForm):
     sib_id = IntegerField("ID send in blue")
-    ordre = IntegerField("Ordre d’envoi")
+    ordre = IntegerField("Ordre d’envoi (si l’ordre est en dessous de 0 la NL ne sera pas envoyé, c’est utile pour les brouillons)")
     debut_periode_validite = DateField("Début de la période de validité", default=date.today().replace(month=1, day=1))
     fin_periode_validite = DateField("Fin de la période de validité", default=date.today().replace(month=1, day=1, year=date.today().year+1))
 
