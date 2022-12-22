@@ -257,7 +257,8 @@ def templates(db_session):
         NewsletterHebdoTemplate(ordre=7, sib_id=7, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
 	    NewsletterHebdoTemplate(ordre=9, sib_id=9, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
 	    NewsletterHebdoTemplate(ordre=5, sib_id=5, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
-	    NewsletterHebdoTemplate(ordre=1, sib_id=1, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1)))
+	    NewsletterHebdoTemplate(ordre=1, sib_id=1, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
+        NewsletterHebdoTemplate(ordre=-1, sib_id=1111, _periode_validite=DateRange(date(2022,1, 1), date(2023, 1,1))),
     ]
     db_session.add_all(templates)
     return templates

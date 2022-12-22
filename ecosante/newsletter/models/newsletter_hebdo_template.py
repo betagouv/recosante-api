@@ -48,6 +48,8 @@ class NewsletterHebdoTemplate(db.Model):
         return date_ in self.periode_validite
 
     def filtre_criteres(self, inscription):
+        if self.ordre > 0:
+            return False
         for nom_critere in ['chauffage', 'activites', 'deplacement']:
             critere = getattr(self, nom_critere)
             if isinstance(critere, list) and len(critere) > 0:
