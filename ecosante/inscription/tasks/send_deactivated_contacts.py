@@ -12,7 +12,8 @@ def send_deactivated_contacts():
     query = Inscription.query.filter_by(
         Inscription.deactivation_date == date.today(),
         Inscription.mail.is_not(None)
-    )
+    ).limit(30)
+
     for inscription in query.all():
         email_api = sib_api_v3_sdk.TransactionalEmailsApi(sib)
         try:
