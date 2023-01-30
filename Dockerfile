@@ -1,18 +1,15 @@
-FROM python:3.8
+FROM nikolaik/python-nodejs:python3.11-nodejs19
 RUN apt update && apt install -y --no-install-recommends locales; rm -rf /var/lib/apt/lists/*; sed -i '/^#.* fr_FR.UTF-8 /s/^#//' /etc/locale.gen; locale-gen
-RUN apt-get update && apt-get install -y nodejs npm
-RUN npm install -g yarn
 
-RUN mkdir /ecosante/
-WORKDIR /ecosante/
+RUN mkdir /recosante-api/
+WORKDIR /recosante-api/
 COPY ./ .
 
+RUN chmod +x startup.sh
+
 RUN yarn install
-RUN yarn global add node-sass rollup @babel/core @rollup/plugin-babel @rollup/plugin-commonjs @rollup/plugin-node-resolve rollup-plugin-postcss
 
 RUN pip3 install .
-RUN pip3 install uwsgi
-RUN flask assets build
 
 EXPOSE 8080
 

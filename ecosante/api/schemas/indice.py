@@ -1,4 +1,3 @@
-from attr import attrib
 from marshmallow import fields, Schema, pre_dump
 
 from ecosante.recommandations.models import Recommandation
