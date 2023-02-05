@@ -16,7 +16,7 @@ DEPENDENCIES = [
     'flask-cors',
     'Flask-Migrate',
     'flask-rebar',
-    'Flask-SQLAlchemy',
+    'Flask-SQLAlchemy<3',
     'Flask-WTF',
     'Flask-Manage-Webpack',
     'flask-rebar',
@@ -71,7 +71,7 @@ setup(
             'pytest-postgresql',
             'pytest-mock',
             'requests-mock',
-            'pytest-flask-sqlalchemy',
+            'pytest-flask-sqlalchemy'
         ]
     },
     setup_requires=['pytest-runner'],

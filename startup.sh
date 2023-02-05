@@ -1,5 +1,5 @@
 #!/bin/bash
 yarn install
-pip install -e .
+pip install -e .[test]
 flask db upgrade
-flask run
+flask run --host=0.0.0.0

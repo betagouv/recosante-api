@@ -41,7 +41,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/
       - ${PWD}/startup_multidatabases.sh:/docker-entrypoint-initdb.d/startup_multidatabases.sh
     environment:
-      - POSTGRES_MULTIPLE_DATABASES=db1,db2=flask_celery,flask_celery_test
+      - "POSTGRES_MULTIPLE_DATABASES=flask_celery,flask_celery: flask_celery_test,flask_celery"
       - POSTGRES_USER=flask_celery
       - POSTGRES_PASSWORD=flask_celery
       - PGUSER=flask_celery
