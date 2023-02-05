@@ -1,4 +1,4 @@
-from sqlalchemy.orm import joinedload, relationship, selectinload
+from sqlalchemy.orm import joinedload, relationship, selectinload, Mapped
 from indice_pollution.history.models import Commune, Departement
 from ecosante.extensions import db
 from ecosante.utils.funcs import generate_line, oxford_comma
@@ -35,7 +35,7 @@ class Inscription(db.Model):
     ville_name: str = db.Column(db.String)
     _ville_insee: str = db.Column("ville_insee", db.String)
     commune_id: int = db.Column(db.Integer, db.ForeignKey(Commune.id))
-    commune: Commune = db.relationship(Commune)
+    commune: Mapped["Commune"] = db.relationship(Commune)
     diffusion: str = db.Column("diffusion", db.Enum("sms", "mail", name="diffusion_enum"), default="mail")
     telephone: str = db.Column(db.String)
     mail: str = db.Column(db.String)
@@ -55,7 +55,7 @@ class Inscription(db.Model):
     ouvertures: List[date] = db.Column(postgresql.ARRAY(db.Date))
     recommandations: List[str] = db.Column(postgresql.ARRAY(db.String))
     notifications: List[str] = db.Column(postgresql.ARRAY(db.String))
-    _webpush_subscriptions_info: List[WebpushSubscriptionInfo] = relationship("WebpushSubscriptionInfo", backref="inscription")
+    _webpush_subscriptions_info: Mapped["List[WebpushSubscriptionInfo]"] = relationship("WebpushSubscriptionInfo", backref="inscription")
     #Indicateurs
     indicateurs: List[str] = db.Column(postgresql.ARRAY(db.String), default=['indice_atmo', 'raep'])
     indicateurs_frequence: List[str] = db.Column(postgresql.ARRAY(db.String), default=['quotidien'])

@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("""
+    conn.execute(sa.text("""
     UPDATE inscription
     SET commune_id = subquery.id
     FROM (
@@ -26,7 +26,7 @@ def upgrade():
         FROM indice_schema.commune
     ) AS subquery
     WHERE inscription.ville_insee = subquery.insee
-    """)
+    """))
 
 
 def downgrade():

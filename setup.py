@@ -4,13 +4,13 @@ from subprocess import call
 
 DEPENDENCIES = [
     'idna<3',
-    'kombu==5.0.2',
-    'amqp==5.0.1',
-    'celery==5.0.3',
+    'kombu',
+    'amqp',
+    'celery',
     'celery[redis]',
     'email_validator',
     'Faker',
-    'Flask',
+    'Flask>=2',
     'Flask-Assets',
     'Flask-caching',
     'flask-cors',
@@ -35,7 +35,8 @@ DEPENDENCIES = [
     'py-vapid',
     'cryptography',
     'python-jose[cryptography]',
-    'Werkzeug~=2.0.0'
+    'Werkzeug',
+    'sqlalchemy<2'
 ]
 
 class CustomPsycopg2Install(install):
@@ -69,7 +70,8 @@ setup(
             'pytest-alembic',
             'pytest-postgresql',
             'pytest-mock',
-            'requests-mock'
+            'requests-mock',
+            'pytest-flask-sqlalchemy',
         ]
     },
     setup_requires=['pytest-runner'],

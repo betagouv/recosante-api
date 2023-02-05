@@ -18,9 +18,9 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("UPDATE recommandation SET type = 'indice_atmo' WHERE type = 'generale'")
+    conn.execute(sa.text("UPDATE recommandation SET type = 'indice_atmo' WHERE type = 'generale'"))
 
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute("UPDATE recommandation SET type = 'generale' WHERE type = 'indice_atmo'")
+    conn.execute(sa.text("UPDATE recommandation SET type = 'generale' WHERE type = 'indice_atmo'"))

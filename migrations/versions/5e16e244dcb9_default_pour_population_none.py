@@ -26,9 +26,9 @@ def upgrade():
         sa.column("recommandations_media", sa.dialects.postgresql.ARRAY(sa.String))
     )
     conn = op.get_bind()
-    conn.execute(inscription.update(
-        sa.text("population IS NULL OR 'allergie_pollens' <> ANY(population)"),
-        values={
+    conn.execute(inscription.update().where(
+        sa.text("population IS NULL OR 'allergie_pollens' <> ANY(population)")
+        ).values({
             "indicateurs": ["indice_atmo"],
             "indicateurs_frequence": ["quotidien"],
             "indicateurs_media": ["mail"],

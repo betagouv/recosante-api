@@ -26,20 +26,20 @@ def upgrade():
         sa.column("recommandations_media", sa.dialects.postgresql.ARRAY(sa.String))
     )
     conn = op.get_bind()
-    conn.execute(inscription.update(
-        sa.text("'allergie_pollens' <> ALL(population)"),
-        values={
+    conn.execute(inscription.update().where(
+        sa.text("'allergie_pollens' <> ALL(population)"))
+        .values({
             "indicateurs": ["indice_atmo"],
             "indicateurs_frequence": ["quotidien"],
             "indicateurs_media": ["mail"],
             "recommandations_actives": ["oui"],
             "recommandations_frequence": ["quotidien"],
             "recommandations_media": ["mail"]
-        }
-    ))
-    conn.execute(inscription.update(
-        sa.text("'allergie_pollens' = ANY(population)"),
-        values={
+        })
+    )
+    conn.execute(inscription.update().where(
+            sa.text("'allergie_pollens' = ANY(population)"),
+        ).values({
             "indicateurs": ["indice_atmo", "raep"],
             "indicateurs_frequence": ["quotidien"],
             "indicateurs_media": ["mail"],
