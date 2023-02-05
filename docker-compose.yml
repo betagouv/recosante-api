@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  indice_pollution:
+    build:
+      context: ../indice_pollution
+      dockerfile: Dockerfile
+    image: indice-pollution
+    env_file:
+      - .env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - indice_pollution
+
+  web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: recosante-api
+    command: ./startup.sh
+    ports:
+      - 5000:5000
+    env_file:
+      - .env.docker
+    volumes:
+      - .:/code
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ${PWD}/startup_multidatabases.sh:/docker-entrypoint-initdb.d/startup_multidatabases.sh
+    environment:
+      - POSTGRES_MULTIPLE_DATABASES=db1,db2=flask_celery,flask_celery_test
+      - POSTGRES_USER=flask_celery
+      - POSTGRES_PASSWORD=flask_celery
+      - PGUSER=flask_celery
+    user: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "flask_celery"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: recosante-api
+    command: bash -c "pip install -e . && celery -A ecosante.celery_worker.celery worker --loglevel=INFO"
+    env_file:
+      - .env.docker
+    volumes:
+      - .:/code
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+#
+#  celery_beat:
+#    build:
+#      context: .
+#      dockerfile: ./compose/local/flask/Dockerfile
+#    image: flask_celery_example_celery_beat
+#    command: /start-celerybeat
+#    volumes:
+#      - .:/app
+#    env_file:
+#      - .env/.dev-sample
+#    environment:
+#      - FLASK_APP=app
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+
+
+volumes:
+  postgres_data:
