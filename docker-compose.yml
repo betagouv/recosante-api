@@ -79,15 +79,13 @@ services:
 #  celery_beat:
 #    build:
 #      context: .
-#      dockerfile: ./compose/local/flask/Dockerfile
-#    image: flask_celery_example_celery_beat
-#    command: /start-celerybeat
+#      dockerfile: ./Dockerfile
+#    image: recosante-api
+#    command: bash -c "pip install -e . && celery -A ecosante.celery_worker.celery beat"
 #    volumes:
-#      - .:/app
+#      - .:/code
 #    env_file:
-#      - .env/.dev-sample
-#    environment:
-#      - FLASK_APP=app
+#      - .env.docker
 #    depends_on:
 #      db:
 #        condition: service_healthy
