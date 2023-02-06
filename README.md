@@ -41,7 +41,7 @@ Vous devez changer dans le fichier `.env.docker` les variables :
  * `SQLALCHEMY_DATABASE_URI`  par `postgresql://flask_celery:flask_celery@db/flask_celery`
  * `TEST_DATABASE_URL` par `postgresql://flask_celery:flask_celery@db/flask_celery_test`
 
-Pour lancer les différents services vous pouvez utiliser [docker-compose](https://github.com/docker/compose), avec la commande `docker-compose up`, une fois tous les services lancés vous pouvez lancer un import de données avec `docker-compose exec indice_pollution python save_today.py` puis lancer les tests avec `docker-compose exec web pytest .`.
+Pour lancer les différents services vous pouvez utiliser [docker-compose](https://github.com/docker/compose), la première fois il faut lancer les migrations de `indice_pollution` avec `docker-compose up indice_pollution` une fois les migrations finies, vous pouvez lancer avec la commande `docker-compose up`, une fois tous les services lancés vous pouvez lancer un import de données avec `docker-compose exec indice_pollution python save_today.py` puis lancer les tests avec `docker-compose exec web pytest .`.
 
 Vous pouvez ensuite accéder à l’API ici: (http://localhost:5000/v1/?insee=75056).
 
