@@ -24,7 +24,7 @@ def upgrade():
         FROM indice_schema.departement
         WHERE indice_schema.commune.nom = ANY(:communes)
         AND indice_schema.departement.code = ANY(:departements)
-        """), **pollinarium)
+        """).bindparams(**pollinarium))
 
 
 def downgrade():

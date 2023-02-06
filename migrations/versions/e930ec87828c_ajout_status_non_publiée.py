@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("UPDATE recommandation SET status = 'hidden' WHERE medias = ARRAY[]::varchar[]")
+    conn.execute(sa.text("UPDATE recommandation SET status = 'hidden' WHERE medias = ARRAY[]::varchar[]"))
 
 
 def downgrade():

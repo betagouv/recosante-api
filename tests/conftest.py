@@ -3,12 +3,13 @@ from indice_pollution.history.models.commune import Commune
 from indice_pollution.history.models.indice_atmo import IndiceATMO
 from indice_pollution.history.models.raep import RAEP
 from indice_pollution.history.models.episode_pollution import EpisodePollution
+from indice_pollution import db as db_indice_pollution
+from indice_pollution import init_app as init_app_indice_pollution
 import pytest
 import os
 import sqlalchemy as sa
 from psycopg2.extras import DateRange
 from ecosante import create_app
-from indice_pollution import create_app as create_app_indice_pollution
 from ecosante.newsletter.models import NewsletterHebdoTemplate
 from ecosante.inscription.models import Inscription, WebpushSubscriptionInfo
 from ecosante.recommandations.models import Recommandation
@@ -33,18 +34,14 @@ def client(app):
 
 @pytest.fixture(scope="session")
 def app(request):
-    indice_pollution_app = create_app_indice_pollution()
-    indice_pollution_app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONN
-    with indice_pollution_app.app_context():
-        db_indice_pollution = indice_pollution_app.extensions['sqlalchemy'].db
-        db_indice_pollution.engine.execute('CREATE SCHEMA IF NOT EXISTS indice_schema')
-        db_indice_pollution.create_all()
-        db_indice_pollution.metadata.bind = db_indice_pollution.engine
-
     app = create_app()
+
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONN
     with app.app_context():
+        init_app_indice_pollution(app)
+        db_indice_pollution.engine.execute('CREATE SCHEMA IF NOT EXISTS indice_schema')
+        db_indice_pollution.metadata.create_all()
         db = app.extensions['sqlalchemy'].db
         db.engine.execute('DROP TABLE IF EXISTS alembic_version;')
         with open("migrations/data/generate-random-short-id.sql") as f:
@@ -54,8 +51,7 @@ def app(request):
         db.metadata.create_all()
         yield app
         db.metadata.drop_all()
-        db_indice_pollution.metadata.drop_all()
-        db_indice_pollution.engine.execute('DROP SCHEMA IF EXISTS indice_schema')
+        db_indice_pollution.engine.execute('DROP SCHEMA IF EXISTS indice_schema CASCADE')
         db.engine.execute("DROP FUNCTION IF EXISTS get_random_string")
         db.engine.execute("DROP FUNCTION IF EXISTS generate_random_id")
 

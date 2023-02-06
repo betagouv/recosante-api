@@ -1,5 +1,4 @@
 import functools
-from lib2to3.pytree import Base
 from time import time
 from flask import current_app, request, session, redirect, url_for, abort
 from flask_rebar.authenticators.base import Authenticator
