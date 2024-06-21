@@ -60,7 +60,7 @@ def make_baignades_response(insee):
                     "details": details,
                 },
                 "sources": [{
-                    "label": "le site Baignades du Ministère des Solidarités et de la Santé",
+                    "label": "le site Baignades du ministère de la Santé et de la Prévention",
                     "url": "https://baignades.sante.gouv.fr/"
                 }],
                 "validity": {
@@ -129,34 +129,53 @@ def get_site_details(site_id, code_departement, season_year, id_carte):
     interdiction_type = None
     interdiction_reason = None
     interdiction_observations = None
-    titre_interdiction = soup.find(class_="texte_titre_interdiction")
+    titre_interdiction = soup.find(class_="texte_titre_interdiction", text=re.compile('Interdiction'))
     if isinstance(titre_interdiction, bs4.PageElement):
         interdiction_label = titre_interdiction.text.strip()
         interdiction_date = re.sub('[^\d\/]', '', interdiction_label)
-        texte_interdiction_type = soup.find(class_="texte_interdiction", text=re.compile('Type :'))
-        if isinstance(texte_interdiction_type, bs4.PageElement):
-            full_type = texte_interdiction_type.text.strip()
-            if "TEMPORAIRE" in full_type:
-                interdiction_type = "temporaire"
-            elif "PERMANENTE" in full_type:
-                interdiction_type = "permanente"
-            elif "DEFINITIVE" in full_type:
-                interdiction_type = "définitive"
-            if "RAISON SANITAIRE" in full_type:
-                interdiction_reason = "sanitaire"
-            elif "RAISON NON SANITAIRE" in full_type:
-                interdiction_reason = "non sanitaire"
-    def text_is_none(s):
-        return s is None
-    texte_interdiction_observations = soup.find(class_="texte_interdiction", text=text_is_none)
-    if isinstance(texte_interdiction_observations, bs4.PageElement):
-        interdiction_observations = re.sub('^Observations : \n(\t)*', '', texte_interdiction_observations.text.strip())
+        table = titre_interdiction.find_parent("table")
+        if isinstance(table, bs4.PageElement):
+            texte_interdiction_type = table.select_one('.texte_interdiction:-soup-contains("Type :")')
+            if isinstance(texte_interdiction_type, bs4.PageElement):
+                full_type = texte_interdiction_type.text.strip()
+                if "PREVENTIVE" in full_type:
+                    interdiction_type = "préventive"
+                elif "TEMPORAIRE" in full_type:
+                    interdiction_type = "temporaire"
+                elif "PERMANENTE" in full_type:
+                    interdiction_type = "permanente"
+                elif "DEFINITIVE" in full_type:
+                    interdiction_type = "définitive"
+                if "RAISON SANITAIRE" in full_type:
+                    interdiction_reason = "sanitaire"
+                elif "RAISON NON SANITAIRE" in full_type:
+                    interdiction_reason = "non sanitaire"
+            texte_interdiction_observations = table.select_one('.texte_interdiction:-soup-contains("Observations :")')
+            if isinstance(texte_interdiction_observations, bs4.PageElement):
+                interdiction_observations = re.sub('^Observations : \n(\t)*', '', texte_interdiction_observations.text.strip())
     if interdiction_date is not None and is_valid_date(interdiction_date):
         interdiction_dict = {
             "date": interdiction_date,
             "type": interdiction_type,
             "reason": interdiction_reason,
             "observations": interdiction_observations
+        }
+    pollution_dict = None
+    pollution_date = None
+    pollution_source = None
+    titre_pollution = soup.find(class_="texte_titre_interdiction", text=re.compile('Pollution'))
+    if isinstance(titre_pollution, bs4.PageElement):
+        pollution_label = titre_pollution.text.strip()
+        pollution_date = re.sub('[^\d\/]', '', pollution_label)
+        table = titre_pollution.find_parent("table")
+        if isinstance(table, bs4.PageElement):
+            texte_pollution_source = table.select_one('.texte_interdiction:-soup-contains("Source de la pollution :")')
+            if isinstance(texte_pollution_source, bs4.PageElement):
+                pollution_source = re.sub('^Source de la pollution : \n(\t)*', '', texte_pollution_source.text.strip())
+    if pollution_date is not None and is_valid_date(pollution_date):
+        pollution_dict = {
+            "date": pollution_date,
+            "source": pollution_source
         }
     cadre_dotted = soup.find_all(class_="cadre_dotted")
     sample_dict = {
@@ -165,22 +184,23 @@ def get_site_details(site_id, code_departement, season_year, id_carte):
     sample_date = None
     sample_label = None
     if isinstance(cadre_dotted, list) and len(cadre_dotted) > 0:
-        last_cadre_dotted = cadre_dotted[-1]
-        if isinstance(last_cadre_dotted, bs4.PageElement):
-            strong = last_cadre_dotted.find('strong')
-            if isinstance(strong, bs4.PageElement):
-                sample_date = strong.text.strip()
-                children = last_cadre_dotted.find_all()
-                for c in children:
-                    if isinstance(c, bs4.PageElement):
-                        c.extract()
-                sample_label = sample_label_from_value(last_cadre_dotted.text.strip())
-    if None not in (sample_date, sample_label) and is_valid_date(sample_date):
-        sample_dict = {
-            "label": sample_label,
-            "date": sample_date
-        }
-        url = url + '&plv=all'
+        for last_cadre_dotted in reversed(cadre_dotted):
+            if isinstance(last_cadre_dotted, bs4.PageElement):
+                strong = last_cadre_dotted.find('strong')
+                if isinstance(strong, bs4.PageElement):
+                    sample_date = strong.text.strip()
+                    children = last_cadre_dotted.find_all()
+                    for c in children:
+                        if isinstance(c, bs4.PageElement):
+                            c.extract()
+                    sample_label = sample_label_from_value(last_cadre_dotted.text.strip())
+                    if None not in (sample_date, sample_label) and is_valid_date(sample_date):
+                        sample_dict = {
+                            "label": sample_label,
+                            "date": sample_date
+                        }
+                        url = url + '&plv=all'
+                        break
     ranking_dict = None
     ranking_year = None
     cellule_titre = soup.find_all(class_="cellule_titre")
@@ -206,6 +226,7 @@ def get_site_details(site_id, code_departement, season_year, id_carte):
         "sample": sample_dict,
         "ranking": ranking_dict,
         "interdiction": interdiction_dict,
+        "pollution": pollution_dict,
         "url": url
     }
 
@@ -245,8 +266,6 @@ def get_site_order(details):
         order = 0
     else:
         order = 10
-    sample_label = details['sample']['label']
-    order += order_from_sample_label(sample_label) # mauvais résultats ensuite
     return order
             
 def order_from_sample_label(label):
@@ -338,11 +357,11 @@ def make_main_label(now, start_dt, end_dt, commune_nb_sites, nb_mauvais_resultat
     elif nb_mauvais_resultats == 0 and nb_resultats_moyens == 0 and nb_bons_resultats == 0:
         label = "Pas de résultats"
     elif nb_mauvais_resultats > 0 and nb_resultats_moyens == 0 and nb_bons_resultats == 0:
-        label = "Mauvais résultats"
+        label = "Mauvaise"
     elif nb_resultats_moyens > 0 and nb_mauvais_resultats == 0 and nb_bons_resultats == 0:
-        label = "Résultats moyens"
+        label = "Moyenne"
     elif nb_bons_resultats > 0 and nb_mauvais_resultats == 0 and nb_resultats_moyens == 0:
-        label = "Bons résultats"
+        label = "Bonne"
     else:
-        label = "Résultats mixtes"
+        label = "Variable"
     return label
